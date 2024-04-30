@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from '@/theme';
 import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           </ThemeProvider>
         </AppRouterCacheProvider>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

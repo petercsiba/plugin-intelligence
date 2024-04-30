@@ -17,6 +17,7 @@
     "@mui/material": "latest",
     "@mui/material-nextjs": "latest",
     "@vercel/analytics": "^1.2.2",
+    "@vercel/speed-insights": "^1.0.10",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest"
