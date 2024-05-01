@@ -19,7 +19,7 @@ export default function HomePage() {
         }}
       >
         <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-          Material UI - Next.js App Router example in TypeScript
+          Plugin Intelligence - Trosku Panko Plugin Revenue Estimator
         </Typography>
       <Link href="/about" color="secondary" underline="hover">
         Go to the about page
