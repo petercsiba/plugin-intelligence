@@ -1,12 +1,11 @@
 # TODO(P1, feature:trends): Can get historical data through WayBack
 #  curl "http://archive.org/wayback/available?url=<LINK>&timestamp=20240101" | jq .
 #  https://web.archive.org/web/20231101062549/https://workspace.google.com/marketplace/app/mail_merge/218858140171
-import csv
 import re
 import urllib
-from dataclasses import asdict, dataclass, field, fields
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from urllib.parse import quote
 
 import requests
@@ -16,6 +15,9 @@ from supawee.client import connect_to_postgres
 from config import POSTGRES_DATABASE_URL
 from supabase.models.data import GoogleAddOn
 
+# TODO(P0, completeness): Figure out a way to crawl the entire site,
+#  note that https://workspace.google.com/marketplace/sitemap.xml isn't enough
+#  Currently best effort by categories and keywords.
 SEARCH_URL = "https://workspace.google.com/marketplace/search/"
 # These are often used keywords
 KEYWORDS = [
@@ -84,7 +86,6 @@ KEYWORDS = [
     "transcribe",
 ]
 
-# TODO(P1, completeness): Some might be missing, and https://workspace.google.com/marketplace/sitemap.xml isn't enough
 LISTS = [SEARCH_URL + quote(term) for term in KEYWORDS] + [
     # MAIN categories
     "https://workspace.google.com/marketplace",
@@ -112,65 +113,6 @@ LISTS = [SEARCH_URL + quote(term) for term in KEYWORDS] + [
 ]
 
 
-@dataclass
-class AppData:
-    name: str
-    developer: str
-    rating: str
-    rating_count: int
-    users: int
-    link: str
-    listing_updated: str = field(default="")
-    description: str = field(default="")
-    pricing: str = field(default="")
-    with_drive: bool = field(default=False)
-    with_docs: bool = field(default=False)
-    with_sheets: bool = field(default=False)
-    with_slides: bool = field(default=False)
-    with_forms: bool = field(default=False)
-    with_calendar: bool = field(default=False)
-    with_gmail: bool = field(default=False)
-    with_meet: bool = field(default=False)
-    with_classroom: bool = field(default=False)
-    with_chat: bool = field(default=False)
-    developer_link: str = field(default="")
-    overview: str = field(default="")
-    permissions: list = field(default_factory=list)
-    reviews: list = field(default_factory=list)
-
-    # Takes in subset of
-    # ['Google Drive', 'Google Docs', 'Google Sheets', 'Google Slides', 'Google Forms', 'Google Calendar',
-    #  'Gmail', 'Google Meet', 'Google Classroom', 'Google Chat']
-    def fill_in_works_with(self, works_with: list):
-        self.with_drive = "Google Drive" in works_with
-        self.with_docs = "Google Docs" in works_with
-        self.with_sheets = "Google Sheets" in works_with
-        self.with_slides = "Google Slides" in works_with
-        self.with_forms = "Google Forms" in works_with
-        self.with_calendar = "Google Calendar" in works_with
-        self.with_gmail = "Gmail" in works_with
-        self.with_meet = "Google Meet" in works_with
-        self.with_classroom = "Google Classroom" in works_with
-        self.with_chat = "Google Chat" in works_with
-
-    # For debugging purposes
-    def display(self):
-        print("--- App Data ---")
-        print(f"Name: {self.name}")
-        print(f"Developer: {self.developer}")
-        print(f"Rating: {self.rating} out of {self.rating_count} reviews")
-        print(f"Users: {self.users}")
-        print(f"Link: {self.link}")
-        print(f"Listing Updated: {self.listing_updated}")
-        print(f"Description: {self.description}")
-        print(f"Pricing: {self.pricing}")
-        # print(f'Works With: {", ".join(self.works_with)}')
-        print(f"Developer Link: {self.developer_link}")
-        print(f'Permissions: {", ".join(self.permissions)}')
-        reviews_str = "\n".join([str(r) for r in self.reviews])
-        print(f"Most Relevant Reviews: {reviews_str}")
-
-
 def find_tag_and_get_text(element: Tag, tag_name: str, class_name: str) -> str:
     found_element = element.find(tag_name, class_=class_name)
     return found_element.text.strip() if found_element else ""
@@ -187,7 +129,17 @@ def parse_user_count(user_str: str) -> int:
     return int(user_str)  # Might error out?
 
 
-def get_apps(url: str):
+@dataclass
+class AppDataBasic:
+    name: str
+    developer_name: str
+    rating: str
+    rating_count: int
+    user_count: int
+    link: str
+
+
+def get_apps(url: str) -> List[AppDataBasic]:
     print(f"getting apps from {url}")
     # Send a request to the URL
     response = requests.get(url)
@@ -201,17 +153,17 @@ def get_apps(url: str):
     for app in apps:
         user_span = app.find("span", class_="kVdtk").find_next_sibling("span")
         if user_span is not None:
-            users = parse_user_count(user_span.text.strip())
+            user_count = parse_user_count(user_span.text.strip())
         else:
-            users = None
+            user_count = None
 
         # Fill in the data available from the listings table page, more will be filled from individual pages.
-        app_data = AppData(
+        app_data = AppDataBasic(
             name=find_tag_and_get_text(app, "div", "M0atNd"),
-            developer=find_tag_and_get_text(app, "span", "y51Cnd"),
+            developer_name=find_tag_and_get_text(app, "span", "y51Cnd"),
             rating=find_tag_and_get_text(app, "span", "wUhZA"),
             rating_count=0,  # will be updated
-            users=users,
+            user_count=user_count,
             # [1:] removes the first dot in the relative link
             link=f"https://workspace.google.com{app['href'][1:]}",
         )
@@ -248,12 +200,13 @@ class ReviewData:
         return f"{'⭐' * self.stars} {self.name} ({self.date_posted}): {self.content}"
 
 
-def parse_permissions(soup):
+def parse_permissions(soup) -> List[str]:
     permission_elements = soup.find_all("span", class_="jyBTLc")
     return [element.text.strip() for element in permission_elements]
 
 
-def parse_reviews(soup):
+# TODO(P3, completeness): This is actually paginated and the Google RPC looks super complicated to reverse engineer.
+def parse_reviews(soup) -> List[ReviewData]:
     reviews = []
     review_elements = soup.find_all("div", class_="ftijEf")
 
@@ -283,31 +236,35 @@ def parse_reviews(soup):
     return reviews
 
 
-def research_app_more(app_data: AppData):
-    print(f"getting more app_data for {app_data.name} from {app_data.link}")
+def research_app_more(add_on: GoogleAddOn) -> None:
+    print(f"getting more app_data for {add_on.name} from {add_on.link}")
 
-    response = requests.get(app_data.link)
+    response = requests.get(add_on.link)
     if response.status_code != 200:
-        print("could not get data")
+        print("WARNING: could not get data")
         return
 
     soup = BeautifulSoup(response.text, "html.parser")
 
     rating_count_el = soup.find("span", itemprop="ratingCount")
-    app_data.rating_count = rating_count_el.text.strip() if rating_count_el else None
-    app_data.listing_updated = find_tag_and_get_text(soup, "div", "bVxKXd").replace(
+    add_on.rating_count = (
+        rating_count_el.text.strip() if rating_count_el else add_on.rating_count
+    )
+    listing_updated_str = find_tag_and_get_text(soup, "div", "bVxKXd").replace(
         "Listing updated:", ""
     )
-    app_data.description = find_tag_and_get_text(soup, "div", "kmwdk")
-    app_data.pricing = find_tag_and_get_text(soup, "span", "P0vMD")
+    add_on.listing_updated = datetime.strptime(
+        listing_updated_str, "%B %d, %Y"
+    ).date()  # "April 24, 2024"
+    add_on.description = find_tag_and_get_text(soup, "div", "kmwdk")
+    add_on.pricing = find_tag_and_get_text(soup, "span", "P0vMD")
     # app_data.works_with = get_works_with(app=soup)
-    app_data.fill_in_works_with(get_works_with_list(soup=soup))
+    add_on.fill_in_works_with(get_works_with_list(soup=soup))
     # TODO: gpt to summarize - probably in another script
-    app_data.overview = find_tag_and_get_text(soup, "pre", "nGA4ed")
-    app_data.developer_link = get_developer_link(soup=soup)
-    # TODO (this needs some clicking)
-    app_data.permissions = parse_permissions(soup=soup)
-    app_data.reviews = parse_reviews(soup=soup)
+    add_on.overview = find_tag_and_get_text(soup, "pre", "nGA4ed")
+    add_on.developer_link = get_developer_link(soup=soup)
+    add_on.permissions = parse_permissions(soup=soup)
+    add_on.reviews = parse_reviews(soup=soup)
     # app_data.display()
 
 
@@ -317,40 +274,39 @@ def get_google_id_from_link(link: str):
 
 
 def main():
-    fieldnames = [
-        f.name for f in fields(AppData)
-    ]  # Dynamically get the field names from the dataclass
-
-    now = datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
     # We will ignore the complexity of timezones
     p_date = datetime.today().strftime("%Y-%m-%d")
 
     with connect_to_postgres(POSTGRES_DATABASE_URL):
-        with open(f"batch_jobs/data/output-{now}.csv", "w", newline="") as file:
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
-            writer.writeheader()
-            researched_apps = set()
+        # TODO(P1, prod): Using some real scraper library might be helpful,
+        #   and concurrency / asyncio welcome since most time is spent waiting on HTTP GET requests.
+        researched_apps = set()
 
-            for listing_page in LISTS:
-                apps = get_apps(listing_page)
-                for app_data in apps:
-                    link = app_data.link
-                    if link in researched_apps:
-                        continue
-                    researched_apps.add(link)
+        for listing_page in LISTS:
+            apps = get_apps(listing_page)
+            for app_data in apps:
+                link = app_data.link
+                if link in researched_apps:
+                    continue
+                researched_apps.add(link)
 
-                    add_on = GoogleAddOn()
-                    add_on.google_id = get_google_id_from_link(link)
-                    add_on.p_date = p_date
-                    add_on.name = app_data.name
-                    add_on.link = app_data.link
-                    add_on.save()
+                # With "get_or_create" and later .save() we essentially get ON CONFLICT UPDATE (in two statements).
+                add_on, created = GoogleAddOn.get_or_create(
+                    google_id=get_google_id_from_link(link),
+                    p_date=p_date,
+                    name=app_data.name,
+                    link=app_data.link,
+                )
+                add_on.developer_name = app_data.developer_name
+                add_on.rating = app_data.rating
+                add_on.rating_count = app_data.rating_count
+                add_on.user_count = app_data.user_count
 
-                    research_app_more(app_data)
-                    app_data_dict = asdict(app_data)
-                    writer.writerow(app_data_dict)
+                research_app_more(add_on)
+                add_on.save()
 
-                    break
+                break
+            break
 
 
 if __name__ == "__main__":
