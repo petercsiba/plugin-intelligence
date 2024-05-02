@@ -253,9 +253,13 @@ def research_app_more(add_on: GoogleAddOn) -> None:
     listing_updated_str = find_tag_and_get_text(soup, "div", "bVxKXd").replace(
         "Listing updated:", ""
     )
-    add_on.listing_updated = datetime.strptime(
-        listing_updated_str, "%B %d, %Y"
-    ).date()  # "April 24, 2024"
+    try:
+        add_on.listing_updated = datetime.strptime(
+            listing_updated_str, "%B %d, %Y"
+        ).date()  # "April 24, 2024"
+    except ValueError:
+        if len(listing_updated_str) > 2:
+            print(f"info: cannot parse listing updated for {listing_updated_str}")
     add_on.description = find_tag_and_get_text(soup, "div", "kmwdk")
     add_on.pricing = find_tag_and_get_text(soup, "span", "P0vMD")
     # app_data.works_with = get_works_with(app=soup)
@@ -304,9 +308,6 @@ def main():
 
                 research_app_more(add_on)
                 add_on.save()
-
-                break
-            break
 
 
 if __name__ == "__main__":
