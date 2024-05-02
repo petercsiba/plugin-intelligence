@@ -1,6 +1,7 @@
 # TODO(P1, feature:trends): Can get historical data through WayBack
 #  curl "http://archive.org/wayback/available?url=<LINK>&timestamp=20240101" | jq .
 #  https://web.archive.org/web/20231101062549/https://workspace.google.com/marketplace/app/mail_merge/218858140171
+import asyncio
 import re
 import urllib
 from dataclasses import dataclass
@@ -8,12 +9,18 @@ from datetime import datetime
 from typing import List, Optional
 from urllib.parse import quote
 
+import aiohttp
 import requests
 from bs4 import BeautifulSoup, Tag
 from supawee.client import connect_to_postgres
 
 from config import POSTGRES_DATABASE_URL
 from supabase.models.data import GoogleAddOn
+
+# How many concurrent HTTP GET can run in the scraper. The ideal here depends on the provisioned machine,
+# and how the scraper target domain is sensitive. This is a super-basic scraper, but if it ain't working
+# might make sense to use a library / service.
+ASYNC_IO_MAX_PARALLELISM = 6
 
 # TODO(P0, completeness): Figure out a way to crawl the entire site,
 #  note that https://workspace.google.com/marketplace/sitemap.xml isn't enough
@@ -86,6 +93,7 @@ KEYWORDS = [
     "transcribe",
 ]
 
+TEST_LIST = ["https://workspace.google.com/marketplace"]
 LISTS = [SEARCH_URL + quote(term) for term in KEYWORDS] + [
     # MAIN categories
     "https://workspace.google.com/marketplace",
@@ -151,15 +159,20 @@ def get_apps(url: str) -> List[AppDataBasic]:
     apps = soup.find_all("a", class_="RwHvCd")
     result = []
     for app in apps:
-        user_span = app.find("span", class_="kVdtk").find_next_sibling("span")
-        if user_span is not None:
-            user_count = parse_user_count(user_span.text.strip())
+        app_name = find_tag_and_get_text(app, "div", "M0atNd")
+        user_span = app.find("span", class_="kVdtk")
+        user_span_sibling = user_span.find_next_sibling("span") if user_span else None
+        if user_span_sibling is not None:
+            user_count = parse_user_count(user_span_sibling.text.strip())
         else:
+            print(
+                f"WARNING: cannot find user span or user span sibling for url {url} and app {app_name}"
+            )
             user_count = None
 
         # Fill in the data available from the listings table page, more will be filled from individual pages.
         app_data = AppDataBasic(
-            name=find_tag_and_get_text(app, "div", "M0atNd"),
+            name=app_name,
             developer_name=find_tag_and_get_text(app, "span", "y51Cnd"),
             rating=find_tag_and_get_text(app, "span", "wUhZA"),
             rating_count=0,  # will be updated
@@ -236,19 +249,21 @@ def parse_reviews(soup) -> List[ReviewData]:
     return reviews
 
 
-def research_app_more(add_on: GoogleAddOn) -> None:
-    print(f"getting more app_data for {add_on.name} from {add_on.link}")
+def str_to_int_safe(int_str: str) -> int:
+    try:
+        return int(int_str.strip().replace(",", "").replace("$", ""))
+    except ValueError as e:
+        print(f"INFO: cannot convert {int_str} to int cause {e}")
 
-    response = requests.get(add_on.link)
-    if response.status_code != 200:
-        print("WARNING: could not get data")
-        return
 
-    soup = BeautifulSoup(response.text, "html.parser")
+def process_app_page_response(add_on: GoogleAddOn, text: str) -> None:
+    soup = BeautifulSoup(text, "html.parser")
 
     rating_count_el = soup.find("span", itemprop="ratingCount")
     add_on.rating_count = (
-        rating_count_el.text.strip() if rating_count_el else add_on.rating_count
+        str_to_int_safe(rating_count_el.text)
+        if rating_count_el
+        else add_on.rating_count
     )
     listing_updated_str = find_tag_and_get_text(soup, "div", "bVxKXd").replace(
         "Listing updated:", ""
@@ -257,9 +272,11 @@ def research_app_more(add_on: GoogleAddOn) -> None:
         add_on.listing_updated = datetime.strptime(
             listing_updated_str, "%B %d, %Y"
         ).date()  # "April 24, 2024"
-    except ValueError:
+    except ValueError as e:
         if len(listing_updated_str) > 2:
-            print(f"info: cannot parse listing updated for {listing_updated_str}")
+            print(
+                f"info: cannot parse listing updated for {listing_updated_str} cause: {e}"
+            )
     add_on.description = find_tag_and_get_text(soup, "div", "kmwdk")
     add_on.pricing = find_tag_and_get_text(soup, "span", "P0vMD")
     # app_data.works_with = get_works_with(app=soup)
@@ -272,12 +289,27 @@ def research_app_more(add_on: GoogleAddOn) -> None:
     # app_data.display()
 
 
+async def research_app_more(add_on: GoogleAddOn, semaphore: asyncio.Semaphore) -> None:
+    async with semaphore:
+        print(f"getting more app data for {add_on.name} from {add_on.link}")
+        async with aiohttp.ClientSession() as session:
+            async with session.get(add_on.link) as response:
+                if response.status != 200:
+                    print("WARNING: could not get data")
+                    return
+                data = await response.text()
+                process_app_page_response(add_on, data)
+                # NOTE: yes this blocks the event loop and could benefit from asyncio,
+                # but DB calls are usually way faster (3-10ms) than the HTTP GET (100-1000ms) above so it is fine.
+                add_on.save()
+
+
 def get_google_id_from_link(link: str):
     parsed_url = urllib.parse.urlparse(link)
     return parsed_url.path.split("/")[-1]
 
 
-def main():
+async def main():
     # We will ignore the complexity of timezones
     p_date = datetime.today().strftime("%Y-%m-%d")
 
@@ -285,8 +317,16 @@ def main():
         # TODO(P1, prod): Using some real scraper library might be helpful,
         #   and concurrency / asyncio welcome since most time is spent waiting on HTTP GET requests.
         researched_apps = set()
+        print(
+            f"will run individual app HTTP GET with {ASYNC_IO_MAX_PARALLELISM} max parallelism"
+        )
+        tasks = []
+        semaphore = asyncio.Semaphore(
+            ASYNC_IO_MAX_PARALLELISM
+        )  # Allow up to 10 concurrent tasks
 
-        for listing_page in LISTS:
+        # for listing_page in LISTS:
+        for listing_page in TEST_LIST:
             apps = get_apps(listing_page)
             for app_data in apps:
                 link = app_data.link
@@ -306,9 +346,15 @@ def main():
                 add_on.rating_count = app_data.rating_count
                 add_on.user_count = app_data.user_count
 
-                research_app_more(add_on)
-                add_on.save()
+                # Schedule the task with semaphore
+                task = research_app_more(add_on, semaphore)
+                tasks.append(asyncio.create_task(task))
+
+        # Await all tasks to complete
+        print("INFO: Main 'thread' waiting on all asyncio tasks START")
+        await asyncio.gather(*tasks)
+        print("INFO: Main 'thread' waiting on all asyncio tasks DONE")
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
