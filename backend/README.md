@@ -1,7 +1,7 @@
 # Plugin Intelligence Backend
 
 Organized into two main parts:
-* API: thin layer between frontend and database so serve requested data. 
+* API: thin layer between frontend and database so serve requested data.
   * Yes, we could've used Supabase row-level security, BUT I like to have an abstraction layer in between.
 * Batch Jobs: Workers ingesting data into our database.
 
@@ -17,7 +17,19 @@ Organized into two main parts:
 # in the backend directory
 pyenv virtualenv 3.9.16 plugin-intelligence
 pyenv activate plugin-intelligence
-pip install -r batch/batch_jobs.txt 
+pip install -r requirements/local.txt -r requirements/batch_jobs.txt
+
+# for IDE like intelliJ, you would need to setup the VirtualEnv
+echo "$VIRTUAL_ENV/python"
+# Sth like /Users/petercsiba/.pyenv/versions/3.9.16/envs/backend/python
+# Copy this into PyCharm -> Settings -> ... -> Python Interpreter -> Add Local Interpreter
+```
+
+### Setup Git
+```shell
+# setup pre-commit checks
+pre-commit install
+pre-commit run --all-files  # check if works
 ```
 
 If you using PyCharm like me make sure to update your project interpreter to the above virtualenv.
@@ -59,8 +71,8 @@ Get the SQL table definition of it from the UI
 supabase migration new your_migration_name
 # and copy paste the SQL migration to definition to the generated file
 
-# generate new python models, add some functionality (might need chmod +x)
-./database/generate_models.sh
+# generate new python models
+supawee supabase/models/models.py
 
 # apply migrations - weird name i know, this takes quite long :/
 # supabase db reset # OG way

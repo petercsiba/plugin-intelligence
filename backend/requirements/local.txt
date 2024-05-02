@@ -1,1 +1,4 @@
+black
 git+https://github.com/petercsiba/supawee
+pre-commit
+pytest

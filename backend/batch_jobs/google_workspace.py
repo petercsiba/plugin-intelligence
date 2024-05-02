@@ -1,15 +1,20 @@
-# TODO(P0, feature:trends): Can get historical data through WayBack
-#  curl "http://archive.org/wayback/available?url=https://workspace.google.com/marketplace/app/mail_merge/218858140171&timestamp=20240101" | jq .
+# TODO(P1, feature:trends): Can get historical data through WayBack
+#  curl "http://archive.org/wayback/available?url=<LINK>&timestamp=20240101" | jq .
 #  https://web.archive.org/web/20231101062549/https://workspace.google.com/marketplace/app/mail_merge/218858140171
 import csv
 import re
-from dataclasses import dataclass, field, fields, asdict
+import urllib
+from dataclasses import asdict, dataclass, field, fields
 from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
 
 import requests
-from bs4 import BeautifulSoup, PageElement, Tag
+from bs4 import BeautifulSoup, Tag
+from supawee.client import connect_to_postgres
+
+from config import POSTGRES_DATABASE_URL
+from supabase.models.data import GoogleAddOn
 
 SEARCH_URL = "https://workspace.google.com/marketplace/search/"
 # These are often used keywords
@@ -253,17 +258,27 @@ def parse_reviews(soup):
     review_elements = soup.find_all("div", class_="ftijEf")
 
     for element in review_elements:
-        name = element.find("div", class_="iLLAJe").text.strip() if element.find("div", class_="iLLAJe") else "No Name"
+        name = (
+            element.find("div", class_="iLLAJe").text.strip()
+            if element.find("div", class_="iLLAJe")
+            else "No Name"
+        )
         # Count SVG elements with stars
         stars = len(element.find_all("svg", tabindex="-1"))
         content = (
-            element.find("div", class_="bR5MYb").text.strip() if element.find("div", class_="bR5MYb") else "No Content"
+            element.find("div", class_="bR5MYb").text.strip()
+            if element.find("div", class_="bR5MYb")
+            else "No Content"
         )
         date_posted = (
-            element.find("div", class_="wzBhKb").text.strip() if element.find("div", class_="wzBhKb") else "No Date"
+            element.find("div", class_="wzBhKb").text.strip()
+            if element.find("div", class_="wzBhKb")
+            else "No Date"
         )
 
-        reviews.append(ReviewData(name=name, stars=stars, content=content, date_posted=date_posted))
+        reviews.append(
+            ReviewData(name=name, stars=stars, content=content, date_posted=date_posted)
+        )
 
     return reviews
 
@@ -280,7 +295,9 @@ def research_app_more(app_data: AppData):
 
     rating_count_el = soup.find("span", itemprop="ratingCount")
     app_data.rating_count = rating_count_el.text.strip() if rating_count_el else None
-    app_data.listing_updated = find_tag_and_get_text(soup, "div", "bVxKXd").replace("Listing updated:", "")
+    app_data.listing_updated = find_tag_and_get_text(soup, "div", "bVxKXd").replace(
+        "Listing updated:", ""
+    )
     app_data.description = find_tag_and_get_text(soup, "div", "kmwdk")
     app_data.pricing = find_tag_and_get_text(soup, "span", "P0vMD")
     # app_data.works_with = get_works_with(app=soup)
@@ -294,27 +311,46 @@ def research_app_more(app_data: AppData):
     # app_data.display()
 
 
+def get_google_id_from_link(link: str):
+    parsed_url = urllib.parse.urlparse(link)
+    return parsed_url.path.split("/")[-1]
+
+
 def main():
-    fieldnames = [f.name for f in fields(AppData)]  # Dynamically get the field names from the dataclass
+    fieldnames = [
+        f.name for f in fields(AppData)
+    ]  # Dynamically get the field names from the dataclass
 
     now = datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
-    # TODO(P0, cloud migration): Integrate with our database
-    with open(f"data/output-{now}.csv", "w", newline="") as file:
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-        writer.writeheader()
-        researched_apps = set()
+    # We will ignore the complexity of timezones
+    p_date = datetime.today().strftime("%Y-%m-%d")
 
-        for listing_page in LISTS:
-            apps = get_apps(listing_page)
-            for app_data in apps:
-                link = app_data.link
-                if link in researched_apps:
-                    continue
-                researched_apps.add(link)
+    with connect_to_postgres(POSTGRES_DATABASE_URL):
+        with open(f"batch_jobs/data/output-{now}.csv", "w", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            researched_apps = set()
 
-                research_app_more(app_data)
-                app_data_dict = asdict(app_data)
-                writer.writerow(app_data_dict)
+            for listing_page in LISTS:
+                apps = get_apps(listing_page)
+                for app_data in apps:
+                    link = app_data.link
+                    if link in researched_apps:
+                        continue
+                    researched_apps.add(link)
+
+                    add_on = GoogleAddOn()
+                    add_on.google_id = get_google_id_from_link(link)
+                    add_on.p_date = p_date
+                    add_on.name = app_data.name
+                    add_on.link = app_data.link
+                    add_on.save()
+
+                    research_app_more(app_data)
+                    app_data_dict = asdict(app_data)
+                    writer.writerow(app_data_dict)
+
+                    break
 
 
 if __name__ == "__main__":

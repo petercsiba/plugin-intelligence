@@ -7,7 +7,7 @@ import csv
 match_strings = ["400312729360", "197076597243"]
 
 # Open the CSV file
-with open("data/output-2024-04-28-19-09-06.csv", newline="") as csvfile:
+with open("batch_jobs/data/output-2024-04-28-19-09-06.csv", newline="") as csvfile:
     reader = csv.reader(csvfile)
     headers = next(reader)  # Extract headers
 
