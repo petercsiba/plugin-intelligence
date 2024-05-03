@@ -289,7 +289,9 @@ def process_app_page_response(add_on: GoogleAddOn, text: str) -> None:
     # app_data.display()
 
 
-async def research_app_more(add_on: GoogleAddOn, semaphore: asyncio.Semaphore) -> None:
+async def async_research_app_more(
+    add_on: GoogleAddOn, semaphore: asyncio.Semaphore
+) -> None:
     async with semaphore:
         print(f"getting more app data for {add_on.name} from {add_on.link}")
         async with aiohttp.ClientSession() as session:
@@ -302,6 +304,18 @@ async def research_app_more(add_on: GoogleAddOn, semaphore: asyncio.Semaphore) -
                 # NOTE: yes this blocks the event loop and could benefit from asyncio,
                 # but DB calls are usually way faster (3-10ms) than the HTTP GET (100-1000ms) above so it is fine.
                 add_on.save()
+
+
+# A backup version for async_research_app_more, sometimes makes it easier to debug.
+def sync_research_app_more(add_on: GoogleAddOn) -> None:
+    print(f"getting more app data for {add_on.name} from {add_on.link}")
+    response = requests.get(add_on.link)
+    if response.status_code != 200:
+        print("WARNING: could not get data")
+        return
+
+    process_app_page_response(add_on, response.text)
+    add_on.save()
 
 
 def get_google_id_from_link(link: str):
@@ -347,8 +361,9 @@ async def main():
                 add_on.user_count = app_data.user_count
 
                 # Schedule the task with semaphore
-                task = research_app_more(add_on, semaphore)
+                task = async_research_app_more(add_on, semaphore)
                 tasks.append(asyncio.create_task(task))
+                # sync_research_app_more(add_on)
 
         # Await all tasks to complete
         print("INFO: Main 'thread' waiting on all asyncio tasks START")
@@ -358,3 +373,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    # main()

@@ -15,13 +15,13 @@ Organized into two main parts:
 ### Setup Python
 ```shell
 # in the backend directory
-pyenv virtualenv 3.9.16 plugin-intelligence
+pyenv virtualenv 3.12.2 plugin-intelligence
 pyenv activate plugin-intelligence
 pip install -r requirements/local.txt -r requirements/batch_jobs.txt
 
 # for IDE like intelliJ, you would need to setup the VirtualEnv
 echo "$VIRTUAL_ENV/python"
-# Sth like /Users/petercsiba/.pyenv/versions/3.9.16/envs/backend/python
+# Sth like /Users/petercsiba/.pyenv/versions/3.12.2/envs/plugin-intelligence/python
 # Copy this into PyCharm -> Settings -> ... -> Python Interpreter -> Add Local Interpreter
 ```
 
@@ -48,6 +48,7 @@ supabase db remote commit
 supabase start
 ```
 
+
 ## Development Workflow
 
 ### Committing Changes
@@ -57,11 +58,34 @@ BEWARE: Sometimes `black` and `isort` disagree. Then:
 * If it passes, run `git status`. Likely the problem files aren't stage for commit (or have unstaged changes).
 You might want to default to always do `-a` for `git commit`.
 
-Below is pretty much filtered https://supabase.com/docs/guides/getting-started/local-development#database-migrations
+
+### Deploying Batch Jobs
+To test Dockerfile setup locally:
+```shell
+docker build --no-cache -t google-workspace-marketplace-scraper -f batch_jobs/Dockerfile .
+# Will likely fail as I was lazy to setup DB config right for `localhost` vs `host.docker.internal`
+docker run --env-file .env -p 4000:4000  google-workspace-marketplace-scraper
+```
+
+To deploy:
+```shell
+flyctl deploy
+```
+
+
+### Update Fly.io
+If you gonna add secrets, or want to use a different database do sth like this:
+```shell
+flyctl secrets set "POSTGRES_DATABASE_URL=postgres://postgres.ngtdkctpkhzyqvkzshxk:<your-password>@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
+```
+
+
 ### Migrations: Create New Table
+Most commands from https://supabase.com/docs/guides/getting-started/local-development#database-migrations
+
 There are a few ways, the best feels like:
 * Create a new table in Supabase UI: http://localhost:54323/project/default/editor
-Get the SQL table definition of it from the UI
+* Get the SQL table definition of it from the UI
 * MAKE SURE it has RLS enabled, otherwise the new table has public access through PostREST (yeah :/).
   * Easiest with `ALTER TABLE your_table_name ENABLE ROW LEVEL SECURITY;` (alternatively with their UI)
   * Note that if the RLS policy is empty, then backend can still query it either via Service KEY or directly DB password.

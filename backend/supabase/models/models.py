@@ -1,9 +1,6 @@
 from peewee import *
 from playhouse.postgres_ext import *
-
-database = PostgresqlDatabase(
-    "postgres", **{"host": "localhost", "port": 54322, "user": "postgres"}
-)
+from supawee.client import database_proxy
 
 
 class UnknownField(object):
@@ -13,7 +10,7 @@ class UnknownField(object):
 
 class BaseModel(Model):
     class Meta:
-        database = database
+        database = database_proxy
 
 
 class BaseGoogleWorkspace(BaseModel):

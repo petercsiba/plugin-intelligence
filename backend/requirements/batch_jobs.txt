@@ -3,3 +3,4 @@ beautifulsoup4
 pydantic
 python-dotenv
 requests
+git+https://github.com/petercsiba/supawee
