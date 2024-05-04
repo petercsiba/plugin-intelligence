@@ -1,0 +1,22 @@
+app = 'google-workspace-marketplace-scraper'
+primary_region = 'sjc'
+
+[build]
+  dockerfile = 'batch_jobs/Dockerfile'  # Ensure this path points to your Dockerfile
+
+[env]
+  ENV = 'prod'
+  PORT = '8080'
+
+[services]
+  restart_policy = "no"
+
+# WARNING: Service must expose at least one port. Add a [[services.ports]] section to fly.toml;
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
