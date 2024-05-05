@@ -1,4 +1,4 @@
-from supabase.models.models import BaseGoogleWorkspace
+from supabase.models.models import BaseChromeExtension, BaseGoogleWorkspace
 
 
 class GoogleAddOn(BaseGoogleWorkspace):
@@ -36,3 +36,8 @@ class GoogleAddOn(BaseGoogleWorkspace):
         # print(f'Permissions: {", ".join(self.permissions)}')
         reviews_str = "\n".join([str(r) for r in self.reviews])
         print(f"Most Relevant Reviews: {reviews_str}")
+
+
+class ChromeExtension(BaseChromeExtension):
+    class Meta:
+        db_table = "chrome_extension"

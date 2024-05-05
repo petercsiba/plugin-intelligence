@@ -1,5 +1,7 @@
 from peewee import *
 from playhouse.postgres_ext import *
+
+# NOTE: this file is fully generated, if you change something, it will go away
 from supawee.client import database_proxy
 
 
@@ -11,6 +13,34 @@ class UnknownField(object):
 class BaseModel(Model):
     class Meta:
         database = database_proxy
+
+
+class BaseChromeExtension(BaseModel):
+    categories = TextField(null=True)
+    created_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
+    description = TextField(null=True)
+    developer_email = TextField(null=True)
+    developer_link = TextField(null=True)
+    developer_name = TextField(null=True)
+    google_id = TextField()
+    id = BigAutoField()
+    is_featured = BooleanField(null=True)
+    landing_page_url = TextField(null=True)
+    link = TextField()
+    listing_updated = DateField(null=True)
+    name = TextField()
+    overview = TextField(null=True)
+    p_date = DateField()
+    permissions = TextField(null=True)
+    rating = TextField(null=True)
+    rating_count = BigIntegerField(null=True)
+    released_version = TextField(null=True)
+    user_count = BigIntegerField(null=True)
+
+    class Meta:
+        schema = "public"
+        table_name = "chrome_extension"
+        indexes = ((("google_id", "p_date"), True),)
 
 
 class BaseGoogleWorkspace(BaseModel):

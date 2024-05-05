@@ -1,20 +1,25 @@
-app = 'google-workspace-marketplace-scraper'
+# fly.toml app configuration file generated for extension-scraper-daily on 2024-05-04T21:31:38-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'extension-scraper-daily'
 primary_region = 'sjc'
 
 [build]
-  dockerfile = 'batch_jobs/Dockerfile'  # Ensure this path points to your Dockerfile
+  dockerfile = 'batch_jobs/Dockerfile'
 
 [env]
   ENV = 'prod'
   PORT = '8080'
 
-[services]
-  restart_policy = "no"
+[[services]]
+  protocol = ''
+  internal_port = 0
 
-# WARNING: Service must expose at least one port. Add a [[services.ports]] section to fly.toml;
   [[services.ports]]
-    handlers = ["http"]
     port = 80
+    handlers = ['http']
 
 [[vm]]
   memory = '1gb'

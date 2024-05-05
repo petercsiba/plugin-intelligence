@@ -32,4 +32,4 @@ COPY supabase/models /app/backend/supabase/models/
 # * classic environmental variables (e.g. through fly.io secrets)
 
 # Set the default command to execute
-CMD ["python", "-m", "batch_jobs.google_workspace"]
+CMD ["python", "-m", "batch_jobs.daily"]
