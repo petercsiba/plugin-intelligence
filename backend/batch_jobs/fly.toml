@@ -7,7 +7,7 @@ app = 'extension-scraper-daily'
 primary_region = 'sjc'
 
 [build]
-  dockerfile = 'batch_jobs/Dockerfile'
+  dockerfile = 'Dockerfile'
 
 [env]
   ENV = 'prod'

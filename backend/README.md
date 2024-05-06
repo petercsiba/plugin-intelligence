@@ -67,13 +67,19 @@ docker build --no-cache -t google-workspace-marketplace-scraper -f batch_jobs/Do
 docker run --env-file .env -p 4000:4000  google-workspace-marketplace-scraper
 ```
 
-To deploy:
+To deploy daily scraper:
 ```shell
-flyctl deploy
+flyctl deploy --build_only --config batch_jobs/fly.toml --dockerfile batch_jobs/Dockerfile
+```
+
+To configure daily job:
+```shell
+# in /backend
+fly machine run . --config batch_jobs/fly.toml --dockerfile batch_jobs/Dockerfile --schedule daily -a extension-scraper-daily
 ```
 
 
-### Update Fly.io
+### Update Secrets Fly.io
 If you gonna add secrets, or want to use a different database do sth like this:
 ```shell
 flyctl secrets set "POSTGRES_DATABASE_URL=postgres://postgres.ngtdkctpkhzyqvkzshxk:<your-password>@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
