@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/
 
 # Install Python dependencies
-COPY requirements/batch_jobs.txt /app/backend/requirements.txt
+COPY requirements/api.txt /app/backend/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy only the necessary Python files and configurations
@@ -22,8 +22,7 @@ COPY __init__.py /app/backend
 COPY config.py /app/backend
 COPY pyproject.toml /app/backend
 COPY setup.cfg /app/backend
-# COPY backend/api backend/api
-COPY batch_jobs /app/backend/batch_jobs
+COPY api /app/backend/api
 # We omit supabase/config.toml, supabase/seed.sql and migrations to be sure
 COPY supabase/__init__.py /app/backend/supabase/
 COPY supabase/models /app/backend/supabase/models/
@@ -32,4 +31,6 @@ COPY supabase/models /app/backend/supabase/models/
 # * .env file for local
 # * classic environmental variables (e.g. through fly.io secrets)
 
-CMD ["python", "-m", "batch_jobs.daily"]
+# NOTE: For larger apps gunicorn is suggested (we used that at my previous company)
+# TODO: Remove --log-level debug
+CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "debug"]

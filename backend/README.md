@@ -17,7 +17,7 @@ Organized into two main parts:
 # in the backend directory
 pyenv virtualenv 3.12.2 plugin-intelligence
 pyenv activate plugin-intelligence
-pip install -r requirements/local.txt -r requirements/batch_jobs.txt
+pip install -r requirements/api.txt -r requirements/local.txt -r requirements/batch_jobs.txt
 
 # for IDE like intelliJ, you would need to setup the VirtualEnv
 echo "$VIRTUAL_ENV/python"
@@ -60,16 +60,14 @@ You might want to default to always do `-a` for `git commit`.
 
 
 ### Deploying Batch Jobs
-To test Dockerfile setup locally:
+To deploy API Server:
 ```shell
-docker build --no-cache -t google-workspace-marketplace-scraper -f batch_jobs/Dockerfile .
-# Will likely fail as I was lazy to setup DB config right for `localhost` vs `host.docker.internal`
-docker run --env-file .env -p 4000:4000  google-workspace-marketplace-scraper
+fly deploy --config api/fly.toml
 ```
 
 To deploy daily scraper:
 ```shell
-flyctl deploy --build_only --config batch_jobs/fly.toml --dockerfile batch_jobs/Dockerfile
+fly deploy --build_only --config batch_jobs/fly.toml --dockerfile batch_jobs/Dockerfile
 ```
 
 To configure daily job:
@@ -77,14 +75,6 @@ To configure daily job:
 # in /backend
 fly machine run . --config batch_jobs/fly.toml --dockerfile batch_jobs/Dockerfile --schedule daily -a extension-scraper-daily
 ```
-
-
-### Update Secrets Fly.io
-If you gonna add secrets, or want to use a different database do sth like this:
-```shell
-flyctl secrets set "POSTGRES_DATABASE_URL=postgres://postgres.ngtdkctpkhzyqvkzshxk:<your-password>@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
-```
-
 
 ### Migrations: Create New Table
 Most commands from https://supabase.com/docs/guides/getting-started/local-development#database-migrations
@@ -115,4 +105,17 @@ export PGPASSWORD=postgres; pg_dump -h localhost -p 54322 -U postgres -d postgre
 
 # Then push migrations to be applied in prod (the Peewee models would mostly work^TM)
 supabase db push
+```
+
+### To test Dockerfile setup locally
+```shell
+docker build --no-cache -t extension-scraper-daily -f batch_jobs/Dockerfile .
+# Will likely fail as I was lazy to setup DB config right for `localhost` vs `host.docker.internal`
+docker run --env-file .env -p 4000:4000  extension-scraper-daily
+```
+
+### Update Secrets Fly.io
+If you gonna add secrets, or want to use a different database do sth like this:
+```shell
+fly secrets set "POSTGRES_DATABASE_URL=postgres://postgres.ngtdkctpkhzyqvkzshxk:<your-password>@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
 ```
