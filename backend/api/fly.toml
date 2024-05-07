@@ -1,0 +1,49 @@
+# fly.toml app configuration file generated for plugin-intelligence-api on 2024-05-06T06:22:11-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'plugin-intelligence-api-v2'
+primary_region = 'sjc'
+
+[build]
+  # builder = 'paketobuildpacks/builder:base'
+  dockerfile = "Dockerfile"
+
+[deploy]
+  strategy = "rolling"  # default, just to be explicit
+  max_unavailable = 1
+
+[env]
+  PORT = '8080'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  # `min_machines_running`; only used when auto_stop_machines = true
+  min_machines_running = 1
+  # `processes` is optional;  Fly.io will use the default process defined in the Dockerfile via the CMD
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/"
+
+# Unsure if needed, but this guy has it: https://github.com/rednafi/fly-fastapi/blob/main/fly.toml
+[mounts]
+source="fly_fastapi_data"
+destination="/data"
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
