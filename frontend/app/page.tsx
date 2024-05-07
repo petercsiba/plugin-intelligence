@@ -16,9 +16,19 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
+interface Extension {
+  id: number;
+  name: string;
+  description: string;
+  rating: number;
+  rating_count: number;
+  user_count: number;
+  link: string;
+}
+
 export default function HomePage() {
   const [loading, setLoading] = useState(true);
-  const [extensions, setExtensions] = useState([]);
+  const [extensions, setExtensions] = useState<Extension[]>([]);
 
   useEffect(() => {
     async function fetchExtensions() {
@@ -49,6 +59,25 @@ export default function HomePage() {
           }}
         >
           <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+  if (extensions.length === 0) {
+    return (
+      <Container maxWidth="lg">
+        <Box
+          sx={{
+            my: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Typography variant="h5" color="textSecondary">
+            No extensions found.
+          </Typography>
         </Box>
       </Container>
     );
