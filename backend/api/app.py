@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from peewee import fn
 from pydantic import BaseModel
 from supawee.client import (
@@ -8,10 +9,32 @@ from supawee.client import (
     disconnect_from_postgres_as_i_promised,
 )
 
-from config import POSTGRES_DATABASE_URL
+from config import ENV, ENV_LOCAL, POSTGRES_DATABASE_URL
 from supabase.models.data import ChromeExtension
 
 app = FastAPI()
+
+
+if ENV == ENV_LOCAL:
+    print(
+        "INFO: Adding CORS Middleware for LOCAL Environment (DO NOT DO IN PRODUCTION)"
+    )
+    # Allow all origins for development purposes
+    origins = [
+        "http://localhost:3000",  # Adjust this if needed
+        "http://localhost:8080",  # Your server's port
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:8080",
+    ]
+
+    # Apply CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,  # or use ["*"] to allow all origins
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 @app.on_event("startup")

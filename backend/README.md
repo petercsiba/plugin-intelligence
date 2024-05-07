@@ -58,6 +58,10 @@ BEWARE: Sometimes `black` and `isort` disagree. Then:
 * If it passes, run `git status`. Likely the problem files aren't stage for commit (or have unstaged changes).
 You might want to default to always do `-a` for `git commit`.
 
+### Running Locally
+```shell
+uvicorn api.app:app --reload --port 8080
+```
 
 ### Deploying Batch Jobs
 To deploy API Server:
