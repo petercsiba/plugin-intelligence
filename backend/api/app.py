@@ -24,6 +24,11 @@ def shutdown():
     disconnect_from_postgres_as_i_promised()
 
 
+@app.get("/")
+def read_root():
+    return {"status": "ok", "version": "1.0.0"}
+
+
 class ChromeExtensionResponse(BaseModel):
     id: int
     name: str
