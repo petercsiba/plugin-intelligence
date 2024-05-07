@@ -9,12 +9,13 @@ from supawee.client import (
     disconnect_from_postgres_as_i_promised,
 )
 
-from config import ENV, ENV_LOCAL, POSTGRES_DATABASE_URL
+from config import ENV, ENV_LOCAL, ENV_PROD, POSTGRES_DATABASE_URL
 from supabase.models.data import ChromeExtension
 
 app = FastAPI()
 
 
+origins = []
 if ENV == ENV_LOCAL:
     print(
         "INFO: Adding CORS Middleware for LOCAL Environment (DO NOT DO IN PRODUCTION)"
@@ -26,15 +27,20 @@ if ENV == ENV_LOCAL:
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8080",
     ]
-
-    # Apply CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,  # or use ["*"] to allow all origins
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+if ENV == ENV_PROD:
+    # List of trusted domains in production
+    origins = [
+        "https://plugin-intelligence.com",
+        "https://www.plugin-intelligence.com",
+    ]
+# Apply CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # or use ["*"] to allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
