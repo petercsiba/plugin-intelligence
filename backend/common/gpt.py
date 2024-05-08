@@ -1,7 +1,7 @@
 from gpt_form_filler.openai_client import CacheStoreBase, PromptCacheEntry
 from peewee import InterfaceError
 
-from supabase.models.models import BasePromptLog
+from supabase.models.base import BasePromptLog
 
 
 class InDatabaseCacheStorage(CacheStoreBase):

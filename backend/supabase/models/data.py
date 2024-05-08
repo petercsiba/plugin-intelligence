@@ -1,4 +1,4 @@
-from supabase.models.models import BaseChromeExtension, BaseGoogleWorkspace
+from supabase.models.base import BaseChromeExtension, BaseGoogleWorkspace
 
 
 class GoogleAddOn(BaseGoogleWorkspace):

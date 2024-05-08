@@ -45,11 +45,26 @@ class BaseChromeExtension(BaseDatabaseModel):
         indexes = ((("google_id", "p_date"), True),)
 
 
+class BaseChromeExtensionMetadata(BaseDatabaseModel):
+    created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
+    elevator_pitch = TextField(null=True)
+    google_id = TextField(unique=True)
+    id = BigAutoField()
+    main_integrations = TextField(null=True)
+    overview_summary = TextField(null=True)
+    pricing_tiers = TextField(null=True)
+    search_terms = TextField(null=True)
+    tags = TextField(null=True)
+    updated_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
+
+    class Meta:
+        schema = "public"
+        table_name = "chrome_extension_metadata"
+
+
 class BaseGoogleWorkspace(BaseDatabaseModel):
-    backlink_count = BigIntegerField(null=True)
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
     description = TextField(null=True)
-    developer_backlink_count = BigIntegerField(null=True)
     developer_link = TextField(null=True)
     developer_name = TextField(null=True)
     google_id = TextField()
@@ -58,14 +73,11 @@ class BaseGoogleWorkspace(BaseDatabaseModel):
     listing_updated = DateField(null=True)
     name = TextField()
     overview = TextField(null=True)
-    overview_summary = TextField(null=True)
     p_date = DateField()
     permissions = TextField(null=True)
     pricing = TextField(null=True)
-    pricing_tiers_derived = TextField(null=True)
     rating = TextField(null=True)
     rating_count = BigIntegerField(null=True)
-    revenue_estimate = TextField(null=True)
     reviews = TextField(null=True)
     user_count = BigIntegerField(null=True)
     with_calendar = BooleanField(null=True)
@@ -83,6 +95,23 @@ class BaseGoogleWorkspace(BaseDatabaseModel):
         schema = "public"
         table_name = "google_workspace"
         indexes = ((("google_id", "p_date"), True),)
+
+
+class BaseGoogleWorkspaceMetadata(BaseDatabaseModel):
+    created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
+    elevator_pitch = TextField(null=True)
+    google_id = TextField(unique=True)
+    id = BigAutoField()
+    main_integrations = TextField(null=True)
+    overview_summary = TextField(null=True)
+    pricing_tiers = TextField(null=True)
+    search_terms = TextField(null=True)
+    tags = TextField(null=True)
+    updated_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
+
+    class Meta:
+        schema = "public"
+        table_name = "google_workspace_metadata"
 
 
 class BasePromptLog(BaseDatabaseModel):

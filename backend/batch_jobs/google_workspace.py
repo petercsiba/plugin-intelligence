@@ -20,7 +20,7 @@ from batch_jobs.common import (
     parse_shortened_int_k_m,
 )
 from batch_jobs.search_terms import GOOGLE_WORKSPACE_SEARCH_TERMS
-from config import POSTGRES_DATABASE_URL
+from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import GoogleAddOn
 
 # TODO(P0, completeness): Figure out a way to crawl the entire site,

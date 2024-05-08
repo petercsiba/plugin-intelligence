@@ -1,7 +1,7 @@
 # Putting it top-level, as pytest will search parent directories for `conftest.py`
 
 
-from config import ENV, ENV_LOCAL, ENV_TEST
+from common.config import ENV, ENV_LOCAL, ENV_TEST
 
 
 def pytest_sessionstart(session):

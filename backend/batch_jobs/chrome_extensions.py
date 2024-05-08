@@ -18,7 +18,7 @@ from batch_jobs.common import (
     parse_shortened_int_k_m,
 )
 from batch_jobs.search_terms import CHROME_EXTENSION_SEARCH_TERMS
-from config import POSTGRES_DATABASE_URL
+from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import ChromeExtension
 
 SEARCH_URL = "https://chromewebstore.google.com/search/"

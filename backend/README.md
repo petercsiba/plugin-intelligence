@@ -100,7 +100,7 @@ supabase migration new your_migration_name
 # and copy paste the SQL migration to definition to the generated file
 
 # generate new python models
-supawee supabase/models/models.py
+supawee supabase/models/base.py
 
 # apply migrations - weird name i know, this takes quite long :/
 # supabase db reset # OG way

@@ -9,7 +9,7 @@ from supawee.client import (
     disconnect_from_postgres_as_i_promised,
 )
 
-from config import ENV, ENV_LOCAL, ENV_PROD, POSTGRES_DATABASE_URL
+from common.config import ENV, ENV_LOCAL, ENV_PROD, POSTGRES_DATABASE_URL
 from supabase.models.data import ChromeExtension
 
 app = FastAPI()
