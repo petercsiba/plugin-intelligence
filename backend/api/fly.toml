@@ -15,6 +15,7 @@ primary_region = 'sjc'
   max_unavailable = 1
 
 [env]
+  ENV = 'prod'  # ENV_PROD
   PORT = '8080'
 
 [http_service]
