@@ -1,14 +1,13 @@
 # TODO Try competitor backlinks https://dataforseo.com/help-center/find-competitors-by-backlinks
 
-from urllib.parse import urlunparse, urlparse
-
-import requests
 import json
 import os
+from typing import Any, Dict, List, Optional, Union
+from urllib.parse import urlparse, urlunparse
 
-from pydantic import BaseModel
-from typing import Any, Dict, Optional, List, Union
+import requests
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 load_dotenv()
 TOKEN = os.environ.get("DATAFORSEO_API_TOKEN")  # base64 encoded "login:password"
@@ -83,7 +82,14 @@ def ensure_slash_after_tld(url: str) -> str:
     # Reconstruct the URL with the updated path
     # TODO: consider removing params
     cleaned_url = urlunparse(
-        (parsed_url.scheme, parsed_url.netloc, path, parsed_url.params, parsed_url.query, parsed_url.fragment)
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            path,
+            parsed_url.params,
+            parsed_url.query,
+            parsed_url.fragment,
+        )
     )
 
     return str(cleaned_url)

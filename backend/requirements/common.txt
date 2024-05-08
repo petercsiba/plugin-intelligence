@@ -1,0 +1,4 @@
+git+https://github.com/petercsiba/gpt-form-filler
+pydantic
+python-dotenv
+git+https://github.com/petercsiba/supawee

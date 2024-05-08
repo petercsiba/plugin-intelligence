@@ -2,6 +2,8 @@ from peewee import *
 from playhouse.postgres_ext import *
 
 # NOTE: this file is fully generated, if you change something, it will go away
+# database_proxy is an abstraction around PostgresqlDatabase so we can defer initialization after model
+# declaration (i.e. the BaseDatabaseModels don't need to import that heavy object).
 from supawee.client import database_proxy
 
 
@@ -10,12 +12,12 @@ class UnknownField(object):
         pass
 
 
-class BaseModel(Model):
+class BaseDatabaseModel(Model):
     class Meta:
         database = database_proxy
 
 
-class BaseChromeExtension(BaseModel):
+class BaseChromeExtension(BaseDatabaseModel):
     categories = TextField(null=True)
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
     description = TextField(null=True)
@@ -43,7 +45,7 @@ class BaseChromeExtension(BaseModel):
         indexes = ((("google_id", "p_date"), True),)
 
 
-class BaseGoogleWorkspace(BaseModel):
+class BaseGoogleWorkspace(BaseDatabaseModel):
     backlink_count = BigIntegerField(null=True)
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
     description = TextField(null=True)
@@ -83,7 +85,24 @@ class BaseGoogleWorkspace(BaseModel):
         indexes = ((("google_id", "p_date"), True),)
 
 
-class BaseUsers(BaseModel):
+class BasePromptLog(BaseDatabaseModel):
+    completion_tokens = BigIntegerField(constraints=[SQL("DEFAULT '0'::bigint")])
+    created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
+    id = BigAutoField()
+    model = TextField()
+    prompt = TextField()
+    prompt_hash = TextField()
+    prompt_tokens = BigIntegerField(constraints=[SQL("DEFAULT '0'::bigint")])
+    request_time_ms = BigIntegerField(constraints=[SQL("DEFAULT '0'::bigint")])
+    result = TextField()
+
+    class Meta:
+        schema = "public"
+        table_name = "prompt_log"
+        indexes = ((("prompt_hash", "model"), True),)
+
+
+class BaseUsers(BaseDatabaseModel):
     aud = CharField(null=True)
     banned_until = DateTimeField(null=True)
     confirmation_sent_at = DateTimeField(null=True)
@@ -102,6 +121,7 @@ class BaseUsers(BaseModel):
     id = UUIDField(null=True)
     instance_id = UUIDField(null=True)
     invited_at = DateTimeField(null=True)
+    is_anonymous = BooleanField(null=True)
     is_sso_user = BooleanField(null=True)
     is_super_admin = BooleanField(null=True)
     last_sign_in_at = DateTimeField(null=True)

@@ -1,0 +1,28 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-yaml
+    -   id: check-added-large-files
+
+-   repo: local
+    hooks:
+    -   id: lint
+        name: Run Black Isort Mypy Flake8
+        entry: "cd backend && make lint"
+        language: system
+        types: [python]
+
+-   repo: https://github.com/awslabs/git-secrets
+    # rev: 80230afa8c8bcd6b4aefebec422f8a0755e0e4b8
+    # rev: 1.3.0
+    rev: 5357e18bc27b42a827b6780564ea873a72ca1f01
+    hooks:
+    -   id: git-secrets
+        entry: git-secrets --scan
+        files: '.*'
+        exclude: '^\..*/'

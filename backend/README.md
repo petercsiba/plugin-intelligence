@@ -17,7 +17,7 @@ Organized into two main parts:
 # in the backend directory
 pyenv virtualenv 3.12.2 plugin-intelligence
 pyenv activate plugin-intelligence
-pip install -r requirements/api.txt -r requirements/local.txt -r requirements/batch_jobs.txt
+make requirements
 
 # for IDE like intelliJ, you would need to setup the VirtualEnv
 echo "$VIRTUAL_ENV/python"
@@ -28,7 +28,7 @@ echo "$VIRTUAL_ENV/python"
 ### Setup Git
 ```shell
 # setup pre-commit checks
-pre-commit install
+pre-commit install --config .pre-commit-config.yaml
 pre-commit run --all-files  # check if works
 ```
 
@@ -52,7 +52,11 @@ supabase start
 ## Development Workflow
 
 ### Committing Changes
-We use `pre-commit` to run flake8, isort, black.
+We use `pre-commit` to run flake8, isort, black. Easiest to see results:
+```shell
+make lint-check  # optional for read-only mode
+make lint  # actually modifies files
+```
 BEWARE: Sometimes `black` and `isort` disagree. Then:
 * Run `pre-commit run --all-files` - this runs it clean without stash / unstash.
 * If it passes, run `git status`. Likely the problem files aren't stage for commit (or have unstaged changes).

@@ -14,7 +14,8 @@ RUN apt-get update && apt-get install -y \
 
 # Install Python dependencies
 COPY requirements/api.txt /app/backend/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements/common.txt /app/backend/common.txt
+RUN pip install --no-cache-dir -r common.txt -r requirements.txt
 
 # Copy only the necessary Python files and configurations
 # TODO(P2, devx): rather use .dockerignore
