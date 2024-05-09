@@ -184,7 +184,7 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get("YES_I_AM_CONNECTING_T
 
 
 def main():
-    # TODO(P1, cost): This is a very expensive operation. We should consider running this in batches (50% off).
+    # TODO(P1, cost): This is a very expensive operation. We should consider running this in Batches (50% off).
     #   https://platform.openai.com/docs/guides/batch/model-availability
     #   NOTE that batches (of up to 50,000 requests) are only available for ChatCompletion API, not for Assistant API
     # Yeah, also considering that people complain that Assistants API pricing is not transparent,
@@ -216,6 +216,9 @@ def main():
                 logo_link=scraped_data.logo_link,
                 lower_bound=lower_bound,
                 upper_bound=upper_bound,
+                user_count=scraped_data.user_count,
+                rating=scraped_data.rating,
+                rating_count=scraped_data.rating_count,
             ).execute()
 
     print(openai_client.sum_up_prompt_stats().pretty_print())

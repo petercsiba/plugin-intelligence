@@ -79,8 +79,8 @@ class TopPluginResponse(BaseModel):
     # Derived stuff
     revenue_lower_bound: Optional[int] = None
     revenue_upper_bound: Optional[int] = None
-    pricing_tiers: Optional[str] = None
-    elevator_pitch: Optional[str] = None
+    # pricing_tiers: Optional[str] = None
+    # elevator_pitch: Optional[str] = None
 
 
 @app.get("/top-plugins/", response_model=List[TopPluginResponse])
@@ -96,21 +96,21 @@ def get_top_plugins(limit: int = 10):
 
     top_plugins = []
     for plugin in query:
-        # Initialize base data with optional fields set to `None`
-        pricing_tiers = None
-        elevator_pitch = None
+        # # Initialize base data with optional fields set to `None`
+        # pricing_tiers = None
+        # elevator_pitch = None
 
         # Retrieve additional metadata if the plugin is for Google Workspace
-        if plugin.plugin_type == PluginType.GOOGLE_WORKSPACE:
-            try:
-                # TODO: We should just move all required fields
-                #   onto the RevenueEstimate object (which is becoming the "plugin" object).
-                metadata = GoogleWorkspaceMetadata.get_by_google_id(plugin.google_id)
-                pricing_tiers = metadata.pricing_tiers
-                elevator_pitch = metadata.elevator_pitch
-            except DoesNotExist:
-                print("WARN: Metadata not found for Google Workspace plugin with ID:", plugin.google_id)
-                pass
+        # if plugin.plugin_type == PluginType.GOOGLE_WORKSPACE:
+        #     try:
+        #         # TODO: We should just move all required fields
+        #         #   onto the RevenueEstimate object (which is becoming the "plugin" object).
+        #         metadata = GoogleWorkspaceMetadata.get_by_google_id(plugin.google_id)
+        #         pricing_tiers = metadata.pricing_tiers
+        #         elevator_pitch = metadata.elevator_pitch
+        #     except DoesNotExist:
+        #         print("WARN: Metadata not found for Google Workspace plugin with ID:", plugin.google_id)
+        #         pass
 
         # Create the TopPluginResponse object directly
         plugin_response = TopPluginResponse(
@@ -119,11 +119,13 @@ def get_top_plugins(limit: int = 10):
             link=plugin.link,
             img_logo_link=plugin.logo_link,
             plugin_type=plugin.plugin_type,
+            user_count=plugin.user_count,
+            rating=plugin.rating,
+            rating_count=plugin.rating_count,
             revenue_lower_bound=plugin.lower_bound,
             revenue_upper_bound=plugin.upper_bound,
-            pricing_tiers=pricing_tiers,
-            elevator_pitch=elevator_pitch,
-            # TODO(P0, ux): Add user_count, rating, rating_count
+            # pricing_tiers=pricing_tiers,
+            # elevator_pitch=elevator_pitch,
         )
 
         top_plugins.append(plugin_response)

@@ -145,8 +145,11 @@ class BaseRevenueEstimates(BaseDatabaseModel):
     lower_bound = BigIntegerField(null=True)
     name = TextField(null=True)
     plugin_type = TextField()
+    rating = TextField(null=True)
+    rating_count = BigIntegerField(null=True)
     thread_id = TextField(null=True)
     upper_bound = BigIntegerField(null=True)
+    user_count = BigIntegerField(null=True)
 
     class Meta:
         schema = "public"
