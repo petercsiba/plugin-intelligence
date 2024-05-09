@@ -197,7 +197,7 @@ def get_top_plugins(limit: int = 50):
         # revenue_estimate = (plugin.lower_bound + plugin.upper_bound) // 2
         revenue_estimate = int(0.9 * plugin.lower_bound + 0.1 * plugin.upper_bound)
 
-        arpu_cents = int((100 * plugin.user_count) // revenue_estimate)
+        arpu_cents = int((100 * revenue_estimate) // plugin.user_count)
         if arpu_cents > 300:
             print("WARNING: ARPU is too high for plugin", plugin.id, arpu_cents, revenue_estimate, plugin.user_count)
             arpu_cents = 300
