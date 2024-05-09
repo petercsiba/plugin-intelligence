@@ -213,6 +213,7 @@ def main():
                 thread_id=thread_id,
                 name=scraped_data.name,
                 link=scraped_data.link,
+                logo_link=scraped_data.logo_link,
                 lower_bound=lower_bound,
                 upper_bound=upper_bound,
             ).execute()

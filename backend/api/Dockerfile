@@ -20,10 +20,10 @@ RUN pip install --no-cache-dir -r common.txt -r requirements.txt
 # Copy only the necessary Python files and configurations
 # TODO(P2, devx): rather use .dockerignore
 COPY __init__.py /app/backend
-COPY config.py /app/backend
 COPY pyproject.toml /app/backend
 COPY setup.cfg /app/backend
 COPY api /app/backend/api
+COPY common /app/backend/common
 # We omit supabase/config.toml, supabase/seed.sql and migrations to be sure
 COPY supabase/__init__.py /app/backend/supabase/
 COPY supabase/models /app/backend/supabase/models/

@@ -192,6 +192,12 @@ def process_add_on_page_response(add_on: GoogleAddOn, add_on_html: str) -> None:
     add_on.fill_in_works_with(get_works_with_list(soup=soup))
     # TODO: gpt to summarize - probably in another script
     add_on.overview = find_tag_and_get_text(soup, "pre", "nGA4ed")
+
+    img_logo_tag = soup.find("img", class_="TS9dEf")
+    add_on.logo_link = img_logo_tag.get("src") if img_logo_tag else None
+    featured_img_tag = soup.find("img", class_="ec1OGc")
+    add_on.featured_img_link = featured_img_tag.get("src") if featured_img_tag else None
+
     add_on.developer_link = get_developer_link(soup=soup)
     add_on.permissions = parse_permissions(soup=soup)
     add_on.reviews = parse_reviews(soup=soup)

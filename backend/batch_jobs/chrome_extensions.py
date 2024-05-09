@@ -187,6 +187,11 @@ def process_extension_page_response(
     chrome_extension.landing_page_url = find_tag_and_get_text(soup, "a", "cJI8ee")
     chrome_extension.is_featured = soup.find("span", class_="OmOMFc") is not None
 
+    img_logo_tag = soup.find("img", class_="rBxtY")
+    chrome_extension.logo_link = img_logo_tag.get("src") if img_logo_tag else None
+    featured_img_tag = soup.find("img", class_="VuCTZc")
+    chrome_extension.featured_img_link = featured_img_tag.get("src") if featured_img_tag else None
+
     category_and_users_tag = soup.find("div", class_="F9iKBc")
     chrome_extension.categories = [
         category_tag.text for category_tag in category_and_users_tag.find_all("a")

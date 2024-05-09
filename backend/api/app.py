@@ -67,7 +67,8 @@ class TopPluginResponse(BaseModel):
     id: int
     # Identity fields
     name: str
-    link: str
+    link: str  # to the marketplace listing
+    img_logo_link: str
     plugin_type: str
 
     # Objective data
@@ -116,12 +117,12 @@ def get_top_plugins(limit: int = 10):
             id=plugin.id,
             name=plugin.name,
             link=plugin.link,
-            # img_logo_link,
+            img_logo_link=plugin.logo_link,
             plugin_type=plugin.plugin_type,
             revenue_lower_bound=plugin.lower_bound,
             revenue_upper_bound=plugin.upper_bound,
             pricing_tiers=pricing_tiers,
-            elevator_pitch=elevator_pitch
+            elevator_pitch=elevator_pitch,
             # TODO(P0, ux): Add user_count, rating, rating_count
         )
 
@@ -137,6 +138,7 @@ class PluginDetailsResponse(BaseModel):
     # todo: replace with marketplace_id
     google_id: Optional[str] = None
     link: Optional[str] = None
+    img_logo_link: Optional[str] = None
 
     # Objective Data
     user_count: Optional[int] = None
@@ -175,6 +177,7 @@ async def get_plugin_details(plugin_id: int):
             google_id=plugin.google_id,
             id=plugin.id,
             link=plugin.link,
+            img_logo_link=plugin.logo_link,
             lower_bound=plugin.lower_bound,
             upper_bound=plugin.upper_bound,
             name=plugin.name,
