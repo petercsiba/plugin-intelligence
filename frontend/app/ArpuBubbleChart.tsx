@@ -88,6 +88,7 @@ const ArpuBubbleChartComponent = () => {
                       cx={props.cx}
                       cy={props.cy}
                       r={radius}
+                      // @ts-ignore (this somehow just works)
                       fill={colorScale(rating)}
                       stroke="black"
                     />
