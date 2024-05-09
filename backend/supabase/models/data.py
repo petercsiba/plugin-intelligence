@@ -1,4 +1,17 @@
-from supabase.models.base import BaseChromeExtension, BaseGoogleWorkspace
+from typing import Optional
+
+from supabase.models.base import BaseChromeExtension, BaseGoogleWorkspace, BaseGoogleWorkspaceMetadata, \
+    BaseRevenueEstimates
+
+from enum import Enum
+
+
+class PluginType(str, Enum):
+    GOOGLE_WORKSPACE = "Google Workspace"
+    CHROME_EXTENSION = "Chrome Extension"
+
+    def __str__(self):
+        return self.value
 
 
 class GoogleAddOn(BaseGoogleWorkspace):
@@ -41,3 +54,35 @@ class GoogleAddOn(BaseGoogleWorkspace):
 class ChromeExtension(BaseChromeExtension):
     class Meta:
         db_table = "chrome_extension"
+
+
+class GoogleWorkspaceMetadata(BaseGoogleWorkspaceMetadata):
+    class Meta:
+        db_table = "google_workspace_metadata"
+
+    def get_scraped_data(self) -> Optional[BaseGoogleWorkspace]:
+        query = BaseGoogleWorkspace.select().where(
+            BaseGoogleWorkspace.google_id == self.google_id
+        ).order_by(BaseGoogleWorkspace.p_date.desc()).limit(1)
+
+        # Get the first (and only) item from the query result, or None if no results are found
+        result = query.first()
+        return result
+
+    @staticmethod
+    def get_by_google_id(google_id: str) -> Optional["GoogleWorkspaceMetadata"]:
+        return GoogleWorkspaceMetadata.get_or_none(GoogleWorkspaceMetadata.google_id == google_id)
+
+
+class RevenueEstimate(BaseRevenueEstimates):
+    class Meta:
+        table_name = "revenue_estimates"
+
+    @staticmethod
+    def exists(plugin_type: str, google_id: str) -> bool:
+        """Check if a revenue estimate entry with the given plugin_type and google_id exists."""
+        query = BaseRevenueEstimates.select().where(
+            (BaseRevenueEstimates.plugin_type == plugin_type) &
+            (BaseRevenueEstimates.google_id == google_id)
+        )
+        return query.exists()

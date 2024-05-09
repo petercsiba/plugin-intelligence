@@ -131,6 +131,23 @@ class BasePromptLog(BaseDatabaseModel):
         indexes = ((("prompt_hash", "model"), True),)
 
 
+class BaseRevenueEstimates(BaseDatabaseModel):
+    created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
+    full_text_analysis = TextField(null=True)
+    google_id = TextField(null=True)
+    id = BigAutoField()
+    link = TextField(null=True)
+    lower_bound = BigIntegerField(null=True)
+    plugin_type = TextField()
+    thread_id = TextField(null=True)
+    upper_bound = BigIntegerField(null=True)
+
+    class Meta:
+        schema = "public"
+        table_name = "revenue_estimates"
+        indexes = ((("plugin_type", "google_id"), True),)
+
+
 class BaseUsers(BaseDatabaseModel):
     aud = CharField(null=True)
     banned_until = DateTimeField(null=True)

@@ -1,7 +1,10 @@
+import os
 from typing import Optional, Any
 
+from dotenv import load_dotenv
 from gpt_form_filler.form import FieldDefinition, FormDefinition
 from gpt_form_filler.openai_client import OpenAiClient
+from peewee import fn
 from supawee.client import connect_to_postgres
 from gpt_form_filler.openai_client import CHEAPEST_MODEL
 
@@ -17,7 +20,7 @@ plugin_intel_form_fields = [
         field_type="text",
         label="Pricing Tiers",
         description=(
-            "Extract all mentioned pricing tiers as a list of 'tier name: $ monthly cost'"
+            "Extract all mentioned pricing tiers as a list of 'pricing tier and monthly cost'."
         ),
     ),
     FieldDefinition(
@@ -98,25 +101,38 @@ def parse_to_list(input_str: Optional[Any]):
         if '*' in line:
             # Handle lines prefixed with '*'
             items.extend([item.strip() for item in line.split('*') if item.strip()])
-        elif ',' in line:
-            # Handle lines with comma-separated values
+        elif ';' in line:
             items.extend([item.strip() for item in line.split(',') if item.strip()])
+        elif ',' in line:
+            items.extend([item.strip() for item in line.split(';') if item.strip()])
         else:
-            # Handle plain lines without separators
-            cleaned_line = line.strip()
-            if cleaned_line:
-                items.append(cleaned_line)
+            items.append(line)
 
-    return ", ".join(repr(item) for item in items)
+    cleaned_items = []
+    for item in items:
+        cleaned_item = item.strip()
+        if cleaned_item:
+            cleaned_items.append(item)
+
+    return ", ".join(repr(item) for item in cleaned_items)
 
 
-with connect_to_postgres(POSTGRES_DATABASE_URL):
+load_dotenv()
+YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get("YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL")
+
+
+# TODO(P1, cost): This is a very expensive operation. We should consider running this in batches.
+#   https://platform.openai.com/docs/guides/batch/model-availability
+with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+    latest_date = BaseGoogleWorkspace.select(fn.MAX(BaseGoogleWorkspace.p_date)).scalar()
+    print(f"LATEST P_DATE is {latest_date}")
+
     # Loop through each row and apply the OpenAI API
-    for add_on_row in BaseGoogleWorkspace.select().limit(10):
+    for add_on_row in BaseGoogleWorkspace.select().where(BaseGoogleWorkspace.p_date == latest_date).limit(10):
         # Although GPT-4 was able to fill_in_form, GPT-3.5 requires more handholding so we pre-process the info.
         summary_prompt = f"""
-        Summarize this plugin description in 3 to 5 paragraphs,
-        and make sure to persist pricing information.
+        Summarize this plugin description,
+        while making sure you persist pricing information, who is it for and all relevant capabilities.
         My note is:  {add_on_row.overview}
         """
         overview_summary = openai_client.run_prompt(prompt=summary_prompt, model=CHEAPEST_MODEL)
@@ -140,7 +156,7 @@ with connect_to_postgres(POSTGRES_DATABASE_URL):
             google_id=add_on_row.google_id,
         )
 
-        record.pricing_tiers = form_data.get('pricing_tiers')
+        record.pricing_tiers = parse_to_list(form_data.get('pricing_tiers'))
 
         record.main_integrations = parse_to_list(form_data.get('main_integrations'))
         record.overview_summary = overview_summary
