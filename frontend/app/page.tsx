@@ -14,6 +14,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import CardMedia from '@mui/material/CardMedia';
 import {TopPluginResponse} from "./plugin/models";
+import ArpuBubbleChartComponent from "./ArpuBubbleChart";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -98,6 +99,7 @@ export default function HomePage() {
                 </Link>
                  */}
             </Box>
+            <ArpuBubbleChartComponent />
             <Grid container spacing={3}>
                 {plugins.map((plugin) => (
                     <Grid item xs={12} sm={6} md={4} key={plugin.id}>

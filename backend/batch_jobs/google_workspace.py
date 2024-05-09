@@ -92,6 +92,9 @@ def get_add_ons_from_listing_page(url: str) -> List[AddOnDataBasic]:
         add_on_data = AddOnDataBasic(
             name=add_on_name,
             developer_name=find_tag_and_get_text(add_on_element, "span", "y51Cnd"),
+            # TODO(P0, quality): This oftentimes gets the rating_count, instead of the rating stars
+            # https://supabase.com/dashboard/project/ngtdkctpkhzyqvkzshxk/sql/537c8fdc-8f46-4091-907d-3441ddf0c780
+            # TODO: Add a function which forces this to be between 0 and 5 (and allows for None or hack rating_count)
             rating=find_tag_and_get_text(add_on_element, "span", "wUhZA"),
             rating_count=0,  # will be updated
             user_count=user_count,
