@@ -14,7 +14,7 @@ create table
     -- to possibly continue on the conversation (and also see what was the starting instruction)
     thread_id text null,
     -- TODO(P0, ux): we should scrape the plugin logo url and store it here too
-    constraint revenue_estimates_pkey primary key (id)
+    constraint revenue_estimates_pkey primary key (id),
     constraint unique_plugin_google_id unique (plugin_type, google_id)
   ) tablespace pg_default;
 

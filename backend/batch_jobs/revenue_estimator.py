@@ -111,6 +111,7 @@ def concatenate_assistant_messages(messages: List[Message]) -> str:
 
 
 def generate_revenue_estimate(inputs: RevenueEstimatorInputs) -> Tuple[Optional[str], Optional[str]]:
+    # https://platform.openai.com/assistants/asst_1wT0hJmnfnlm8f3kLfHJyVqx
     assistant = client.beta.assistants.retrieve("asst_1wT0hJmnfnlm8f3kLfHJyVqx")
 
     # Create a thread with messages:
@@ -183,15 +184,15 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get("YES_I_AM_CONNECTING_T
 
 
 def main():
-    # TODO(P1, cost): This is a very expensive operation. We should consider running this in batches.
+    # TODO(P1, cost): This is a very expensive operation. We should consider running this in batches (50% off).
     #   https://platform.openai.com/docs/guides/batch/model-availability
     #   NOTE that batches (of up to 50,000 requests) are only available for ChatCompletion API, not for Assistant API
     # Yeah, also considering that people complain that Assistants API pricing is not transparent,
     # might as well use the ChatCompletion interface for this task.
     # AND remove those plugin $TTM datapoints as they don't seem to be used much
     # (we should still disclose them somewhere).
-    with connect_to_postgres(POSTGRES_DATABASE_URL):
-        for metadata in GoogleWorkspaceMetadata.select().limit(15):
+    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+        for metadata in GoogleWorkspaceMetadata.select().limit(10):
             google_id = metadata.google_id
             plugin_type = PluginType.GOOGLE_WORKSPACE
             if RevenueEstimate.exists(plugin_type, google_id):
@@ -203,13 +204,14 @@ def main():
             estimate, thread_id = generate_revenue_estimate(inputs=inputs)
             lower_bound, upper_bound = extract_bounds(estimate)
 
-            # TODO(ux, P2): Might be nice to do a few more prompts to get more comprehensive report.
-
+            # TODO(ux, P2): Might be nice to do a few more prompts to get more comprehensive report,
+            #   especially for a higher ranking plugin.
             RevenueEstimate.insert(
                 plugin_type=plugin_type,
                 google_id=google_id,
                 full_text_analysis=estimate,
                 thread_id=thread_id,
+                name=scraped_data.name,
                 link=scraped_data.link,
                 lower_bound=lower_bound,
                 upper_bound=upper_bound,

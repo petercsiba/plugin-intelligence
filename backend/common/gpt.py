@@ -5,7 +5,7 @@ from supabase.models.base import BasePromptLog
 
 
 class InDatabaseCacheStorage(CacheStoreBase):
-    def get_or_create(self, prompt: str, model: str) -> PromptCacheEntry:
+    def maybe_get(self, prompt: str, model: str) -> PromptCacheEntry:
         pce = PromptCacheEntry(
             prompt=prompt,
             model=model,
@@ -41,9 +41,6 @@ class InDatabaseCacheStorage(CacheStoreBase):
 
         try:
             cached_prompt_log.save()
-            print(
-                f"prompt_log: written to cache {cached_prompt_log.model}:{cached_prompt_log.prompt_hash}"
-            )
-        # TODO(P3, reliability): There is an edge case when two threads run the same prompt
+        # TODO(P3, reliability): There is an edge case when two threads running the same prompt
         except InterfaceError:
             print("DB NOT connected, NOT using gpt prompt caching")

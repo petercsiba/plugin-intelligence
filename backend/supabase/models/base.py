@@ -138,6 +138,7 @@ class BaseRevenueEstimates(BaseDatabaseModel):
     id = BigAutoField()
     link = TextField(null=True)
     lower_bound = BigIntegerField(null=True)
+    name = TextField(null=True)
     plugin_type = TextField()
     thread_id = TextField(null=True)
     upper_bound = BigIntegerField(null=True)

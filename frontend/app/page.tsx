@@ -3,121 +3,136 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
+import NextLink from "next/link";
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Grid from '@mui/material/Grid';
+import CardMedia from '@mui/material/CardMedia';
+import {TopPluginResponse} from "./plugin/models";
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
-interface Extension {
-  id: number;
-  name: string;
-  description: string;
-  rating: number;
-  rating_count: number;
-  user_count: number;
-  link: string;
-}
+const fetchTopPlugins = async (): Promise<TopPluginResponse[]> => {
+    console.log("Attempting to fetch plugins from", `${baseUrl}/top-plugins/`);
+    const response = await fetch(`${baseUrl}/top-plugins/`);
+    return await response.json();
+};
 
 export default function HomePage() {
-  const [loading, setLoading] = useState(true);
-  const [extensions, setExtensions] = useState<Extension[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [plugins, setPlugins] = useState<TopPluginResponse[]>([]);
 
-  useEffect(() => {
-    async function fetchExtensions() {
-      try {
-        /* Should I even use axios? */
-        const response = await axios.get(`${baseURL}/top-extensions/`);
-        setExtensions(response.data);
-      } catch (error) {
-        console.error('Error fetching extensions:', error);
-      } finally {
-        setLoading(false);
-      }
+    useEffect(() => {
+        console.log("useEffect is being triggered");
+        (async () => {
+            try {
+                const fetchedPlugins = await fetchTopPlugins();
+                setPlugins(fetchedPlugins);
+            } catch (error) {
+                console.error('Error fetching plugins:', error);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []);
+
+    if (loading) {
+        return (
+            <Container maxWidth="lg">
+                <Box
+                    sx={{
+                        my: 4,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <CircularProgress />
+                </Box>
+            </Container>
+        );
+    }
+    if (plugins.length === 0) {
+        return (
+            <Container maxWidth="lg">
+                <Box
+                    sx={{
+                        my: 4,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Typography variant="h5" color="textSecondary">
+                        No plugins found.
+                    </Typography>
+                </Box>
+            </Container>
+        );
     }
 
-    fetchExtensions();
-  }, []);
-
-  if (loading) {
     return (
-      <Container maxWidth="lg">
-        <Box
-          sx={{
-            my: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
-  if (extensions.length === 0) {
-    return (
-      <Container maxWidth="lg">
-        <Box
-          sx={{
-            my: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Typography variant="h5" color="textSecondary">
-            No extensions found.
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
+        <Container maxWidth="lg">
+            <Box
+                sx={{
+                    my: 4,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                }}
+            >
+                <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
+                    Plugin Intelligence - Top Google Plugins By Estimated Revenue
+                </Typography>
+                {/*
+                <Link href="/about" color="secondary" underline="hover">
+                    Go to the about page
+                </Link>
+                 */}
+            </Box>
+            <Grid container spacing={3}>
+                {plugins.map((plugin) => (
+                    <Grid item xs={12} sm={6} md={4} key={plugin.id}>
+                        <Card>
+                            <CardContent>
+                                <Typography variant="h5" gutterBottom>
+                                    {plugin.name}
+                                </Typography>
+                                <CardMedia
+                                    component="img"
+                                    height="40"
+                                    image={plugin.img_logo_link}
+                                    alt={plugin.name}
+                                />
+                                { (plugin.revenue_lower_bound && plugin.revenue_upper_bound) ? (
+                                    <Typography variant="body2" color="textSecondary">
+                                        TTM Estimate: ${plugin.revenue_lower_bound} - ${plugin.revenue_upper_bound}
+                                    </Typography>
+                                ) : null}
+                                {plugin.elevator_pitch ? (
+                                <Typography variant="body2" color="textSecondary">
+                                    {plugin.elevator_pitch}
+                                </Typography>
+                                ) : null}
 
-  return (
-    <Container maxWidth="lg">
-      <Box
-        sx={{
-          my: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-          Plugin Intelligence - Trosku Panko Plugin Revenue Estimator
-        </Typography>
-        <Link href="/about" color="secondary" underline="hover">
-          Go to the about page
-        </Link>
-      </Box>
-
-      {extensions.map((extension) => (
-        <Card key={extension.id} sx={{ my: 2 }}>
-          <CardContent>
-            <Typography variant="h5">{extension.name}</Typography>
-            <Typography variant="body2">{extension.description}</Typography>
-            <Typography variant="body1">Rating: {extension.rating}</Typography>
-            <Typography variant="body1">Rating Count: {extension.rating_count}</Typography>
-            <Typography variant="body1">Users: {extension.user_count}</Typography>
-          </CardContent>
-          <CardActions>
-            <Button size="small" href={extension.link} target="_blank" rel="noopener noreferrer">
-              Learn More
-            </Button>
-          </CardActions>
-        </Card>
-      ))}
-    </Container>
-  );
+                                <NextLink href={`/plugin/${plugin.id}`} passHref>
+                                    <Button variant="contained" color="primary">
+                                        View Details
+                                    </Button>
+                                </NextLink>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
+        </Container>
+    );
 }
