@@ -67,7 +67,7 @@ const ArpuBubbleChartComponent = () => {
           <Tooltip cursor={{ strokeDasharray: '3 3' }} />
           <Legend />
           <Scatter
-            name="Bubble Size: Revenue Estimate, Bubble Color: Rating"
+            name="Estimated ARPU to User Count; Size is Revenue Estimate; Color is Rating"
             data={data}
             fill="#8884d8"
             shape={(props: { cx?: any; cy?: any; payload?: BubbleData; }) => {
