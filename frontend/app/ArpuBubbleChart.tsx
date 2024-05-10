@@ -1,13 +1,17 @@
 // pages/BubbleChart.js
 import React, {useEffect, useState } from 'react';
-import { ScatterChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Scatter, ResponsiveContainer } from 'recharts';
+import { ScatterChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Scatter, ResponsiveContainer, Label } from 'recharts';
 import NextLink from 'next/link';
 import Box from '@mui/material/Box';
 import * as d3 from 'd3-scale';
+import {formatCurrency, formatNumber} from "@/utils";
+import { scaleLog } from 'd3-scale';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 // There is somewhat few plugins with below 3.0 rating; and 3.0 is itself quite low so lets just do red there.
 const MIN_RATING = 3.0;
+const TOP_RATING = 5.0;
+const TOP_RATING_COLOR = '#4caf50'; // Green
 
 // Define the shape of a bubble data object
 interface BubbleData {
@@ -15,10 +19,39 @@ interface BubbleData {
   name: string;
 
   user_count: number;
+  user_count_thousands: number;
   rating: number;  // float
   revenue_estimate: number;
   arpu_cents: number;
+  arpu_dollars: number;
 }
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: BubbleData;
+  }>;
+  label?: string;
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+
+    return (
+        <div className="custom-tooltip" style={{backgroundColor: "#fff", padding: "10px", border: "1px solid #ccc"}}>
+            <p><strong>{data.name}</strong></p>
+            <p className="label">{`User Count: ${formatNumber(data.user_count)}`}</p>
+            <p>{`ARPU: ${formatCurrency(data.arpu_dollars)}`}</p>
+            <p>{`Rating: ${data.rating}`}</p>
+            <p>{`Revenue*: ${formatCurrency(data.revenue_estimate)}`}</p>
+        </div>
+    );
+  }
+
+    return null;
+};
+
 
 const ArpuBubbleChartComponent = () => {
     // State to store the fetched data with BubbleData type
@@ -44,10 +77,15 @@ const ArpuBubbleChartComponent = () => {
   // Color scale function using d3-scale
   // TODO(P0, ux): Maybe better is to just
   const colorScale = d3.scaleLinear()
-    .domain([MIN_RATING, 5])
+    .domain([MIN_RATING, 4, 4.8, TOP_RATING])
       // Ignore TypeScript checking for `.range()` as it returns a string array
+      //     Red (#f44336): For the lowest ratings (Material Design Red 500).
+      //     Yellow (#FFEB3B): Midpoint yellow (Material Design Yellow 400).
+      //     Green (#4caf50): For higher ratings (Material Design Green 500).
       // @ts-ignore
-    .range(['red', 'green']);
+    .range(['#f44336', '#FFEB3B', TOP_RATING_COLOR, TOP_RATING_COLOR]);
+
+  const logTicks = [1000, 10000, 100000, 1000000, 10000000, 100000000];
 
   return (
     <Box
@@ -62,10 +100,19 @@ const ArpuBubbleChartComponent = () => {
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <CartesianGrid />
-          <XAxis type="number" dataKey="user_count" name="Users" unit=" users" />
-          <YAxis type="number" dataKey="arpu_cents" name="ARPU" unit="¢" />
-          <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-          <Legend />
+          <XAxis type="number" scale={scaleLog().base(10)} domain={[1000, 100000000]} dataKey="user_count" name="Users" ticks={logTicks} tickFormatter={(value) => formatNumber(value)}>
+            <Label value="Users" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
+          </XAxis>
+          <YAxis type="number" dataKey="arpu_dollars" name="ARPU" tickFormatter={(value) => formatCurrency(value)}>
+              <Label value="ARPU" offset={11} position="insideTopLeft" style={{ color: 'black', fontWeight: 'bold'}} />
+          </YAxis>
+            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: "3 3" }} />
+                <Legend
+        payload={[
+          { value: 'Revenue Estimate (Size)', type: 'circle', color: '#8884d8' },
+          { value: 'Rating (Color)', type: 'circle', color: TOP_RATING_COLOR },
+        ]}
+      />
           <Scatter
             name="Estimated ARPU to User Count; Size is Revenue Estimate; Color is Rating"
             data={data}

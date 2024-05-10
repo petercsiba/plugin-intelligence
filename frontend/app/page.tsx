@@ -15,6 +15,7 @@ import Grid from '@mui/material/Grid';
 import CardMedia from '@mui/material/CardMedia';
 import {TopPluginResponse} from "./plugin/models";
 import ArpuBubbleChartComponent from "./ArpuBubbleChart";
+import {formatCurrency} from "@/utils";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -116,7 +117,7 @@ export default function HomePage() {
                                 />
                                 { (plugin.revenue_lower_bound && plugin.revenue_upper_bound) ? (
                                     <Typography variant="body2" color="textSecondary">
-                                        TTM Estimate: ${plugin.revenue_lower_bound} - ${plugin.revenue_upper_bound}
+                                        TTM Estimate: {formatCurrency(plugin.revenue_lower_bound)} - {formatCurrency(plugin.revenue_upper_bound)}
                                     </Typography>
                                 ) : null}
                                 {plugin.elevator_pitch ? (

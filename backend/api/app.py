@@ -165,13 +165,15 @@ class ChartsMainResponse(BaseModel):
     name: str
     # Math fields
     user_count: int
+    user_count_thousands: int
     rating: float
     revenue_estimate: int
     arpu_cents: int
+    arpu_dollars: float
 
 
 @app.get("/charts/arpu-bubble", response_model=List[ChartsMainResponse])
-def get_top_plugins(limit: int = 50):
+def get_top_plugins(limit: int = 50, max_arpu_cents: int = 200):
     if limit > MAX_LIMIT:
         raise HTTPException(status_code=400, detail=f"Limit exceeds the maximum allowed value of {MAX_LIMIT}")
 
@@ -198,9 +200,9 @@ def get_top_plugins(limit: int = 50):
         revenue_estimate = int(0.9 * plugin.lower_bound + 0.1 * plugin.upper_bound)
 
         arpu_cents = int((100 * revenue_estimate) // plugin.user_count)
-        if arpu_cents > 300:
+        if arpu_cents > max_arpu_cents:
             print("WARNING: ARPU is too high for plugin", plugin.id, arpu_cents, revenue_estimate, plugin.user_count)
-            arpu_cents = 300
+            arpu_cents = max_arpu_cents
 
         plugin_response = ChartsMainResponse(
             # legend stuff
@@ -208,9 +210,11 @@ def get_top_plugins(limit: int = 50):
             name=plugin.name,
             # math stuff
             user_count=plugin.user_count,
+            user_count_thousands=plugin.user_count // 1000,
             rating=float(plugin.rating),
             revenue_estimate=revenue_estimate,
             arpu_cents=arpu_cents,
+            arpu_dollars=arpu_cents / 100.0,
         )
 
         data.append(plugin_response)

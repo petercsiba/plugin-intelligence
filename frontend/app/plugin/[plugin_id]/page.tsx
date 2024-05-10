@@ -13,6 +13,7 @@ import {
 import Box from "@mui/material/Box";
 import {PluginDetailsResponse} from "../models";
 import ExternalLink from "@/components/ExternalLink";
+import {formatCurrency, formatNumber} from "@/utils";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -47,7 +48,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
 
     // Format ranges
     const revenueRange = plugin && plugin.lower_bound && plugin.upper_bound
-        ? `\$${plugin.lower_bound} - \$${plugin.upper_bound}`
+        ? `${formatCurrency(plugin.lower_bound)} - ${formatCurrency(plugin.upper_bound)}`
         : "N/A";
 
     // Convert comma-separated lists
@@ -63,12 +64,12 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                 </Typography>
                 <Box display="flex" alignItems="center" gap={2} mt={2}>
                     <Typography variant="body1">
-                        {plugin.user_count ? `${plugin.user_count.toLocaleString()} Users` : "N/A"}
+                        {plugin.user_count ? `${formatNumber(plugin.user_count)} Users` : "N/A"}
                     </Typography>
                     <Rating
                         name="plugin-rating"
                         value={plugin.rating ? parseFloat(plugin.rating) : 0}
-                        precision={0.5}
+                        precision={0.25}
                         readOnly
                     />
                     <Typography variant="body2">
