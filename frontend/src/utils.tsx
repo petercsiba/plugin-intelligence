@@ -3,7 +3,10 @@
  * @param value - The monetary value to format
  * @returns Formatted string representing the value with the appropriate suffix
  */
-export function formatCurrency(value: number): string {
+export function formatCurrency(value: number | null): string {
+  if (value === null) {
+    return 'N/A';
+  }
   return `$${formatNumberShort(value)}`;
 }
 

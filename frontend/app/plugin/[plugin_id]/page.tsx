@@ -75,7 +75,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                     />
                     <Typography variant="body2">
                         {plugin.rating_count ? `${plugin.rating_count.toLocaleString()} Ratings` : "N/A"}
-                    </Typography>`
+                    </Typography>
                 </Box>
                 <List>
                     <ListItem>

@@ -12,7 +12,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import {TopPluginResponse} from "./plugin/models";
 import ArpuBubbleChartComponent from "./ArpuBubbleChart";
 import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
-import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import {Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -104,9 +104,10 @@ export default function HomePage() {
                         <TableRow>
                             <TableCell>Logo</TableCell>
                             <TableCell>Name</TableCell>
-                            <TableCell>Type</TableCell>
+                            <TableCell>Main Tags</TableCell>
                             <TableCell>Revenue Estimate</TableCell>
                             <TableCell>User Count</TableCell>
+                            <TableCell>Lowest Paid Tier</TableCell>
                             <TableCell>Details</TableCell>
                         </TableRow>
                     </TableHead>
@@ -120,14 +121,27 @@ export default function HomePage() {
                                         ''
                                     )}
                                 </TableCell>
-                                <TableCell>{plugin.name}</TableCell>
-                                <TableCell>{plugin.plugin_type}</TableCell>
+                                <TableCell style={{fontWeight: "bold"}}>{plugin.name}</TableCell>
+                                {/*TODO(format tags), there should be just a general util */}
+                                <TableCell>
+                                    <Box display="flex" alignItems="center" flexWrap="wrap">
+                                        {plugin.main_tags?.map((tag, index, array) => (
+                                            <React.Fragment key={index}>
+                                                <Typography variant="body2">{tag}</Typography>
+                                                {index < array.length - 1 && <Divider orientation="vertical" flexItem style={{ margin: '0 8px' }} />}
+                                            </React.Fragment>
+                                        )) || <Typography variant="body2">Unknown</Typography>}
+                                    </Box>
+
+                                </TableCell>
+                                {/*<TableCell>{plugin.plugin_type}</TableCell>*/}
                                 <TableCell>
                                     {plugin.revenue_lower_bound && plugin.revenue_upper_bound ? (
                                         `${formatCurrency(plugin.revenue_lower_bound)} - ${formatCurrency(plugin.revenue_upper_bound)}`
                                     ) : 'N/A'}
                                 </TableCell>
                                 <TableCell>{formatNumberShort(plugin.user_count)}</TableCell>
+                                <TableCell>{formatCurrency(plugin.lowest_paid_tier)}</TableCell>
                                 <TableCell>
                                     <NextLink href={`/plugin/${plugin.id}`} passHref>
                                         <Button variant="contained" color="primary" fullWidth> {/* Full width on mobile */}

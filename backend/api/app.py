@@ -109,9 +109,29 @@ class TopPluginResponse(BaseModel):
     # Derived stuff
     revenue_lower_bound: Optional[int] = None
     revenue_upper_bound: Optional[int] = None
-    lowest_paid_tier: Optional[str] = None
+    lowest_paid_tier: Optional[float] = None
+    main_tags: Optional[list] = None
     # pricing_tiers: Optional[str] = None
     # elevator_pitch: Optional[str] = None
+
+
+def parse_number_from_string(input_string: Optional[str]):
+    if input_string is None:
+        return None
+
+    # Find all numbers in the string (this regex handles integers and floats)
+    numbers = re.findall(r'[-+]?\d*\.\d+|\d+', input_string)
+
+    if numbers:
+        # Attempt to convert the first number found to a float or integer
+        number = numbers[0]
+        if '.' in number:
+            return float(number)
+        else:
+            return int(number)
+
+    # Return None if no numbers are found
+    return None
 
 
 @app.get("/top-plugins/", response_model=List[TopPluginResponse])
@@ -127,6 +147,10 @@ def get_top_plugins(limit: int = 20):
 
     top_plugins = []
     for plugin in query:
+        metadata = None
+        if plugin.plugin_type == PluginType.GOOGLE_WORKSPACE:
+            metadata = GoogleWorkspaceMetadata.get_by_google_id(plugin.google_id)
+
         plugin_response = TopPluginResponse(
             id=plugin.id,
             name=plugin.name,
@@ -138,8 +162,10 @@ def get_top_plugins(limit: int = 20):
             rating_count=plugin.rating_count,
             revenue_lower_bound=plugin.lower_bound,
             revenue_upper_bound=plugin.upper_bound,
-            # TODO: Lets just merge metdata and revenue estimate tables into the plugin table; will make life easier
-            # lowest_paid_tier=plugin.lowest_paid_tier,
+            # TODO(P0):
+            #  Lets just merge metadata and revenue estimate tables into the plugin table; will make life easier
+            lowest_paid_tier=parse_number_from_string(metadata.lowest_paid_tier),
+            main_tags=parse_fuzzy_list(metadata.tags, max_elements=3),
         )
 
         top_plugins.append(plugin_response)
@@ -227,7 +253,7 @@ class PluginDetailsResponse(BaseModel):
     # Money Stuff
     full_text_analysis_html: Optional[str] = None
     pricing_tiers: Optional[list] = None
-    lowest_paid_tier: Optional[str] = None
+    lowest_paid_tier: Optional[float] = None
     lower_bound: Optional[int] = None
     upper_bound: Optional[int] = None
 
@@ -244,15 +270,23 @@ class PluginDetailsResponse(BaseModel):
     # thread_id: Optional[str]
 
 
-def parse_pricing_tiers(pricing_str: Optional[str]) -> Optional[list]:
-    if pricing_str is None:
+def parse_fuzzy_list(list_str: Optional[str], max_elements: int = None) -> Optional[list]:
+    if list_str is None:
         return None
 
+    list_str = list_str.replace("'", "").replace('"', "")
+
     # Split the string by commas and handle special cases
-    tiers = re.split(r',\s*(?![^[]*\])', pricing_str)
-    # Further refine each tier description
-    structured_tiers = [re.sub(r'[\*]\s*', '', tier.strip()) for tier in tiers]
-    return structured_tiers
+    items = re.split(r',\s*(?![^[]*\])', list_str)
+    # Further refine each item description
+    structured_items = [re.sub(r'[\*]\s*', '', item.strip()) for item in items]
+
+    if max_elements:
+        structured_items = structured_items[:max_elements]
+
+    structured_items = [item.capitalize() for item in structured_items if item]
+
+    return structured_items
 
 
 @app.get("/plugin/{plugin_id}/details", response_model=PluginDetailsResponse)
@@ -282,8 +316,8 @@ async def get_plugin_details(plugin_id: int):
                 response.elevator_pitch = metadata.elevator_pitch
                 response.main_integrations = metadata.main_integrations
                 response.overview_summary = metadata.overview_summary
-                response.pricing_tiers = parse_pricing_tiers(metadata.pricing_tiers)
-                response.lowest_paid_tier = metadata.lowest_paid_tier
+                response.pricing_tiers = parse_fuzzy_list(metadata.pricing_tiers)
+                response.lowest_paid_tier = parse_number_from_string(metadata.lowest_paid_tier)
                 response.search_terms = metadata.search_terms
                 response.tags = metadata.tags
                 response.updated_at = metadata.updated_at
