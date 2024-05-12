@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Optional, Union
 
-from supabase.models.base import BaseChromeExtension, BaseGoogleWorkspace, BaseGoogleWorkspaceMetadata, \
-    BaseRevenueEstimates
+from supabase.models.base import BaseChromeExtension, BaseGoogleWorkspace, BasePlugin, \
+    BasePlugin
 
 from enum import Enum
 
 
-class PluginType(str, Enum):
+class MarketplaceName(str, Enum):
     GOOGLE_WORKSPACE = "Google Workspace"
     CHROME_EXTENSION = "Chrome Extension"
 
@@ -14,7 +14,7 @@ class PluginType(str, Enum):
         return self.value
 
 
-class GoogleAddOn(BaseGoogleWorkspace):
+class GoogleWorkspace(BaseGoogleWorkspace):
     class Meta:
         db_table = "google_workspace"
 
@@ -56,33 +56,40 @@ class ChromeExtension(BaseChromeExtension):
         db_table = "chrome_extension"
 
 
-class GoogleWorkspaceMetadata(BaseGoogleWorkspaceMetadata):
+class Plugin(BasePlugin):
     class Meta:
-        db_table = "google_workspace_metadata"
+        db_table = "plugin"
 
-    def get_scraped_data(self) -> Optional[BaseGoogleWorkspace]:
-        query = BaseGoogleWorkspace.select().where(
-            BaseGoogleWorkspace.google_id == self.google_id
-        ).order_by(BaseGoogleWorkspace.p_date.desc()).limit(1)
+    def get_scraped_data(self) -> Optional[Union[GoogleWorkspace, ChromeExtension]]:
+        if self.marketplace_name == MarketplaceName.GOOGLE_WORKSPACE:
+            query = BaseGoogleWorkspace.select().where(
+                BaseGoogleWorkspace.google_id == self.marketplace_id
+            ).order_by(BaseGoogleWorkspace.p_date.desc()).limit(1)
 
-        # Get the first (and only) item from the query result, or None if no results are found
-        result = query.first()
-        return result
+            # Get the first (and only) item from the query result, or None if no results are found
+            result = query.first()
+            return result
+
+        if self.marketplace_name == MarketplaceName.CHROME_EXTENSION:
+            query = BaseChromeExtension.select().where(
+                BaseChromeExtension.google_id == self.marketplace_id
+            ).order_by(BaseChromeExtension.p_date.desc()).limit(1)
+
+            # Get the first (and only) item from the query result, or None if no results are found
+            result = query.first()
+            return result
+
+        raise ValueError(f"Non-implemented marketplace name: {self.marketplace_name} for get_scraped_data")
 
     @staticmethod
-    def get_by_google_id(google_id: str) -> Optional["GoogleWorkspaceMetadata"]:
-        return GoogleWorkspaceMetadata.get_or_none(GoogleWorkspaceMetadata.google_id == google_id)
-
-
-class RevenueEstimate(BaseRevenueEstimates):
-    class Meta:
-        table_name = "revenue_estimates"
+    def get_by_marketplace_id(marketplace_id: str) -> Optional["Plugin"]:
+        return Plugin.get_or_none(Plugin.marketplace_id == marketplace_id)
 
     @staticmethod
-    def exists(plugin_type: str, google_id: str) -> bool:
+    def exists(marketplace_name: str, marketplace_id: str) -> bool:
         """Check if a revenue estimate entry with the given plugin_type and google_id exists."""
-        query = BaseRevenueEstimates.select().where(
-            (BaseRevenueEstimates.plugin_type == plugin_type) &
-            (BaseRevenueEstimates.google_id == google_id)
+        query = BasePlugin.select().where(
+            (BasePlugin.marketplace_name == marketplace_name) &
+            (BasePlugin.marketplace_id == marketplace_id)
         )
         return query.exists()

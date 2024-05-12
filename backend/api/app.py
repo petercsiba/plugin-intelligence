@@ -1,3 +1,4 @@
+# TODO(p1, devx): Separate out this file into multiple as it's getting too big (e.g. utils, list, details, etc.)
 import re
 import traceback
 from datetime import datetime
@@ -6,7 +7,7 @@ from typing import List, Optional
 import markdown
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from peewee import fn, DoesNotExist
+from peewee import DoesNotExist
 from pydantic import BaseModel
 from supawee.client import (
     connect_to_postgres_i_will_call_disconnect_i_promise,
@@ -15,8 +16,8 @@ from supawee.client import (
 from starlette.responses import JSONResponse
 
 from common.config import ENV, ENV_LOCAL, ENV_PROD, POSTGRES_DATABASE_URL
-from supabase.models.base import BaseRevenueEstimates
-from supabase.models.data import RevenueEstimate, GoogleWorkspaceMetadata, PluginType
+from supabase.models.base import BasePlugin
+from supabase.models.data import Plugin
 
 app = FastAPI()
 MAX_LIMIT = 100
@@ -97,9 +98,9 @@ class TopPluginResponse(BaseModel):
     id: int
     # Identity fields
     name: str
-    link: str  # to the marketplace listing
+    marketplace_name: str
+    marketplace_link: str
     img_logo_link: Optional[str] = None
-    plugin_type: str
 
     # Objective data
     user_count: Optional[int] = None
@@ -111,8 +112,6 @@ class TopPluginResponse(BaseModel):
     revenue_upper_bound: Optional[int] = None
     lowest_paid_tier: Optional[float] = None
     main_tags: Optional[list] = None
-    # pricing_tiers: Optional[str] = None
-    # elevator_pitch: Optional[str] = None
 
 
 def parse_number_from_string(input_string: Optional[str]):
@@ -140,32 +139,26 @@ def get_top_plugins(limit: int = 20):
         raise HTTPException(status_code=400, detail=f"Limit exceeds the maximum allowed value of {MAX_LIMIT}")
 
     # Query the top plugins by upper_bound
-    query = (RevenueEstimate
+    query = (Plugin
              .select()
-             .order_by(RevenueEstimate.upper_bound.desc())
+             .order_by(Plugin.revenue_upper_bound.desc())
              .limit(limit))
 
     top_plugins = []
     for plugin in query:
-        metadata = None
-        if plugin.plugin_type == PluginType.GOOGLE_WORKSPACE:
-            metadata = GoogleWorkspaceMetadata.get_by_google_id(plugin.google_id)
-
         plugin_response = TopPluginResponse(
             id=plugin.id,
             name=plugin.name,
-            link=plugin.link,
+            marketplace_name=plugin.marketplace_name,
+            marketplace_link=plugin.marketplace_link,
             img_logo_link=plugin.logo_link,
-            plugin_type=plugin.plugin_type,
             user_count=plugin.user_count,
             rating=plugin.rating,
             rating_count=plugin.rating_count,
-            revenue_lower_bound=plugin.lower_bound,
-            revenue_upper_bound=plugin.upper_bound,
-            # TODO(P0):
-            #  Lets just merge metadata and revenue estimate tables into the plugin table; will make life easier
-            lowest_paid_tier=parse_number_from_string(metadata.lowest_paid_tier),
-            main_tags=parse_fuzzy_list(metadata.tags, max_elements=3),
+            revenue_lower_bound=plugin.revenue_lower_bound,
+            revenue_upper_bound=plugin.revenue_upper_bound,
+            lowest_paid_tier=plugin.lowest_paid_tier,
+            main_tags=parse_fuzzy_list(plugin.tags, max_elements=3),
         )
 
         top_plugins.append(plugin_response)
@@ -192,26 +185,27 @@ def get_top_plugins(limit: int = 50, max_arpu_cents: int = 200):
         raise HTTPException(status_code=400, detail=f"Limit exceeds the maximum allowed value of {MAX_LIMIT}")
 
     # Query the top plugins by upper_bound
-    query = (RevenueEstimate
+    query = (Plugin
              .select()
             .where(
-                (RevenueEstimate.user_count.is_null(False)) &
-                (RevenueEstimate.rating.is_null(False)) &
-                (RevenueEstimate.lower_bound.is_null(False)) &
-                (RevenueEstimate.upper_bound.is_null(False)) &
-                (RevenueEstimate.user_count > 1000) &
-                (RevenueEstimate.rating_count > 1) &
-                (RevenueEstimate.lower_bound > 0) &
-                (RevenueEstimate.upper_bound > 0)
+                (Plugin.user_count.is_null(False)) &
+                (Plugin.rating.is_null(False)) &
+                (Plugin.revenue_lower_bound.is_null(False)) &
+                (Plugin.revenue_upper_bound.is_null(False)) &
+                (Plugin.user_count > 1000) &
+                (Plugin.rating_count > 1) &
+                (Plugin.revenue_lower_bound > 0) &
+                (Plugin.revenue_upper_bound > 0)
             )
-             .order_by(RevenueEstimate.upper_bound.desc())
+             .order_by(Plugin.revenue_upper_bound.desc())
              .limit(limit))
 
     data = []
     for plugin in query:
         # Sometimes the upper bound is crazy
         # revenue_estimate = (plugin.lower_bound + plugin.upper_bound) // 2
-        revenue_estimate = int(0.9 * plugin.lower_bound + 0.1 * plugin.upper_bound)
+        # TODO: Be better
+        revenue_estimate = int(0.9 * plugin.revenue_lower_bound + 0.1 * plugin.revenue_upper_bound)
 
         arpu_cents = int((100 * revenue_estimate) // plugin.user_count)
         if arpu_cents > max_arpu_cents:
@@ -238,11 +232,10 @@ def get_top_plugins(limit: int = 50, max_arpu_cents: int = 200):
 
 class PluginDetailsResponse(BaseModel):
     id: int
-    plugin_type: str
     name: str
-    # todo: replace with marketplace_id
-    google_id: Optional[str] = None
-    link: Optional[str] = None
+    marketplace_name: str
+    marketplace_id: str
+    marketplace_link: str
     img_logo_link: Optional[str] = None
 
     # Objective Data
@@ -251,11 +244,11 @@ class PluginDetailsResponse(BaseModel):
     rating_count: Optional[int] = None
 
     # Money Stuff
-    full_text_analysis_html: Optional[str] = None
+    revenue_analysis_html: Optional[str] = None
     pricing_tiers: Optional[list] = None
     lowest_paid_tier: Optional[float] = None
-    lower_bound: Optional[int] = None
-    upper_bound: Optional[int] = None
+    revenue_lower_bound: Optional[int] = None
+    revenue_upper_bound: Optional[int] = None
 
     # Metadata
     elevator_pitch: Optional[str] = None
@@ -267,7 +260,7 @@ class PluginDetailsResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
     # internal fields which are not exposed
-    # thread_id: Optional[str]
+    # openai_thread_id: Optional[str]
 
 
 def parse_fuzzy_list(list_str: Optional[str], max_elements: int = None) -> Optional[list]:
@@ -277,9 +270,9 @@ def parse_fuzzy_list(list_str: Optional[str], max_elements: int = None) -> Optio
     list_str = list_str.replace("'", "").replace('"', "")
 
     # Split the string by commas and handle special cases
-    items = re.split(r',\s*(?![^[]*\])', list_str)
+    items = re.split(r',\s*(?![^[]*\])', list_str)  # noqa
     # Further refine each item description
-    structured_items = [re.sub(r'[\*]\s*', '', item.strip()) for item in items]
+    structured_items = [re.sub(r'[\*]\s*', '', item.strip()) for item in items]  # noqa
 
     if max_elements:
         structured_items = structured_items[:max_elements]
@@ -293,41 +286,38 @@ def parse_fuzzy_list(list_str: Optional[str], max_elements: int = None) -> Optio
 async def get_plugin_details(plugin_id: int):
     try:
         # Step 1: Retrieve revenue estimates
-        plugin: BaseRevenueEstimates = BaseRevenueEstimates.get_by_id(plugin_id)
+        plugin: BasePlugin = BasePlugin.get_by_id(plugin_id)
 
         # Step 2: Fill in the common fields from the revenue estimate model
         response = PluginDetailsResponse(
-            created_at=plugin.created_at,
-            full_text_analysis_html=markdown.markdown(plugin.full_text_analysis),
-            google_id=plugin.google_id,
             id=plugin.id,
-            link=plugin.link,
-            img_logo_link=plugin.logo_link,
-            lower_bound=plugin.lower_bound,
-            upper_bound=plugin.upper_bound,
+            created_at=plugin.created_at,
             name=plugin.name,
-            plugin_type=plugin.plugin_type,
+            marketplace_name=plugin.marketplace_name,
+            marketplace_id=plugin.marketplace_id,
+            marketplace_link=plugin.marketplace_link,
+            img_logo_link=plugin.logo_link,
         )
 
-        # Step 3: If plugin type is "Google Workspace," fill in the additional metadata fields
-        if plugin.plugin_type == "Google Workspace":
-            try:
-                metadata = GoogleWorkspaceMetadata.get_by_google_id(plugin.google_id)
-                response.elevator_pitch = metadata.elevator_pitch
-                response.main_integrations = metadata.main_integrations
-                response.overview_summary = metadata.overview_summary
-                response.pricing_tiers = parse_fuzzy_list(metadata.pricing_tiers)
-                response.lowest_paid_tier = parse_number_from_string(metadata.lowest_paid_tier)
-                response.search_terms = metadata.search_terms
-                response.tags = metadata.tags
-                response.updated_at = metadata.updated_at
+        # objective stuff
+        response.user_count = plugin.user_count
+        response.rating = plugin.rating
+        response.rating_count = plugin.rating_count
 
-                scraped_data = metadata.get_scraped_data()
-                response.user_count = scraped_data.user_count
-                response.rating = scraped_data.rating
-                response.rating_count = scraped_data.rating_count
-            except DoesNotExist:
-                print(f"WARN: Metadata (or Scraper data) not found for Google Workspace plugin with ID: {plugin.google_id}")
+        # revenue stuff
+        response.revenue_lower_bound = plugin.revenue_lower_bound,
+        response.revenue_upper_bound = plugin.revenue_upper_bound,
+        # TODO(P1, ux): This is 85% nice but we can do better, do quick-wins in formatting
+        response.revenue_analysis_html = markdown.markdown(plugin.revenue_analysis),
+
+        response.elevator_pitch = plugin.elevator_pitch
+        response.main_integrations = plugin.main_integrations
+        response.overview_summary = plugin.overview_summary
+        response.pricing_tiers = parse_fuzzy_list(plugin.pricing_tiers)
+        response.lowest_paid_tier = plugin.lowest_paid_tier
+        response.search_terms = plugin.search_terms
+        response.tags = plugin.tags
+
         return response
 
     except DoesNotExist:

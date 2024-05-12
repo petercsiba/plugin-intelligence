@@ -48,8 +48,8 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
     }
 
     // Format ranges
-    const revenueRange = plugin && plugin.lower_bound && plugin.upper_bound
-        ? `${formatCurrency(plugin.lower_bound)} - ${formatCurrency(plugin.upper_bound)}`
+    const revenueRange = plugin && plugin.revenue_lower_bound && plugin.revenue_upper_bound
+        ? `${formatCurrency(plugin.revenue_lower_bound)} - ${formatCurrency(plugin.revenue_upper_bound)}`
         : "N/A";
 
     // Convert comma-separated lists
@@ -61,7 +61,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
         <Container maxWidth="md">
             <Paper elevation={3} style={{ padding: "2em", marginTop: "2em" }}>
                 <Typography variant="h4" gutterBottom>
-                    {plugin.name} ({plugin.plugin_type})
+                    {plugin.name} ({plugin.marketplace_name})
                 </Typography>
                 <Box display="flex" alignItems="center" gap={2} mt={2}>
                     <Typography variant="body1">
@@ -81,13 +81,13 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                     <ListItem>
                         <ListItemText
                             primary="Marketplace ID"
-                            secondary={plugin.google_id || "N/A"}
+                            secondary={plugin.marketplace_id || "N/A"}
                         />
                         <ListItemText
-                            primary={`See on ${plugin.plugin_type} Marketplace`}
+                            primary={`See on ${plugin.marketplace_name} Marketplace`}
                             secondary={
                                 <ExternalLink
-                                    href={plugin.link || "#"}
+                                    href={plugin.marketplace_link || "#"}
                                 >
                                     Link
                                 </ExternalLink>
@@ -133,10 +133,10 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                     <Typography variant="h5">Overview Summary</Typography>
                     <Typography paragraph>{plugin.overview_summary || "N/A"}</Typography>
                 </Box>
-                {plugin.full_text_analysis_html ? (
+                {plugin.revenue_analysis_html ? (
                     <Box mt={4}>
                         <Typography variant="h5">Full Text Analysis</Typography>
-                        <Typography paragraph dangerouslySetInnerHTML={{__html: plugin.full_text_analysis_html}}>
+                        <Typography paragraph dangerouslySetInnerHTML={{__html: plugin.revenue_analysis_html}}>
                         </Typography>
                     </Box>
                 ):null}

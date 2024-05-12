@@ -1,12 +1,14 @@
 export interface TopPluginResponse {
   id: number;
   name: string;
-  link: string;
-  img_logo_link: string;
-  plugin_type: string;
+  marketplace_name: string;
+  marketplace_link: string;
+  img_logo_link?: string;
+
   user_count: number;
   rating?: string;
   rating_count?: number;
+
   revenue_lower_bound?: number;
   revenue_upper_bound?: number;
   lowest_paid_tier: number | null;
@@ -15,20 +17,21 @@ export interface TopPluginResponse {
 
 export interface PluginDetailsResponse {
     id: number;
-    plugin_type: string;
     name: string;
-    google_id: string;
-    link?: string;
+    marketplace_name: string;
+    marketplace_id: string;
+    marketplace_link: string;
+    img_logo_link?: string;
 
     user_count: number;
     rating?: string;
     rating_count?: number;
 
-    full_text_analysis_html?: string;
+    revenue_analysis_html?: string;
     pricing_tiers?: string[];
     lowest_paid_tier: number | null;
-    lower_bound?: number;
-    upper_bound?: number;
+    revenue_lower_bound?: number;
+    revenue_upper_bound?: number;
 
     elevator_pitch?: string;
     main_integrations?: string;

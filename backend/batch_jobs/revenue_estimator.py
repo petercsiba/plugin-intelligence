@@ -14,7 +14,7 @@ from common.config import OPEN_AI_API_KEY, POSTGRES_DATABASE_URL
 from common.gpt import InDatabaseCacheStorage
 from common.utils import Timer
 from supabase.models.base import BaseGoogleWorkspace
-from supabase.models.data import GoogleWorkspaceMetadata, PluginType, RevenueEstimate
+from supabase.models.data import Plugin, MarketplaceName, Plugin
 
 openai_client = OpenAiClient(
     open_ai_api_key=OPEN_AI_API_KEY,
@@ -34,8 +34,7 @@ class RevenueEstimatorInputs:
     link: str
     listing_updated: str
     pricing_category: str
-    pricing_tiers: str  # from metadata
-    developer_link: str
+    pricing_tiers: str
     overview_summary: str
     search_terms: str
     # TODO: backlinks
@@ -46,12 +45,11 @@ class RevenueEstimatorInputs:
         It has {self.user_count} users and was last updated on {self.listing_updated}.
         You can find it by searching {self.search_terms} on the Google Workspace Marketplace.
         The pricing category is {self.pricing_category} with pricing tiers {self.pricing_tiers}.
-        The developer link is {self.developer_link}.
         The overview summary is {self.overview_summary} and you can find more information at {self.link}.
         """
 
 
-def add_on_to_inputs(metadata: GoogleWorkspaceMetadata, scraped_data: BaseGoogleWorkspace) -> RevenueEstimatorInputs:
+def add_on_to_inputs(plugin: Plugin, scraped_data: BaseGoogleWorkspace) -> RevenueEstimatorInputs:
     return RevenueEstimatorInputs(
         name=scraped_data.name,
         developer_name=scraped_data.developer_name,
@@ -61,10 +59,9 @@ def add_on_to_inputs(metadata: GoogleWorkspaceMetadata, scraped_data: BaseGoogle
         link=scraped_data.link,
         listing_updated=scraped_data.listing_updated,
         pricing_category=scraped_data.pricing,
-        pricing_tiers=metadata.pricing_tiers,
-        developer_link=scraped_data.developer_link,
-        overview_summary=metadata.overview_summary,
-        search_terms=metadata.search_terms
+        pricing_tiers=plugin.pricing_tiers,
+        overview_summary=plugin.overview_summary,
+        search_terms=plugin.search_terms
     )
 
 
@@ -191,35 +188,23 @@ def main():
     # might as well use the ChatCompletion interface for this task.
     # AND remove those plugin $TTM datapoints as they don't seem to be used much
     # (we should still disclose them somewhere).
-    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
-        for metadata in GoogleWorkspaceMetadata.select().limit(50):
-            google_id = metadata.google_id
-            plugin_type = PluginType.GOOGLE_WORKSPACE
-            if RevenueEstimate.exists(plugin_type, google_id):
-                print(f"revenue estimate already exists for google_id {google_id}")
-                continue
+    # with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+    with connect_to_postgres(POSTGRES_DATABASE_URL):
+        for plugin in Plugin.select().where(Plugin.revenue_analysis.is_null()).limit(1):
 
-            scraped_data = metadata.get_scraped_data()
-            inputs = add_on_to_inputs(metadata, scraped_data)
-            estimate, thread_id = generate_revenue_estimate(inputs=inputs)
-            lower_bound, upper_bound = extract_bounds(estimate)
+            scraped_data = plugin.get_scraped_data()
+            inputs = add_on_to_inputs(plugin, scraped_data)
+            revenue_analysis, thread_id = generate_revenue_estimate(inputs=inputs)
+            lower_bound, upper_bound = extract_bounds(revenue_analysis)
 
             # TODO(ux, P2): Might be nice to do a few more prompts to get more comprehensive report,
             #   especially for a higher ranking plugin.
-            RevenueEstimate.insert(
-                plugin_type=plugin_type,
-                google_id=google_id,
-                full_text_analysis=estimate,
-                thread_id=thread_id,
-                name=scraped_data.name,
-                link=scraped_data.link,
-                logo_link=scraped_data.logo_link,
-                lower_bound=lower_bound,
-                upper_bound=upper_bound,
-                user_count=scraped_data.user_count,
-                rating=scraped_data.rating,
-                rating_count=scraped_data.rating_count,
-            ).execute()
+
+            plugin.revenue_analysis = revenue_analysis
+            plugin.openai_thread_id = thread_id
+            plugin.revenue_lower_bound = lower_bound
+            plugin.revenue_upper_bound = upper_bound
+            plugin.save()
 
     print(openai_client.sum_up_prompt_stats().pretty_print())
 

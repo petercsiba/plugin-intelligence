@@ -47,24 +47,6 @@ class BaseChromeExtension(BaseDatabaseModel):
         indexes = ((("google_id", "p_date"), True),)
 
 
-class BaseChromeExtensionMetadata(BaseDatabaseModel):
-    created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
-    elevator_pitch = TextField(null=True)
-    google_id = TextField(unique=True)
-    id = BigAutoField()
-    lowest_paid_tier = TextField(null=True)
-    main_integrations = TextField(null=True)
-    overview_summary = TextField(null=True)
-    pricing_tiers = TextField(null=True)
-    search_terms = TextField(null=True)
-    tags = TextField(null=True)
-    updated_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
-
-    class Meta:
-        schema = "public"
-        table_name = "chrome_extension_metadata"
-
-
 class BaseGoogleWorkspace(BaseDatabaseModel):
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
     description = TextField(null=True)
@@ -102,22 +84,34 @@ class BaseGoogleWorkspace(BaseDatabaseModel):
         indexes = ((("google_id", "p_date"), True),)
 
 
-class BaseGoogleWorkspaceMetadata(BaseDatabaseModel):
+class BasePlugin(BaseDatabaseModel):
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
     elevator_pitch = TextField(null=True)
-    google_id = TextField(unique=True)
     id = BigAutoField()
+    logo_link = TextField(null=True)
     lowest_paid_tier = TextField(null=True)
     main_integrations = TextField(null=True)
+    marketplace_id = TextField()
+    marketplace_link = TextField(null=True)
+    marketplace_name = TextField()
+    name = TextField(null=True)
+    openai_thread_id = TextField(null=True)
     overview_summary = TextField(null=True)
     pricing_tiers = TextField(null=True)
+    rating = TextField(null=True)
+    rating_count = BigIntegerField(null=True)
+    revenue_analysis = TextField(null=True)
+    revenue_lower_bound = BigIntegerField(null=True)
+    revenue_upper_bound = BigIntegerField(null=True)
     search_terms = TextField(null=True)
     tags = TextField(null=True)
     updated_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
+    user_count = BigIntegerField(null=True)
 
     class Meta:
         schema = "public"
-        table_name = "google_workspace_metadata"
+        table_name = "plugin"
+        indexes = ((("marketplace_name", "marketplace_id"), True),)
 
 
 class BasePromptLog(BaseDatabaseModel):
@@ -135,28 +129,6 @@ class BasePromptLog(BaseDatabaseModel):
         schema = "public"
         table_name = "prompt_log"
         indexes = ((("prompt_hash", "model"), True),)
-
-
-class BaseRevenueEstimates(BaseDatabaseModel):
-    created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
-    full_text_analysis = TextField(null=True)
-    google_id = TextField(null=True)
-    id = BigAutoField()
-    link = TextField(null=True)
-    logo_link = TextField(null=True)
-    lower_bound = BigIntegerField(null=True)
-    name = TextField(null=True)
-    plugin_type = TextField()
-    rating = TextField(null=True)
-    rating_count = BigIntegerField(null=True)
-    thread_id = TextField(null=True)
-    upper_bound = BigIntegerField(null=True)
-    user_count = BigIntegerField(null=True)
-
-    class Meta:
-        schema = "public"
-        table_name = "revenue_estimates"
-        indexes = ((("plugin_type", "google_id"), True),)
 
 
 class BaseUsers(BaseDatabaseModel):

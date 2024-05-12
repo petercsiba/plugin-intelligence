@@ -21,7 +21,7 @@ from batch_jobs.common import (
 )
 from batch_jobs.search_terms import GOOGLE_WORKSPACE_SEARCH_TERMS
 from common.config import POSTGRES_DATABASE_URL
-from supabase.models.data import GoogleAddOn
+from supabase.models.data import GoogleWorkspace
 
 # TODO(P0, completeness): Figure out a way to crawl the entire site,
 #  note that https://workspace.google.com/marketplace/sitemap.xml isn't enough
@@ -177,7 +177,7 @@ def str_to_int_safe(int_str: str) -> int:
         print(f"INFO: cannot convert {int_str} to int cause {e}")
 
 
-def process_add_on_page_response(add_on: GoogleAddOn, add_on_html: str) -> None:
+def process_add_on_page_response(add_on: GoogleWorkspace, add_on_html: str) -> None:
     soup = BeautifulSoup(add_on_html, "html.parser")
 
     rating_count_el = soup.find("span", itemprop="ratingCount")
@@ -208,7 +208,7 @@ def process_add_on_page_response(add_on: GoogleAddOn, add_on_html: str) -> None:
 
 
 async def async_research_add_on_more(
-    add_on: GoogleAddOn, semaphore: asyncio.Semaphore
+    add_on: GoogleWorkspace, semaphore: asyncio.Semaphore
 ) -> None:
     async with semaphore:
         print(f"getting more add_on data for {add_on.name} from {add_on.link}")
@@ -225,7 +225,7 @@ async def async_research_add_on_more(
 
 
 # A backup version for async_research_app_more, sometimes makes it easier to debug.
-def sync_research_add_on_more(add_on: GoogleAddOn) -> None:
+def sync_research_add_on_more(add_on: GoogleWorkspace) -> None:
     print(f"getting more app data for {add_on.name} from {add_on.link}")
     response = requests.get(add_on.link)
     if response.status_code != 200:
@@ -258,7 +258,7 @@ async def get_all_google_workspace_add_ons(p_date: str):
             researched_add_ons.add(link)
 
             # With "get_or_create" and later .save() we essentially get ON CONFLICT UPDATE (in two statements).
-            add_on, created = GoogleAddOn.get_or_create(
+            add_on, created = GoogleWorkspace.get_or_create(
                 google_id=get_add_on_id_from_link(link),
                 p_date=p_date,
                 name=add_on_data.name,
