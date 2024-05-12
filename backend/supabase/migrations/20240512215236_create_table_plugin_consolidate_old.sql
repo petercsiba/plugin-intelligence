@@ -56,5 +56,5 @@ ALTER TABLE public.plugin ENABLE ROW LEVEL SECURITY;
 
 -- -- Drop the original tables if no longer needed
 DROP TABLE public.google_workspace_metadata;
-DROP TABLE public.chrome_extension_metadata
+DROP TABLE public.chrome_extension_metadata;
 DROP TABLE public.revenue_estimates;
