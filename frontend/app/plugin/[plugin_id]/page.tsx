@@ -9,6 +9,7 @@ import {
     List,
     ListItem,
     ListItemText,
+    Divider,
 } from "@mui/material";
 import Box from "@mui/material/Box";
 import {PluginDetailsResponse} from "../models";
@@ -74,7 +75,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                     />
                     <Typography variant="body2">
                         {plugin.rating_count ? `${plugin.rating_count.toLocaleString()} Ratings` : "N/A"}
-                    </Typography>
+                    </Typography>`
                 </Box>
                 <List>
                     <ListItem>
@@ -95,6 +96,19 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                     </ListItem>
                     <ListItem>
                         <ListItemText primary="Revenue Estimate" secondary={revenueRange} />
+                        <ListItemText
+                            primary="Pricing Tiers"
+                            secondary={
+                                <Box display="flex" alignItems="center" flexWrap="wrap">
+                                    {plugin.pricing_tiers?.map((tier, index, array) => (
+                                        <React.Fragment key={index}>
+                                            <Typography variant="body2">{tier}</Typography>
+                                            {index < array.length - 1 && <Divider orientation="vertical" flexItem style={{ margin: '0 8px' }} />}
+                                        </React.Fragment>
+                                    )) || <Typography variant="body2">Unknown</Typography>}
+                                </Box>
+                            }
+                        />
                     </ListItem>
                     <ListItem>
                         <ListItemText primary="Main Integrations" secondary={mainIntegrations} />

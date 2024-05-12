@@ -1,3 +1,5 @@
+import re
+import traceback
 from datetime import datetime
 from typing import List, Optional
 
@@ -67,7 +69,8 @@ async def add_cors_headers(request: Request, call_next):
         response = await call_next(request)
     except Exception as ex:
         # Log the error (TODO(p1, devx): replace with logging framework of choice)
-        print(f"Internal Server Error: {ex}")
+        traceback_text = traceback.format_exc()  # Get the full traceback as a string
+        print(f"Internal Server Error: {ex}\n{traceback_text}")
 
         # Return a JSON response with CORS headers on error
         response = JSONResponse(
@@ -106,6 +109,7 @@ class TopPluginResponse(BaseModel):
     # Derived stuff
     revenue_lower_bound: Optional[int] = None
     revenue_upper_bound: Optional[int] = None
+    lowest_paid_tier: Optional[str] = None
     # pricing_tiers: Optional[str] = None
     # elevator_pitch: Optional[str] = None
 
@@ -123,22 +127,6 @@ def get_top_plugins(limit: int = 20):
 
     top_plugins = []
     for plugin in query:
-        # # Initialize base data with optional fields set to `None`
-        # pricing_tiers = None
-        # elevator_pitch = None
-
-        # Retrieve additional metadata if the plugin is for Google Workspace
-        # if plugin.plugin_type == PluginType.GOOGLE_WORKSPACE:
-        #     try:
-        #         # TODO: We should just move all required fields
-        #         #   onto the RevenueEstimate object (which is becoming the "plugin" object).
-        #         metadata = GoogleWorkspaceMetadata.get_by_google_id(plugin.google_id)
-        #         pricing_tiers = metadata.pricing_tiers
-        #         elevator_pitch = metadata.elevator_pitch
-        #     except DoesNotExist:
-        #         print("WARN: Metadata not found for Google Workspace plugin with ID:", plugin.google_id)
-        #         pass
-
         plugin_response = TopPluginResponse(
             id=plugin.id,
             name=plugin.name,
@@ -150,8 +138,8 @@ def get_top_plugins(limit: int = 20):
             rating_count=plugin.rating_count,
             revenue_lower_bound=plugin.lower_bound,
             revenue_upper_bound=plugin.upper_bound,
-            # pricing_tiers=pricing_tiers,
-            # elevator_pitch=elevator_pitch,
+            # TODO: Lets just merge metdata and revenue estimate tables into the plugin table; will make life easier
+            # lowest_paid_tier=plugin.lowest_paid_tier,
         )
 
         top_plugins.append(plugin_response)
@@ -238,7 +226,8 @@ class PluginDetailsResponse(BaseModel):
 
     # Money Stuff
     full_text_analysis_html: Optional[str] = None
-    pricing_tiers: Optional[str] = None
+    pricing_tiers: Optional[list] = None
+    lowest_paid_tier: Optional[str] = None
     lower_bound: Optional[int] = None
     upper_bound: Optional[int] = None
 
@@ -253,6 +242,17 @@ class PluginDetailsResponse(BaseModel):
 
     # internal fields which are not exposed
     # thread_id: Optional[str]
+
+
+def parse_pricing_tiers(pricing_str: Optional[str]) -> Optional[list]:
+    if pricing_str is None:
+        return None
+
+    # Split the string by commas and handle special cases
+    tiers = re.split(r',\s*(?![^[]*\])', pricing_str)
+    # Further refine each tier description
+    structured_tiers = [re.sub(r'[\*]\s*', '', tier.strip()) for tier in tiers]
+    return structured_tiers
 
 
 @app.get("/plugin/{plugin_id}/details", response_model=PluginDetailsResponse)
@@ -282,7 +282,8 @@ async def get_plugin_details(plugin_id: int):
                 response.elevator_pitch = metadata.elevator_pitch
                 response.main_integrations = metadata.main_integrations
                 response.overview_summary = metadata.overview_summary
-                response.pricing_tiers = metadata.pricing_tiers
+                response.pricing_tiers = parse_pricing_tiers(metadata.pricing_tiers)
+                response.lowest_paid_tier = metadata.lowest_paid_tier
                 response.search_terms = metadata.search_terms
                 response.tags = metadata.tags
                 response.updated_at = metadata.updated_at

@@ -24,6 +24,12 @@ plugin_intel_form_fields = [
         ),
     ),
     FieldDefinition(
+        name="lowest_paid_tier",
+        field_type="number",
+        label="Lowest Paid Tier",
+        description="The lowest pricing tier monthly cost, 0 if all tiers are free or not available.",
+    ),
+    FieldDefinition(
         name="search_terms",
         field_type="text",
         label="Search Terms",
@@ -159,6 +165,7 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         )
 
         record.pricing_tiers = parse_to_list(form_data.get('pricing_tiers'))
+        record.lowest_paid_tier = parse_to_list(form_data.get('lowest_paid_tier'))
 
         record.main_integrations = parse_to_list(form_data.get('main_integrations'))
         record.overview_summary = overview_summary

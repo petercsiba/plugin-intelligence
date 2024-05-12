@@ -9,8 +9,7 @@ export interface TopPluginResponse {
   rating_count?: number;
   revenue_lower_bound?: number;
   revenue_upper_bound?: number;
-  pricing_tiers?: string;
-  elevator_pitch?: string;
+  lowest_paid_tier?: string;
 }
 
 export interface PluginDetailsResponse {
@@ -25,7 +24,8 @@ export interface PluginDetailsResponse {
     rating_count?: number;
 
     full_text_analysis_html?: string;
-    pricing_tiers?: string;
+    pricing_tiers?: string[] | null;
+    lowest_paid_tier?: string;
     lower_bound?: number;
     upper_bound?: number;
 
