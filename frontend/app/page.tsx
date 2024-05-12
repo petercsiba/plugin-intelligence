@@ -114,7 +114,7 @@ export default function HomePage() {
                     <TableBody>
                         {plugins.map((plugin) => (
                             <TableRow key={plugin.id}>
-                                <TableCell style={{ maxWidth: '64px' }}>
+                                <TableCell style={{ maxWidth: '48px' }}>
                                     {plugin.img_logo_link ? (
                                         <img src={plugin.img_logo_link} alt={plugin.name} style={{ width: 64 }} />
                                     ) : (
