@@ -4,7 +4,7 @@ export interface TopPluginResponse {
   link: string;
   img_logo_link: string;
   plugin_type: string;
-  user_count?: number;
+  user_count: number;
   rating?: string;
   rating_count?: number;
   revenue_lower_bound?: number;
@@ -17,10 +17,10 @@ export interface PluginDetailsResponse {
     id: number;
     plugin_type: string;
     name: string;
-    google_id?: string;
+    google_id: string;
     link?: string;
 
-    user_count?: number;
+    user_count: number;
     rating?: string;
     rating_count?: number;
 

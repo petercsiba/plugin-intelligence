@@ -192,7 +192,7 @@ def main():
     # AND remove those plugin $TTM datapoints as they don't seem to be used much
     # (we should still disclose them somewhere).
     with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
-        for metadata in GoogleWorkspaceMetadata.select().limit(10):
+        for metadata in GoogleWorkspaceMetadata.select().limit(50):
             google_id = metadata.google_id
             plugin_type = PluginType.GOOGLE_WORKSPACE
             if RevenueEstimate.exists(plugin_type, google_id):

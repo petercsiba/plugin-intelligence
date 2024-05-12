@@ -7,15 +7,12 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import NextLink from "next/link";
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
-import Grid from '@mui/material/Grid';
-import CardMedia from '@mui/material/CardMedia';
 import {TopPluginResponse} from "./plugin/models";
 import ArpuBubbleChartComponent from "./ArpuBubbleChart";
-import {formatCurrency} from "@/utils";
+import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
+import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -101,41 +98,49 @@ export default function HomePage() {
                  */}
             </Box>
             <ArpuBubbleChartComponent />
-            <Grid container spacing={3}>
-                {plugins.map((plugin) => (
-                    <Grid item xs={12} sm={6} md={4} key={plugin.id}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h5" gutterBottom>
-                                    {plugin.name}
-                                </Typography>
-                                <CardMedia
-                                    component="img"
-                                    height="40"
-                                    image={plugin.img_logo_link}
-                                    alt={plugin.name}
-                                />
-                                { (plugin.revenue_lower_bound && plugin.revenue_upper_bound) ? (
-                                    <Typography variant="body2" color="textSecondary">
-                                        TTM Estimate: {formatCurrency(plugin.revenue_lower_bound)} - {formatCurrency(plugin.revenue_upper_bound)}
-                                    </Typography>
-                                ) : null}
-                                {plugin.elevator_pitch ? (
-                                <Typography variant="body2" color="textSecondary">
-                                    {plugin.elevator_pitch}
-                                </Typography>
-                                ) : null}
+            <TableContainer component={Paper}>
+                <Table size="small"> {/* Smaller cell padding */}
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Logo</TableCell>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Type</TableCell>
+                            <TableCell>Revenue Estimate</TableCell>
+                            <TableCell>User Count</TableCell>
+                            <TableCell>Details</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {plugins.map((plugin) => (
+                            <TableRow key={plugin.id}>
+                                <TableCell style={{ maxWidth: '64px' }}>
+                                    {plugin.img_logo_link ? (
+                                        <img src={plugin.img_logo_link} alt={plugin.name} style={{ width: 100 }} />
+                                    ) : (
+                                        ''
+                                    )}
+                                </TableCell>
+                                <TableCell>{plugin.name}</TableCell>
+                                <TableCell>{plugin.plugin_type}</TableCell>
+                                <TableCell>
+                                    {plugin.revenue_lower_bound && plugin.revenue_upper_bound ? (
+                                        `${formatCurrency(plugin.revenue_lower_bound)} - ${formatCurrency(plugin.revenue_upper_bound)}`
+                                    ) : 'N/A'}
+                                </TableCell>
+                                <TableCell>{formatNumberShort(plugin.user_count)}</TableCell>
+                                <TableCell>
+                                    <NextLink href={`/plugin/${plugin.id}`} passHref>
+                                        <Button variant="contained" color="primary" fullWidth> {/* Full width on mobile */}
+                                            View
+                                        </Button>
+                                    </NextLink>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
-                                <NextLink href={`/plugin/${plugin.id}`} passHref>
-                                    <Button variant="contained" color="primary">
-                                        View Details
-                                    </Button>
-                                </NextLink>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
         </Container>
     );
 }
