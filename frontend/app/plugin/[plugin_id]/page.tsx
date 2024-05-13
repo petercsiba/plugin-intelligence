@@ -14,7 +14,13 @@ import {
 import Box from "@mui/material/Box";
 import {PluginDetailsResponse} from "../models";
 import ExternalLink from "@/components/ExternalLink";
-import {formatCurrency, formatNumber} from "@/utils";
+import {fixThatArrayWithNullShit, formatCurrency, formatNumber} from "@/utils";
+import dynamic from "next/dynamic";
+
+const RevenueAnalysis = dynamic(
+  () => import('./RevenueAnalysis'),
+  { ssr: false }  // This will disable server-side rendering for the component
+);
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -47,10 +53,14 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
         );
     }
 
-    // Format ranges
-    const revenueRange = plugin && plugin.revenue_lower_bound && plugin.revenue_upper_bound
-        ? `${formatCurrency(plugin.revenue_lower_bound)} - ${formatCurrency(plugin.revenue_upper_bound)}`
-        : "N/A";
+    // FIX SHIT
+    const lower_bound = fixThatArrayWithNullShit(plugin.revenue_lower_bound)
+    const upper_bound = fixThatArrayWithNullShit(plugin.revenue_upper_bound)
+    const revenue_analysis_html = fixThatArrayWithNullShit(plugin.revenue_analysis_html)
+
+    const revenueRange = (lower_bound != null && upper_bound != null)
+         ? `${formatCurrency(lower_bound)} - ${formatCurrency(upper_bound)}`
+         : "N/A";
 
     // Convert comma-separated lists
     const mainIntegrations = plugin && plugin.main_integrations ? plugin.main_integrations.split(",").join(", ") : "N/A";
@@ -133,12 +143,8 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                     <Typography variant="h5">Overview Summary</Typography>
                     <Typography paragraph>{plugin.overview_summary || "N/A"}</Typography>
                 </Box>
-                {plugin.revenue_analysis_html ? (
-                    <Box mt={4}>
-                        <Typography variant="h5">Full Text Analysis</Typography>
-                        <Typography paragraph dangerouslySetInnerHTML={{__html: plugin.revenue_analysis_html}}>
-                        </Typography>
-                    </Box>
+                {revenue_analysis_html ? (
+                    <RevenueAnalysis htmlContent={revenue_analysis_html} />
                 ):null}
             </Paper>
         </Container>

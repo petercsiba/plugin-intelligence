@@ -4,6 +4,7 @@ import traceback
 from datetime import datetime
 from typing import List, Optional
 
+import latex2mathml.converter
 import markdown
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -203,7 +204,7 @@ def get_top_plugins(limit: int = 50, max_arpu_cents: int = 200):
     data = []
     for plugin in query:
         # Sometimes the upper bound is crazy
-        # revenue_estimate = (plugin.lower_bound + plugin.upper_bound) // 2
+        # revenue_estimate = (plugin.revenue_lower_bound + plugin.upper_bound) // 2
         # TODO: Be better
         revenue_estimate = int(0.9 * plugin.revenue_lower_bound + 0.1 * plugin.revenue_upper_bound)
 
@@ -282,6 +283,41 @@ def parse_fuzzy_list(list_str: Optional[str], max_elements: int = None) -> Optio
     return structured_items
 
 
+def convert_latex_to_mathml(latex_str: str) -> str:
+    return latex2mathml.converter.convert(latex_str)
+
+
+def prompt_output_to_html(prompt_output: Optional[str]) -> Optional[str]:
+    if prompt_output is None:
+        return None
+
+    # Pattern to detect LaTeX within \( ... \) or \[ ... \] delimiters
+    patterns = [r'\\\((.*?)\\\)', r'\\\[(.*?)\\\]']
+
+    def replace_latex(match):
+        latex_content = match.group(1).strip()
+        return convert_latex_to_mathml(latex_content)
+
+    # Replace all LaTeX formulas with HTML
+    for pattern in patterns:
+        prompt_output = re.sub(pattern, replace_latex, prompt_output)
+
+    # Convert the rest of the Markdown to HTML
+    extensions = [
+        'fenced_code',  # Allows using fenced code blocks (```code```)
+        'codehilite'    # Syntax highlighting for code blocks
+    ]
+    extension_configs = {
+        'codehilite': {
+            'use_pygments': True,
+            'css_class': 'highlight'
+        }
+    }
+    html = markdown.markdown(prompt_output, extensions=extensions, extension_configs=extension_configs)
+
+    return html.replace("\\$", "$")
+
+
 @app.get("/plugin/{plugin_id}/details", response_model=PluginDetailsResponse)
 async def get_plugin_details(plugin_id: int):
     try:
@@ -305,10 +341,10 @@ async def get_plugin_details(plugin_id: int):
         response.rating_count = plugin.rating_count
 
         # revenue stuff
+        # TODO(P1, devx): For some WTF reason this translates to JSON
         response.revenue_lower_bound = plugin.revenue_lower_bound,
         response.revenue_upper_bound = plugin.revenue_upper_bound,
-        # TODO(P1, ux): This is 85% nice but we can do better, do quick-wins in formatting
-        response.revenue_analysis_html = markdown.markdown(plugin.revenue_analysis),
+        response.revenue_analysis_html = prompt_output_to_html(plugin.revenue_analysis),
 
         response.elevator_pitch = plugin.elevator_pitch
         response.main_integrations = plugin.main_integrations
@@ -317,6 +353,8 @@ async def get_plugin_details(plugin_id: int):
         response.lowest_paid_tier = plugin.lowest_paid_tier
         response.search_terms = plugin.search_terms
         response.tags = plugin.tags
+
+        PluginDetailsResponse.model_validate(response, strict=True)
 
         return response
 

@@ -1,3 +1,5 @@
 fastapi
+latex2mathml
 markdown
+pygments
 uvicorn

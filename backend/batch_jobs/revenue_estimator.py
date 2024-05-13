@@ -141,7 +141,7 @@ def generate_revenue_estimate(inputs: RevenueEstimatorInputs) -> Tuple[Optional[
 
 
 # Fuzzy matching to extract lower and upper bounds from generate_revenue_estimate output
-def extract_bounds(text: Optional[str]):
+def extract_bounds(text: Optional[str]) -> Tuple[int, int]:
     # Regular expression pattern to capture amounts following "Lower" or "Upper" keywords
     # Adjusted pattern to capture bullet points, bold markers, and flexible spacing
     # Examples:
