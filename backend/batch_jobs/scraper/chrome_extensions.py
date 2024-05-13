@@ -21,7 +21,7 @@ from batch_jobs.common import (
     listing_updated_str_to_date,
     parse_shortened_int_k_m,
 )
-from batch_jobs.search_terms import CHROME_EXTENSION_SEARCH_TERMS
+from batch_jobs.scraper.search_terms import CHROME_EXTENSION_SEARCH_TERMS
 from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import ChromeExtension
 
