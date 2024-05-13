@@ -1,3 +1,7 @@
+# TODO(P0, quality): Get the full Chrome Extension list from Kaggle, and adjust daily scraper to use the DB too.
+# TODO(P1, ops): At some point we will need to upscale the scraping beyond marketplaces, to the whole web.
+#   This is a project in itself, check out what this guy writes (also has a GPT web scraping article)
+#   https://medium.com/@macrodrigues/web-scraping-with-scrapy-and-splash-3d5666ba78ff
 import asyncio
 import re
 import urllib
