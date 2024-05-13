@@ -17,9 +17,9 @@ import ExternalLink from "@/components/ExternalLink";
 import {fixThatArrayWithNullShit, formatCurrency, formatNumber} from "@/utils";
 import dynamic from "next/dynamic";
 
-const RevenueAnalysis = dynamic(
-  () => import('./RevenueAnalysis'),
-  { ssr: false }  // This will disable server-side rendering for the component
+const BoxWithInnerHtml = dynamic(
+    () => import('./BoxWithInnerHtml'),
+    { ssr: false }  // This will disable server-side rendering for the component
 );
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
@@ -59,8 +59,8 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
     const revenue_analysis_html = fixThatArrayWithNullShit(plugin.revenue_analysis_html)
 
     const revenueRange = (lower_bound != null && upper_bound != null)
-         ? `${formatCurrency(lower_bound)} - ${formatCurrency(upper_bound)}`
-         : "N/A";
+        ? `${formatCurrency(lower_bound)} - ${formatCurrency(upper_bound)}`
+        : "N/A";
 
     // Convert comma-separated lists
     const mainIntegrations = plugin && plugin.main_integrations ? plugin.main_integrations.split(",").join(", ") : "N/A";
@@ -139,12 +139,11 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                         <Typography paragraph>{plugin.elevator_pitch || "N/A"}</Typography>
                     </Box>
                 ) : null}
-                <Box mt={4}>
-                    <Typography variant="h5">Overview Summary</Typography>
-                    <Typography paragraph>{plugin.overview_summary || "N/A"}</Typography>
-                </Box>
+                {plugin.overview_summary_html ? (
+                    <BoxWithInnerHtml heading="Overview Summary" htmlContent={plugin.overview_summary_html} />
+                ) : null}
                 {revenue_analysis_html ? (
-                    <RevenueAnalysis htmlContent={revenue_analysis_html} />
+                    <BoxWithInnerHtml heading="Revenue Analysis" htmlContent={revenue_analysis_html} />
                 ):null}
             </Paper>
         </Container>

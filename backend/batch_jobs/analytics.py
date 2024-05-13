@@ -109,9 +109,9 @@ def parse_to_list(input_str: Optional[Any]):
         if '*' in line:
             # Handle lines prefixed with '*'
             items.extend([item.strip() for item in line.split('*') if item.strip()])
-        elif ';' in line:
-            items.extend([item.strip() for item in line.split(',') if item.strip()])
         elif ',' in line:
+            items.extend([item.strip() for item in line.split(',') if item.strip()])
+        elif ';' in line:
             items.extend([item.strip() for item in line.split(';') if item.strip()])
         else:
             items.append(line)
@@ -131,15 +131,15 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get("YES_I_AM_CONNECTING_T
 
 # TODO(P1, cost): This is a very expensive operation. We should consider running this in batches.
 #   https://platform.openai.com/docs/guides/batch/model-availability
-with connect_to_postgres(POSTGRES_DATABASE_URL):
-    # with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+#with connect_to_postgres(POSTGRES_DATABASE_URL):
+with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
     latest_date = BaseGoogleWorkspace.select(fn.MAX(BaseGoogleWorkspace.p_date)).scalar()
     print(f"LATEST P_DATE is {latest_date}")
 
     query = BaseGoogleWorkspace.select().where(BaseGoogleWorkspace.p_date == latest_date).order_by(fn.COALESCE(BaseGoogleWorkspace.user_count, -1).desc())
 
     # Loop through each row and apply the OpenAI API
-    for add_on_row in query.limit(100):
+    for add_on_row in query.limit(200):
         # Although GPT-4 was able to fill_in_form, GPT-3.5 requires more handholding so we pre-process the info.
         summary_prompt = f"""
         Summarize this plugin description,

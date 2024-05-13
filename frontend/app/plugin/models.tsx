@@ -36,6 +36,7 @@ export interface PluginDetailsResponse {
     elevator_pitch?: string;
     main_integrations?: string;
     overview_summary?: string;
+    overview_summary_html?: string;
     search_terms?: string;
     tags?: string;
 

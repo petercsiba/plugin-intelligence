@@ -255,6 +255,7 @@ class PluginDetailsResponse(BaseModel):
     elevator_pitch: Optional[str] = None
     main_integrations: Optional[str] = None
     overview_summary: Optional[str] = None
+    overview_summary_html: Optional[str] = None
     search_terms: Optional[str] = None
     tags: Optional[str] = None
     created_at: Optional[datetime] = None
@@ -349,6 +350,7 @@ async def get_plugin_details(plugin_id: int):
         response.elevator_pitch = plugin.elevator_pitch
         response.main_integrations = plugin.main_integrations
         response.overview_summary = plugin.overview_summary
+        response.overview_summary_html = prompt_output_to_html(plugin.overview_summary),
         response.pricing_tiers = parse_fuzzy_list(plugin.pricing_tiers)
         response.lowest_paid_tier = plugin.lowest_paid_tier
         response.search_terms = plugin.search_terms
