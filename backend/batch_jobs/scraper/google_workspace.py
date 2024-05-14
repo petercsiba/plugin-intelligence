@@ -199,6 +199,7 @@ def parse_downloads_count(soup: BeautifulSoup, url: str) -> Optional[int]:
     return int(user_count)
 
 
+# TODO(P1, reliability): Consume all exceptions and keep on running the job
 def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html: str) -> None:
     soup = BeautifulSoup(add_on_html, "html.parser")
     if not is_html_in_english(soup):

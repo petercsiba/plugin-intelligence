@@ -182,6 +182,7 @@ async def async_research_extension_more(
                 chrome_extension.save()
 
 
+# TODO(P1, reliability): Consume all exceptions and keep on running the job
 def process_extension_page_response(
     chrome_extension: ChromeExtension, extension_html: str
 ):
@@ -215,12 +216,15 @@ def process_extension_page_response(
     chrome_extension.released_version = find_tag_and_get_text(soup, "div", "pDlpAd")
 
     listing_updated_li = soup.find("li", class_="kBFnc")
-    listing_updated_str = " ".join(
-        [div_tag.text for div_tag in listing_updated_li.find_all("div")]
-    )
-    chrome_extension.listing_updated = listing_updated_str_to_date(
-        listing_updated_str.replace("Updated", "").strip()
-    )
+    if listing_updated_li:
+        listing_updated_str = " ".join(
+            [div_tag.text for div_tag in listing_updated_li.find_all("div")]
+        )
+        chrome_extension.listing_updated = listing_updated_str_to_date(
+            listing_updated_str.replace("Updated", "").strip()
+        )
+    else:
+        print(f"WARNING: cannot find listing updated for {chrome_extension.link}")
 
     chrome_extension.developer_name = find_tag_and_get_text(soup, "div", "C2WXF")
     developer_link_a = soup.find("a", "XQ8Hh")
