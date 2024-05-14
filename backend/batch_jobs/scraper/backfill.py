@@ -1,7 +1,9 @@
 import asyncio
+import os
 import time
 from typing import List
 
+from dotenv import load_dotenv
 from supawee.client import connect_to_postgres
 
 from batch_jobs.scraper.google_workspace import ScrapeAddOnDetailsJob, scrape_google_workspace_add_ons, \
@@ -41,7 +43,7 @@ def backfill_google_workspace():
     distinct_links = (BaseGoogleWorkspace
                       .select(BaseGoogleWorkspace.link, BaseGoogleWorkspace.user_count)
                       .distinct()
-                      .where(BaseGoogleWorkspace.link.is_null(False))
+                      .where(BaseGoogleWorkspace.link.is_null(False) & BaseGoogleWorkspace.user_count.is_null(False))
                       .order_by(BaseGoogleWorkspace.user_count.desc()))
     print("Distinct links count:", distinct_links.count())
 
@@ -78,13 +80,15 @@ def backfill_google_workspace():
 
         avg_per_minute = 60 * total_scraped / (time.time() - scraping_start)
         print(f"Total scraped so far: {total_scraped}; on average {avg_per_minute} per minute")
-        break
 
 
 # For Chrome Extensions
 # https://chrome.google.com/webstore/detail/kami-pdf-sign-edit-review/iljojpiodmlhoehoecppliohmplbgeij?hl=en&__hstc=20629287.a7f712def3fc231023cd88e3b92265a1.1713973492755.1713973492755.1715724869156.2&__hssc=20629287.1.1715724869156&__hsfp=2560732712
 
 
+load_dotenv()
+YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get("YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL")
+
 if __name__ == "__main__":
-    with connect_to_postgres(POSTGRES_DATABASE_URL):
+    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         backfill_google_workspace()
