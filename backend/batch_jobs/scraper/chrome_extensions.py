@@ -19,7 +19,7 @@ from batch_jobs.common import (
     ASYNC_IO_MAX_PARALLELISM,
     find_tag_and_get_text,
     listing_updated_str_to_date,
-    parse_shortened_int_k_m,
+    extract_number_best_effort, is_html_in_english,
 )
 from batch_jobs.scraper.search_terms import CHROME_EXTENSION_SEARCH_TERMS
 from common.config import POSTGRES_DATABASE_URL
@@ -99,7 +99,7 @@ def get_extensions_from_category_page(url: str) -> List[ExtensionDataBasic]:
         extension_name = find_tag_and_get_text(extension_element, "p", "GzKZcb")
         print(f"parsing extension {extension_name}")
         rating_count_span = find_tag_and_get_text(extension_element, "span", "Y30PE")
-        rating_count = parse_shortened_int_k_m(
+        rating_count = extract_number_best_effort(
             rating_count_span.replace(")", "").replace("(", "").strip()
         )
         link_span = extension_element.find("a", class_="UvhDdd")
@@ -135,7 +135,7 @@ def get_extensions_from_search_page(url: str) -> List[ExtensionDataBasic]:
         extension_name = find_tag_and_get_text(extension_element, "h2", "CiI2if")
         # print(f"parsing extension {extension_name}")
         rating_count_span = find_tag_and_get_text(extension_element, "span", "Y30PE")
-        rating_count = parse_shortened_int_k_m(
+        rating_count = extract_number_best_effort(
             rating_count_span.replace(")", "").replace("(", "").strip()
         )
         link_span = extension_element.find("a", class_="q6LNgd")
@@ -186,6 +186,9 @@ def process_extension_page_response(
     chrome_extension: ChromeExtension, extension_html: str
 ):
     soup = BeautifulSoup(extension_html, "html.parser")
+    if not is_html_in_english(soup):
+        # print(f"WARNING: page is not in English for {scrape_job.url}, rather skipping than getting wrong data.")
+        return
 
     chrome_extension.name = find_tag_and_get_text(soup, "h1", "Pa2dE")
     chrome_extension.landing_page_url = find_tag_and_get_text(soup, "a", "cJI8ee")
@@ -200,7 +203,7 @@ def process_extension_page_response(
     chrome_extension.categories = [
         category_tag.text for category_tag in category_and_users_tag.find_all("a")
     ]
-    chrome_extension.user_count = parse_shortened_int_k_m(
+    chrome_extension.user_count = extract_number_best_effort(
         re.sub("[^0-9]", "", category_and_users_tag.text)
     )
 

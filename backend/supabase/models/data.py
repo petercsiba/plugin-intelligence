@@ -18,6 +18,14 @@ class GoogleWorkspace(BaseGoogleWorkspace):
     class Meta:
         db_table = "google_workspace"
 
+    @staticmethod
+    def exists(google_id: str, p_date: str) -> bool:
+        query = BaseGoogleWorkspace.select().where(
+            (BaseGoogleWorkspace.google_id == google_id) &
+            (BaseGoogleWorkspace.p_date == p_date)
+        )
+        return query.exists()
+
     # Takes in subset of
     # ['Google Drive', 'Google Docs', 'Google Sheets', 'Google Slides', 'Google Forms', 'Google Calendar',
     #  'Gmail', 'Google Meet', 'Google Classroom', 'Google Chat']

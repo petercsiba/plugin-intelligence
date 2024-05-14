@@ -1,7 +1,5 @@
-# TODO(P1, feature:trends): Can get historical data through WayBack
-#  curl "http://archive.org/wayback/available?url=<LINK>&timestamp=20240101" | jq .
-#  https://web.archive.org/web/20231101062549/https://workspace.google.com/marketplace/app/mail_merge/218858140171
 import asyncio
+import re
 import urllib
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,7 +15,7 @@ from supawee.client import connect_to_postgres
 from batch_jobs.common import (
     ASYNC_IO_MAX_PARALLELISM,
     find_tag_and_get_text,
-    listing_updated_str_to_date, parse_shortened_int_k_m,
+    listing_updated_str_to_date, extract_number_best_effort, is_html_in_english,
 )
 from batch_jobs.scraper.search_terms import GOOGLE_WORKSPACE_SEARCH_TERMS
 from common.config import POSTGRES_DATABASE_URL
@@ -62,9 +60,9 @@ class ScrapeAddOnDetailsJob(BaseModel):
     p_date: str
 
     # plugin identification
-    name: Optional[str]
-    google_id: Optional[str]
-    marketplace_link: Optional[str]
+    name: Optional[str] = None
+    google_id: Optional[str] = None
+    marketplace_link: Optional[str] = None
 
 
 def get_google_id_from_marketplace_link(link: str):
@@ -106,6 +104,7 @@ def get_works_with_list(soup: BeautifulSoup) -> list:
     if works_with_section:
         return [
             div["aria-label"].replace("This app works with ", "")
+            # Great, "eqVmXb" is used as ratingCount in 20210415205204
             for div in works_with_section.find_all("div", class_="eqVmXb")
         ]
     return []
@@ -164,26 +163,49 @@ def parse_reviews(soup) -> List[ReviewData]:
     return reviews
 
 
-def str_to_int_safe(int_str: str) -> int:
-    try:
-        return int(int_str.strip().replace(",", "").replace("$", ""))
-    except ValueError as e:
-        print(f"INFO: cannot convert {int_str} to int cause {e}")
-
-
-def parse_rating_info_from_div(rating_div: BeautifulSoup) -> Tuple[Optional[float], Optional[int]]:
-    rating_value_meta = rating_div.find('meta', itemprop='ratingValue')
+def parse_rating_info(soup: BeautifulSoup) -> Tuple[Optional[float], Optional[int]]:
+    rating_value_meta = soup.find('meta', itemprop='ratingValue')
     rating = float(rating_value_meta.get('content')) if rating_value_meta else None
 
-    rating_count_span = rating_div.find('span', itemprop='ratingCount')
-    rating_count = str_to_int_safe(rating_count_span.text) if rating_count_span else None
+    rating_count_span = soup.find('span', itemprop='ratingCount')
+    rating_count = extract_number_best_effort(rating_count_span.text) if rating_count_span else None
+
+    # The above should work, but sometimes this label has higher precision:
+    average_rating_divs = soup.find_all('div', attrs={'aria-label': lambda x: x and x.startswith('Average rating')})
+    if average_rating_divs:
+        # Regular expression to extract the rating value
+        rating_pattern = re.compile(r'Average rating:\s*([0-9.]+)')
+
+        aria_label = average_rating_divs[0].get('aria-label', '')
+        match = rating_pattern.search(aria_label)
+        if match:
+            rating = match.group(1)
 
     return rating, rating_count
 
 
+def parse_downloads_count(soup: BeautifulSoup, url: str) -> Optional[int]:
+    # <div aria-label="457,795 users have installed this app.">457,795</div>
+    user_div = soup.find('div', {'aria-label': lambda x: x and 'users have installed this app' in x})
+    if user_div:
+        aria_label = user_div.get('aria-label', '')
+        return int(extract_number_best_effort(aria_label.split(' ')[0]))
+
+    # 20210509075544 (is missing that aria-label div)
+    user_count_str = find_tag_and_get_text(soup, "div", "LCopac qlfxzd")
+    user_count = extract_number_best_effort(user_count_str)
+    if user_count == 0:
+        print(f"WARNING: cannot find downloads_count_div LCopac NOR aria-label for url {url}")
+    return int(user_count)
+
+
 def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html: str) -> None:
     soup = BeautifulSoup(add_on_html, "html.parser")
+    if not is_html_in_english(soup):
+        print(f"WARNING: page is not in English for {scrape_job.url}, rather skipping than getting wrong data.")
+        return
 
+    # This tag was there on 20210415205204
     name = find_tag_and_get_text(soup, "span", "BfHp9b")
 
     # With "get_or_create" and later .save() we essentially get ON CONFLICT UPDATE (in two statements).
@@ -196,35 +218,30 @@ def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html:
     if not created:
         print(f"INFO: will updated existing GoogleWorkspace entry {add_on.p_date} {add_on.google_id}")
 
-    downloads_count_div = soup.find("div", class_="EqjhYe")
-    user_div = downloads_count_div.find('div', {'aria-label': lambda x: x and 'users have installed this app' in x})
+    add_on: GoogleWorkspace
+    # For especially historical data, we want to keep the source URL for debugging / re-runs purposes.
+    add_on.source_url = scrape_job.url
 
-    if user_div:
-        add_on.user_count = parse_shortened_int_k_m(user_div.text.strip())
-    else:
-        print(f"WARNING: cannot find user <div> tag for url {scrape_job.url}")
-        add_on.user_count = None
+    # They have changed styles and classes a few times, so we need to be careful here.
+    # Observations:
+    # * 20230307201612 has the "old" style
+    # * 20230415205204 has the "new" style
+    # Sometimes things got changed and then changed back - or maybe WebArchive has a bug.
+    # TLDR; For historical data most important is to have the user_count, rating, rating_count tags.
+
+    add_on.user_count = parse_downloads_count(soup=soup, url=scrape_job.url)
 
     developer_a = soup.find("a", class_="DmgOFc Sm1toc")
     if developer_a:
         add_on.developer_name = developer_a.text.strip()
         add_on.developer_link = developer_a["href"]
     else:
-        print(f"WARNING: cannot find developer <a> tag for url {scrape_job.url}")
-        add_on.developer_name = None
+        add_on.developer_name = find_tag_and_get_text(soup, tag_name="div", class_name="kmwdk")
         add_on.developer_link = None
 
-    no_reviews_text = find_tag_and_get_text(soup, "div", "rbHGud")
-    if no_reviews_text != "No reviews":
-        rating_count_el = soup.find("div", class_="rbHGud")
-        if rating_count_el:
-            add_on.rating, add_on.rating_count = parse_rating_info_from_div(rating_count_el)
-            if add_on.rating is None or add_on.rating_count is None:
-                print(f"WARNING: cannot parse rating or rating count for url {scrape_job.url}")
-        else:
-            print(f"WARNING: cannot find rating count <div> tag for url {scrape_job.url}")
-            add_on.rating = None
-            add_on.rating_count = None
+    add_on.rating, add_on.rating_count = parse_rating_info(soup=soup)
+    if add_on.rating is None or add_on.rating_count is None:
+        print(f"WARNING: cannot parse rating or rating count for url {scrape_job.url}")
 
     listing_updated_str = find_tag_and_get_text(soup, "div", "bVxKXd").replace(
         "Listing updated:", ""
@@ -306,9 +323,18 @@ def main():
     # We will ignore the complexity of timezones
     p_date = datetime.today().strftime("%Y-%m-%d")
     with connect_to_postgres(POSTGRES_DATABASE_URL):
-        scrape_job_list = get_all_from_marketplace(p_date)
-        asyncio.run(scrape_google_workspace_add_ons(scrape_job_list))
+        # scrape_job_list = get_all_from_marketplace(p_date)
+        # asyncio.run(scrape_google_workspace_add_ons(scrape_job_list))
         # get_all_google_workspace_add_ons(p_date)
+
+        test_job = ScrapeAddOnDetailsJob(
+            url="https://web.archive.org/web/20210415205204id_/https://workspace.google.com/marketplace/app/merge_values/857144221591",
+            p_date="2021-04-15",
+            name=None,
+            google_id="857144221591",
+            marketplace_link="https://workspace.google.com/marketplace/app/merge_values/857144221591",
+        )
+        process_add_on_page_response(test_job, requests.get(test_job.url).text)
 
 
 if __name__ == "__main__":
