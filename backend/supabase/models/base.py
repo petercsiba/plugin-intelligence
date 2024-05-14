@@ -90,6 +90,8 @@ class BaseGoogleWorkspace(BaseDatabaseModel):
 
 class BasePlugin(BaseDatabaseModel):
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
+    developer_link = TextField(null=True)
+    developer_name = TextField(null=True)
     elevator_pitch = TextField(null=True)
     id = BigAutoField()
     logo_link = TextField(null=True)
@@ -107,7 +109,7 @@ class BasePlugin(BaseDatabaseModel):
     revenue_analysis = TextField(null=True)
     revenue_lower_bound = BigIntegerField(null=True)
     revenue_upper_bound = BigIntegerField(null=True)
-    search_terms = TextField(null=True)
+    reviews_summary = TextField(null=True)
     tags = TextField(null=True)
     updated_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
     user_count = BigIntegerField(null=True)

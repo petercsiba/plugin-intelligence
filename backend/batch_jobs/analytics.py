@@ -30,12 +30,12 @@ plugin_intel_form_fields = [
         label="Lowest Paid Tier",
         description="The lowest pricing tier monthly cost, 0 if all tiers are free or not available.",
     ),
-    FieldDefinition(
-        name="search_terms",
-        field_type="text",
-        label="Search Terms",
-        description="Generate the top 10 search keywords for this plugin",
-    ),
+    # FieldDefinition(
+    #     name="search_terms",
+    #     field_type="text",
+    #     label="Search Terms",
+    #     description="Generate the top 10 search keywords for this plugin",
+    # ),
     FieldDefinition(
         name="tags",
         field_type="text",
@@ -52,7 +52,7 @@ plugin_intel_form_fields = [
         name="elevator_pitch",
         field_type="text",
         label="Elevator Pitch",
-        description="Come up with a one line elevator pitch for this plugin",
+        description="Come up with a one line elevator pitch why you should install this plugin",
     ),
 ]
 
@@ -147,7 +147,6 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         My note is:  {add_on_row.overview}
         """
         overview_summary = openai_client.run_prompt(prompt=summary_prompt, model=CHEAPEST_MODEL)
-
         # Fill in the form using OpenAI
         form_data_obj, err = openai_client.fill_in_form(
             form=plugin_intel_form,
@@ -175,27 +174,29 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         plugin.rating = add_on_row.rating
         plugin.rating_count = add_on_row.rating_count
         plugin.user_count = add_on_row.user_count
+        plugin.developer_link = add_on_row.developer_link
+        plugin.developer_name = add_on_row.developer_name
 
         # Add new stuff to the Plugin table
         plugin.pricing_tiers = parse_to_list(form_data.get('pricing_tiers'))
         plugin.lowest_paid_tier = form_data.get('lowest_paid_tier')
         if plugin.lowest_paid_tier == 0:
             plugin.lowest_paid_tier = None
-        print("lowest_paid_tier", plugin.lowest_paid_tier)
 
         plugin.main_integrations = parse_to_list(form_data.get('main_integrations'))
         plugin.overview_summary = overview_summary
         plugin.elevator_pitch = form_data.get('elevator_pitch')
         plugin.tags = parse_to_list(form_data.get('tags'))
-        plugin.updated_at = now_in_utc()  # TODO: why not working?
 
-        search_terms = form_data.get('search_terms')
-        print("search_terms", search_terms)
-        if search_terms:
-            search_terms = str(search_terms).lower()
-        plugin.search_terms = parse_to_list(search_terms)
+        if plugin.rating_count > 20:
+            # add_on_row.reviews is formatted as (for historical reasons):
+            # [ReviewData(name='John Doe', rating=5, date='2022-01-01', review='Great app!'), ...]
+            reviews_summary_prompt = f"""
+            Summarize these customer reviews to fill in a section "Customers Say":  {add_on_row.reviews}
+            """
+            plugin.reviews_summary = openai_client.run_prompt(reviews_summary_prompt, model=CHEAPEST_MODEL)
 
-        print(f"Plugin id: {plugin.id} saved ({add_on_row.user_count} users)")
+        print(f"Plugin id: {plugin.id} saved (has {add_on_row.user_count} users)")
         plugin.save()
 
 
