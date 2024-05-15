@@ -1,11 +1,13 @@
 from typing import List
 
 from fastapi import HTTPException
+from peewee import fn
 from pydantic import BaseModel
+from supawee.client import database_proxy
 
 from api.config import MAX_LIMIT
-from supabase.models.data import Plugin
-
+from api.plugins import PluginsTopResponse
+from supabase.models.data import Plugin, GoogleWorkspace
 
 from fastapi import APIRouter
 charts_router = APIRouter()
@@ -85,3 +87,44 @@ def get_charts_plugin_arpu_bubble(limit: int = 50, max_arpu_cents: int = 200):
         data.append(plugin_response)
 
     return data
+
+
+# @charts_router.get("/charts/plugins-biggest-jumpers", response_model=List[PluginsTopResponse]):
+# def charts_plugins_biggest_jumpers():
+#   # Subquery to calculate historical data
+#     historical = (
+#         GoogleWorkspace
+#         .select(
+#             GoogleWorkspace.google_id,
+#             fn.COUNT(GoogleWorkspace.id).alias('total_entries'),
+#             fn.MIN(GoogleWorkspace.p_date).alias('first_date'),
+#             fn.MAX(GoogleWorkspace.p_date).alias('last_date'),
+#             fn.CAST(fn.AVG(fn.CASE(None, [(fn.EXTRACT('year', GoogleWorkspace.p_date) == 2020, GoogleWorkspace.user_count)], else_=None)).over(partition_by=[GoogleWorkspace.google_id]).alias('avg_user_count_2020'), 'int').alias('avg_user_count_2020'),
+#             fn.CAST(fn.AVG(fn.CASE(None, [(fn.EXTRACT('year', GoogleWorkspace.p_date) == 2021, GoogleWorkspace.user_count)], else_=None)).over(partition_by=[GoogleWorkspace.google_id]).alias('avg_user_count_2021'), 'int').alias('avg_user_count_2021'),
+#             fn.CAST(fn.AVG(fn.CASE(None, [(fn.EXTRACT('year', GoogleWorkspace.p_date) == 2022, GoogleWorkspace.user_count)], else_=None)).over(partition_by=[GoogleWorkspace.google_id]).alias('avg_user_count_2022'), 'int').alias('avg_user_count_2022'),
+#             fn.CAST(fn.AVG(fn.CASE(None, [(fn.EXTRACT('year', GoogleWorkspace.p_date) == 2023, GoogleWorkspace.user_count)], else_=None)).over(partition_by=[GoogleWorkspace.google_id]).alias('avg_user_count_2023'), 'int').alias('avg_user_count_2023'),
+#             fn.CAST(fn.AVG(fn.CASE(None, [(fn.EXTRACT('year', GoogleWorkspace.p_date) == 2024, GoogleWorkspace.user_count)], else_=None)).over(partition_by=[GoogleWorkspace.google_id]).alias('avg_user_count_2024'), 'int').alias('avg_user_count_2024')
+#         )
+#         .group_by(GoogleWorkspace.google_id)
+#         .having(fn.CAST(fn.AVG(fn.CASE(None, [(fn.EXTRACT('year', GoogleWorkspace.p_date) == 2022, GoogleWorkspace.user_count)], else_=None)).over(partition_by=[GoogleWorkspace.google_id]).alias('avg_user_count_2022'), 'int') > 1000)
+#         .alias('historical')
+#     )
+#
+#     # Main query to calculate the jump and select data
+#     query = (
+#         database_proxy
+#         .from_(historical)
+#         .select(
+#             (historical.c.avg_user_count_2024.cast('float') / historical.c.avg_user_count_2023.cast('float')).alias('jump'),
+#             historical.c.google_id,
+#             historical.c.total_entries,
+#             historical.c.first_date,
+#             historical.c.last_date,
+#             historical.c.avg_user_count_2020,
+#             historical.c.avg_user_count_2021,
+#             historical.c.avg_user_count_2022,
+#             historical.c.avg_user_count_2023,
+#             historical.c.avg_user_count_2024
+#         )
+#         .order_by(historical.c.avg_user_count_2024.cast('float') / historical.c.avg_user_count_2023.cast('float').desc(nulls='last'))
+#     )

@@ -82,6 +82,7 @@ def get_companies_top(limit: int = 20, min_count: int = 1, max_count: int = 1000
             # Analysis data
             count_plugin=result.count_plugin,
             sum_download_count=result.sum_download_count,
+            # TODO: Weighted average
             avg_avg_rating=result.avg_avg_rating,
         )
         top_companies.append(company_response)

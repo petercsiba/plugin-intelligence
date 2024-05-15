@@ -10,6 +10,11 @@ from batch_jobs.scraper.google_workspace import (
 )
 from common.config import POSTGRES_DATABASE_URL
 
+# load_dotenv()
+# YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
+#     "YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL"
+# )
+
 if __name__ == "__main__":
     # We will ignore the complexity of timezones
     p_date = datetime.today().strftime("%Y-%m-%d")

@@ -33,6 +33,9 @@ class PluginsTopResponse(BaseModel):
     lowest_paid_tier: Optional[float] = None
     main_tags: Optional[list] = None
 
+    # Some endpoints return extra
+    yoy_jump: Optional[float] = None
+
 
 @plugins_router.get("/plugins/top", response_model=List[PluginsTopResponse])
 def get_plugins_top(limit: int = 20):

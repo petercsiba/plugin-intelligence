@@ -322,7 +322,7 @@ def sync_scrape_add_on_details(scrape_job: ScrapeAddOnDetailsJob) -> None:
 def get_all_from_marketplace(p_date: str) -> List[ScrapeAddOnDetailsJob]:
     result = {}
 
-    for listing_page in LISTS[:1]:
+    for listing_page in LISTS:
         scrape_jobs = get_add_ons_from_listing_page(listing_page, p_date=p_date)
 
         result.update(
