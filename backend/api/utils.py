@@ -56,3 +56,13 @@ def prompt_output_to_html(prompt_output: Optional[str]) -> Optional[str]:
     )
 
     return html.replace("\\$", "$")
+
+
+def get_formatted_sql(peewee_query):
+    # Extract the SQL query and parameters from the Peewee query object
+    sql, params = peewee_query.sql()
+
+    # Format the SQL query with the parameters
+    formatted_query = sql % tuple(params)
+
+    return formatted_query

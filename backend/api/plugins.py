@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import HTTPException
+from fastapi import APIRouter, HTTPException
 from peewee import DoesNotExist
 from pydantic import BaseModel
 
@@ -11,7 +11,6 @@ from supabase.models.base import BasePlugin
 from supabase.models.data import Plugin
 
 
-from fastapi import APIRouter
 plugins_router = APIRouter()
 
 

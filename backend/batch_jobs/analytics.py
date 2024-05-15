@@ -13,7 +13,6 @@ from batch_jobs.common import standardize_url, extract_number_best_effort
 from common.company import standardize_company_name, slugify_company_name
 from common.config import POSTGRES_DATABASE_URL, OPEN_AI_API_KEY
 from common.gpt import InDatabaseCacheStorage
-from common.utils import now_in_utc
 from supabase.models.base import BaseGoogleWorkspace, BasePlugin
 from supabase.models.data import MarketplaceName
 
@@ -168,8 +167,8 @@ args = parser.parse_args()
 
 # TODO(P1, cost): This is somewhat expensive operation.
 #   We should separate out the field updates and the OpenAI API calls.
-# with connect_to_postgres(POSTGRES_DATABASE_URL):
-with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+with connect_to_postgres(POSTGRES_DATABASE_URL):
+# with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
     # Determine the latest p_date, either from the argument or the database
     if args.p_date:
         latest_date = args.p_date
@@ -187,6 +186,7 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
 
     # Loop through each row and apply the OpenAI API
     for add_on_row in query:
+        add_on_row: BaseGoogleWorkspace  # type hint
         # Although GPT-4 is able to fill_in_form directly, GPT-3.5 requires more handholding so we pre-process the info.
         summary_prompt = f"""
         Summarize this plugin description,
@@ -223,7 +223,7 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         plugin.name = add_on_row.name
         plugin.logo_link = add_on_row.logo_link
         plugin.marketplace_link = add_on_row.link
-        plugin.avg_rating = extract_number_best_effort(add_on_row.avg_rating)
+        plugin.avg_rating = extract_number_best_effort(add_on_row.rating)
         plugin.rating_count = add_on_row.rating_count
         plugin.user_count = add_on_row.user_count
         plugin.developer_link = standardize_url(add_on_row.developer_link)

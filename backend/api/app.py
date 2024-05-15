@@ -9,11 +9,13 @@ from supawee.client import (
 from starlette.responses import JSONResponse
 
 from api.charts import charts_router
+from api.companies import companies_router
 from api.plugins import plugins_router
 from common.config import ENV, ENV_LOCAL, ENV_PROD, POSTGRES_DATABASE_URL
 
 app = FastAPI()
 app.include_router(charts_router)
+app.include_router(companies_router)
 app.include_router(plugins_router)
 
 
