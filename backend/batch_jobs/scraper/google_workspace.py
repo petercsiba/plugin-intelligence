@@ -24,9 +24,6 @@ from batch_jobs.scraper.settings import should_save_large_fields
 from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import GoogleWorkspace
 
-# TODO(P1, completeness): Figure out a way to crawl the entire site,
-#  note that https://workspace.google.com/marketplace/sitemap.xml isn't enough
-#  Currently best effort by categories and keywords.
 SEARCH_URL = "https://workspace.google.com/marketplace/search/"
 
 LISTS = [SEARCH_URL + quote(term) for term in GOOGLE_WORKSPACE_SEARCH_TERMS] + [
