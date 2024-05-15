@@ -104,7 +104,8 @@ class BaseGoogleWorkspace(BaseDatabaseModel):
 
 
 class BasePlugin(BaseDatabaseModel):
-    company_slug = BigIntegerField(null=True)
+    avg_rating = DecimalField(null=True)
+    company_slug = TextField(null=True)
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
     developer_link = TextField(null=True)
     developer_name = TextField(null=True)
@@ -120,7 +121,6 @@ class BasePlugin(BaseDatabaseModel):
     openai_thread_id = TextField(null=True)
     overview_summary = TextField(null=True)
     pricing_tiers = TextField(null=True)
-    rating = TextField(null=True)
     rating_count = BigIntegerField(null=True)
     revenue_analysis = TextField(null=True)
     revenue_lower_bound = BigIntegerField(null=True)

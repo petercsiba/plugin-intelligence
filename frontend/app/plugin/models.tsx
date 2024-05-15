@@ -6,7 +6,7 @@ export interface TopPluginResponse {
   img_logo_link?: string;
 
   user_count: number;
-  rating?: string;
+  avg_rating?: number;
   rating_count?: number;
 
   revenue_lower_bound?: number;
@@ -24,7 +24,7 @@ export interface PluginDetailsResponse {
     img_logo_link?: string;
 
     user_count: number;
-    rating?: string;
+    avg_rating?: number;
     rating_count?: number;
 
     revenue_analysis_html?: string;

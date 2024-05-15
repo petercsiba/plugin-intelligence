@@ -9,7 +9,7 @@ from peewee import fn
 from supawee.client import connect_to_postgres
 from gpt_form_filler.openai_client import CHEAPEST_MODEL
 
-from batch_jobs.common import standardize_url
+from batch_jobs.common import standardize_url, extract_number_best_effort
 from common.company import standardize_company_name, slugify_company_name
 from common.config import POSTGRES_DATABASE_URL, OPEN_AI_API_KEY
 from common.gpt import InDatabaseCacheStorage
@@ -223,7 +223,7 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         plugin.name = add_on_row.name
         plugin.logo_link = add_on_row.logo_link
         plugin.marketplace_link = add_on_row.link
-        plugin.rating = add_on_row.rating
+        plugin.avg_rating = extract_number_best_effort(add_on_row.avg_rating)
         plugin.rating_count = add_on_row.rating_count
         plugin.user_count = add_on_row.user_count
         plugin.developer_link = standardize_url(add_on_row.developer_link)

@@ -26,13 +26,13 @@ def find_tag_and_get_text(element: Tag, tag_name: str, class_name: str) -> str:
 # print(extract_first_number(text1))  # Output: 3.62
 # print(extract_first_number(text2))  # Output: 2500000.0
 # print(extract_first_number(text3))  # Output: 12000.0
-def extract_number_best_effort(int_str: Optional[str]) -> float:
-    if int_str == "" or int_str is None:
+def extract_number_best_effort(number_str: Optional[str]) -> float:
+    if number_str == "" or number_str is None:
         return 0
 
-    int_str = int_str.replace(",", "")
+    number_str = number_str.replace(",", "")
     # Find numbers with optional K or M suffix
-    match = re.search(r"(\d+\.?\d*)([KM]?)", int_str)
+    match = re.search(r"(\d+\.?\d*)([KM]?)", number_str)
     if not match:
         return 0
 

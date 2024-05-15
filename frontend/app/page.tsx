@@ -106,7 +106,7 @@ export default function HomePage() {
                             <TableCell>Name</TableCell>
                             <TableCell>Main Tags</TableCell>
                             <TableCell>Revenue Estimate</TableCell>
-                            <TableCell>User Count</TableCell>
+                            <TableCell>Downloads</TableCell>
                             <TableCell>Lowest Paid Tier</TableCell>
                             <TableCell>Details</TableCell>
                         </TableRow>

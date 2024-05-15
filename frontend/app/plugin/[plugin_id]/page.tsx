@@ -79,8 +79,8 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                         {plugin.user_count ? `${formatNumber(plugin.user_count)} Users` : "N/A"}
                     </Typography>
                     <Rating
-                        name="plugin-rating"
-                        value={plugin.rating ? parseFloat(plugin.rating) : 0}
+                        name="plugin-avg-rating"
+                        value={plugin.avg_rating ? plugin.avg_rating : 0}
                         precision={0.25}
                         readOnly
                     />

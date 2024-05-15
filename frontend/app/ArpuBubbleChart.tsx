@@ -4,7 +4,7 @@ import { ScatterChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Scatter, Re
 import NextLink from 'next/link';
 import Box from '@mui/material/Box';
 import * as d3 from 'd3-scale';
-import {formatCurrency, formatNumber} from "@/utils";
+import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
 import { scaleLog } from 'd3-scale';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
@@ -20,7 +20,7 @@ interface BubbleData {
 
   user_count: number;
   user_count_thousands: number;
-  rating: number;  // float
+  avg_rating: number;  // float
   revenue_estimate: number;
   arpu_cents: number;
   arpu_dollars: number;
@@ -41,9 +41,9 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label })
     return (
         <div className="custom-tooltip" style={{backgroundColor: "#fff", padding: "10px", border: "1px solid #ccc"}}>
             <p><strong>{data.name}</strong></p>
-            <p className="label">{`User Count: ${formatNumber(data.user_count)}`}</p>
+            <p className="label">{`Downloads: ${formatNumberShort(data.user_count)}`}</p>
             <p>{`ARPU: ${formatCurrency(data.arpu_dollars)}`}</p>
-            <p>{`Rating: ${data.rating}`}</p>
+            <p>{`Average Rating: ${data.avg_rating}`}</p>
             <p>{`Revenue*: ${formatCurrency(data.revenue_estimate)}`}</p>
         </div>
     );
@@ -110,11 +110,11 @@ const ArpuBubbleChartComponent = () => {
                 <Legend
         payload={[
           { value: 'Revenue Estimate (Size)', type: 'circle', color: '#8884d8' },
-          { value: 'Rating (Color)', type: 'circle', color: TOP_RATING_COLOR },
+          { value: 'Average Rating (Color)', type: 'circle', color: TOP_RATING_COLOR },
         ]}
       />
           <Scatter
-            name="Estimated ARPU to User Count; Size is Revenue Estimate; Color is Rating"
+            name="Estimated ARPU to Downloads; Size is Revenue Estimate; Color is Average Rating"
             data={data}
             fill="#8884d8"
             shape={(props: { cx?: any; cy?: any; payload?: BubbleData; }) => {
@@ -126,7 +126,7 @@ const ArpuBubbleChartComponent = () => {
               // revenue = (150 * r)^2; so the maximum display is (50 * 150) ^ 2 = $11,250,000
 
               // @ts-ignore
-              const rating = Math.max(MIN_RATING, payload.rating);
+              const avg_rating = Math.max(MIN_RATING, payload?.avg_rating);
 
               return (
                   // @ts-ignore - payload is possibly undefined
@@ -136,7 +136,7 @@ const ArpuBubbleChartComponent = () => {
                       cy={props.cy}
                       r={radius}
                       // @ts-ignore (this somehow just works)
-                      fill={colorScale(rating)}
+                      fill={colorScale(avg_rating)}
                       stroke="black"
                     />
                 </NextLink>

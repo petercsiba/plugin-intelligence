@@ -293,6 +293,7 @@ async def get_all_chrome_extensions(p_date: str) -> None:
                 name=extension_data.name,
                 link=extension_data.link,
             )
+            chrome_extension: ChromeExtension
             chrome_extension.rating = extension_data.rating
             chrome_extension.rating_count = extension_data.rating_count
             chrome_extension.description = extension_data.description

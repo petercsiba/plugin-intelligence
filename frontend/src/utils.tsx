@@ -85,11 +85,7 @@ export function formatNumberShort(value: number | null): string {
 
   return cleanTrailingZero(formattedValue);
 }
-/**
- * Function to format a number with thousands separators
- * @param value - The user count value to format
- * @returns Formatted string representing the user count
- */
+
 export function formatNumber(value: number): string {
   // Use Intl.NumberFormat to format the number with thousands separators
   return new Intl.NumberFormat('en-US').format(value);

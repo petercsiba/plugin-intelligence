@@ -104,7 +104,7 @@ class TopPluginResponse(BaseModel):
 
     # Objective data
     user_count: Optional[int] = None
-    rating: Optional[str] = None
+    avg_rating: Optional[float] = None
     rating_count: Optional[int] = None
 
     # Derived stuff
@@ -153,7 +153,7 @@ def get_top_plugins(limit: int = 20):
             marketplace_link=plugin.marketplace_link,
             img_logo_link=plugin.logo_link,
             user_count=plugin.user_count,
-            rating=plugin.rating,
+            avg_rating=plugin.avg_rating,
             rating_count=plugin.rating_count,
             revenue_lower_bound=plugin.revenue_lower_bound,
             revenue_upper_bound=plugin.revenue_upper_bound,
@@ -173,7 +173,7 @@ class ChartsMainResponse(BaseModel):
     # Math fields
     user_count: int
     user_count_thousands: int
-    rating: float
+    avg_rating: float
     revenue_estimate: int
     arpu_cents: int
     arpu_dollars: float
@@ -192,7 +192,7 @@ def get_top_plugins(limit: int = 50, max_arpu_cents: int = 200):
         Plugin.select()
         .where(
             (Plugin.user_count.is_null(False))
-            & (Plugin.rating.is_null(False))
+            & (Plugin.avg_rating.is_null(False))
             & (Plugin.revenue_lower_bound.is_null(False))
             & (Plugin.revenue_upper_bound.is_null(False))
             & (Plugin.user_count > 1000)
@@ -231,7 +231,7 @@ def get_top_plugins(limit: int = 50, max_arpu_cents: int = 200):
             # math stuff
             user_count=plugin.user_count,
             user_count_thousands=plugin.user_count // 1000,
-            rating=float(plugin.rating),
+            avg_rating=plugin.avg_rating,
             revenue_estimate=revenue_estimate,
             arpu_cents=arpu_cents,
             arpu_dollars=arpu_cents / 100.0,
@@ -252,7 +252,7 @@ class PluginDetailsResponse(BaseModel):
 
     # Objective Data
     user_count: Optional[int] = None
-    rating: Optional[str] = None
+    avg_rating: Optional[float] = None
     rating_count: Optional[int] = None
 
     # Money Stuff
@@ -349,7 +349,7 @@ async def get_plugin_details(plugin_id: int):
 
         # objective stuff
         response.user_count = plugin.user_count
-        response.rating = plugin.rating
+        response.avg_rating = plugin.avg_rating
         response.rating_count = plugin.rating_count
 
         # revenue stuff

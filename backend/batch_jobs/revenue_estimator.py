@@ -27,7 +27,7 @@ google_ids = ["619840861140", "258179390912"]
 class RevenueEstimatorInputs:
     name: str
     developer_name: str
-    rating: float
+    avg_rating: float
     rating_count: int
     user_count: int
     link: str
@@ -40,7 +40,7 @@ class RevenueEstimatorInputs:
 
     def to_prompt(self):
         return f"""
-        Plugin name {self.name} by {self.developer_name} has a rating of {self.rating} with {self.rating_count} ratings.
+        Plugin name {self.name} by {self.developer_name} has an average rating of {self.avg_rating} with {self.rating_count} ratings.
         It has {self.user_count} users and was last updated on {self.listing_updated}.
         You can find it by searching {self.search_terms} on the Google Workspace Marketplace.
         The pricing category is {self.pricing_category} with pricing tiers {self.pricing_tiers}.
@@ -54,7 +54,7 @@ def add_on_to_inputs(
     return RevenueEstimatorInputs(
         name=scraped_data.name,
         developer_name=scraped_data.developer_name,
-        rating=scraped_data.rating,
+        avg_rating=scraped_data.rating,
         rating_count=scraped_data.rating_count,
         user_count=scraped_data.user_count,
         link=scraped_data.link,
