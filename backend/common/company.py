@@ -65,7 +65,6 @@ def standardize_company_name(name: str) -> str:
         )
         maybe_website_chunks[-1] = re.sub(pattern, "", last_chunk)
         name = " ".join(maybe_website_chunks)
-        print(name)
 
     if "." in name:
         # If the name contains a period, it's likely a website-only name
@@ -75,19 +74,15 @@ def standardize_company_name(name: str) -> str:
             # Capitalize only the domain name part, e.g. google.com -> Google.com
             name = name.capitalize()
         # Leave more complex website names as is e.g. nsspot.herokuapp.com/coincreator
-    print(name)
 
     # Remove non-alphanumeric characters at beginning and end
     name = re.sub(r"^[^\w]+|[^\w]+$", "", name, flags=re.UNICODE)
-    print(name)
 
     # Remove punctuation (we keep "." for website-only names)
     name = re.sub(r"[\|,]", "", name)
-    print(name)
 
     if "." not in name:
         # Ensure capitalization for each word if not a website-only name
         name = " ".join(word.capitalize() for word in name.split())
-    print(name)
 
     return name

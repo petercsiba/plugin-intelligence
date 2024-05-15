@@ -148,3 +148,8 @@ To deploy it:
 ```shell
 fly deploy --config batch_jobs/fly.toml
 ```
+
+For batch jobs you might want to set restart policy to `no` so you can detect errors ASAP:
+```shell
+fly m update 9080ee4a653d08 --restart no
+```

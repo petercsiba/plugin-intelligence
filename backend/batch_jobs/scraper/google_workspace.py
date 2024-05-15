@@ -256,6 +256,10 @@ def process_add_on_page_response(
 
     developer_a = soup.find("a", class_="DmgOFc Sm1toc")
     if developer_a:
+        # Remove all subtags within the found <a> tag, this for .text to work correctly for subtags like:
+        # <i class="google-material-icons bmrmhd" aria-hidden="true">open_in_new</i>
+        for child_tag in developer_a.find_all(True):
+            child_tag.decompose()
         add_on.developer_name = developer_a.text.strip()
         add_on.developer_link = developer_a["href"]
     else:
