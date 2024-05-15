@@ -32,7 +32,7 @@ def extract_number_best_effort(int_str: Optional[str]) -> float:
 
     int_str = int_str.replace(",", "")
     # Find numbers with optional K or M suffix
-    match = re.search(r'(\d+\.?\d*)([KM]?)', int_str)
+    match = re.search(r"(\d+\.?\d*)([KM]?)", int_str)
     if not match:
         return 0
 
@@ -58,19 +58,19 @@ def listing_updated_str_to_date(listing_updated_str: str) -> datetime.date:
 
 def is_html_in_english(soup: BeautifulSoup) -> bool:
     # Check the lang attribute in the <html> tag
-    html_tag = soup.find('html')
-    if html_tag and html_tag.has_attr('lang'):
-        if 'en' in html_tag['lang'].lower():
+    html_tag = soup.find("html")
+    if html_tag and html_tag.has_attr("lang"):
+        if "en" in html_tag["lang"].lower():
             return True
 
     # Check the lang attribute in <meta> tags
-    meta_tags = soup.find_all('meta')
+    meta_tags = soup.find_all("meta")
     for meta_tag in meta_tags:
-        if meta_tag.get('http-equiv') == 'Content-Language':
-            if 'en' in meta_tag.get('content', '').lower():
+        if meta_tag.get("http-equiv") == "Content-Language":
+            if "en" in meta_tag.get("content", "").lower():
                 return True
-        if meta_tag.get('name') == 'language':
-            if 'en' in meta_tag.get('content', '').lower():
+        if meta_tag.get("name") == "language":
+            if "en" in meta_tag.get("content", "").lower():
                 return True
 
     # Optionally, check text content for further validation (if necessary)
@@ -82,40 +82,48 @@ def standardize_url(url: str) -> Optional[str]:
     try:
         # Ensure the URL has a scheme
         if not urlparse(url).scheme:
-            url = 'http://' + url
+            url = "http://" + url
 
         # Parse the URL
         parsed_url = urlparse(url)
 
         # Check if the scheme and netloc are present
-        if not parsed_url.scheme or not parsed_url.netloc or len(parsed_url.scheme) == 0:
+        if (
+            not parsed_url.scheme
+            or not parsed_url.netloc
+            or len(parsed_url.scheme) == 0
+        ):
             return None
         print("scheme: ", parsed_url.scheme)
 
         # Ensure netloc does not contain invalid characters like "://"
-        if '://' in parsed_url.netloc or not parsed_url.netloc:
+        if "://" in parsed_url.netloc or not parsed_url.netloc:
             return None
 
         # Upgrade http to https, keep other schemes as is
-        scheme = 'https' if parsed_url.scheme in ['http', 'https'] else parsed_url.scheme
+        scheme = (
+            "https" if parsed_url.scheme in ["http", "https"] else parsed_url.scheme
+        )
 
         # Add www if missing
         netloc = parsed_url.netloc.lower()
         if len(netloc.split(".")) <= 2:
-            netloc = 'www.' + netloc
+            netloc = "www." + netloc
 
         # Remove default port 80 if present
-        if netloc.endswith(':80'):
+        if netloc.endswith(":80"):
             netloc = netloc[:-3]
 
         # Standardize the rest of the URL components
-        path = parsed_url.path if parsed_url.path else '/'
+        path = parsed_url.path if parsed_url.path else "/"
         params = parsed_url.params
         query = parsed_url.query
         fragment = parsed_url.fragment
 
         # Rebuild the URL
-        standardized_url = urlunparse((scheme, netloc, path, params, query, fragment)).lower()
+        standardized_url = urlunparse(
+            (scheme, netloc, path, params, query, fragment)
+        ).lower()
         return standardized_url
     except Exception as e:
         # Return None if any error occurs

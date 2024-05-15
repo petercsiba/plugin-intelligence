@@ -19,7 +19,8 @@ from batch_jobs.common import (
     ASYNC_IO_MAX_PARALLELISM,
     find_tag_and_get_text,
     listing_updated_str_to_date,
-    extract_number_best_effort, is_html_in_english,
+    extract_number_best_effort,
+    is_html_in_english,
 )
 from batch_jobs.scraper.search_terms import CHROME_EXTENSION_SEARCH_TERMS
 from common.config import POSTGRES_DATABASE_URL
@@ -198,7 +199,9 @@ def process_extension_page_response(
     img_logo_tag = soup.find("img", class_="rBxtY")
     chrome_extension.logo_link = img_logo_tag.get("src") if img_logo_tag else None
     featured_img_tag = soup.find("img", class_="VuCTZc")
-    chrome_extension.featured_img_link = featured_img_tag.get("src") if featured_img_tag else None
+    chrome_extension.featured_img_link = (
+        featured_img_tag.get("src") if featured_img_tag else None
+    )
 
     category_and_users_tag = soup.find("div", class_="F9iKBc")
     chrome_extension.categories = [

@@ -109,13 +109,15 @@ def get_backlinks_summary_live(target_url: str) -> ApiResponse:
     return post_request("backlinks/summary/live", json_payload)
 
 
-def get_backlinks_competitors_live(target_url: str, min_rank: int = 10, limit: int = 25) -> ApiResponse:
+def get_backlinks_competitors_live(
+    target_url: str, min_rank: int = 10, limit: int = 25
+) -> ApiResponse:
     json_payload = [
         {
             "target": ensure_slash_after_tld(target_url),
             "filters": ["rank", ">", min_rank],
             "order_by": ["rank,desc"],
-            "limit": limit
+            "limit": limit,
         },
     ]
     return post_request("backlinks/competitors/live", json_payload)
@@ -171,10 +173,14 @@ def labs_competitors_domain(target_url: str) -> ApiResponse:
                 [
                     ["metrics.organic.count", ">=", 5],  # was 50
                     "and",
-                    ["metrics.organic.pos_1", "in", [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]]  # was 1, 2, 3
+                    [
+                        "metrics.organic.pos_1",
+                        "in",
+                        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    ],  # was 1, 2, 3
                 ],
                 "or",
-                ["metrics.organic.etv", ">=", 10]  # was 100
+                ["metrics.organic.etv", ">=", 10],  # was 100
             ],
             "limit": 10,
         }

@@ -62,8 +62,7 @@ plugin_intel_form = FormDefinition("plugin_intel", plugin_intel_form_fields)
 extra_fieldnames = [field.name for field in plugin_intel_form_fields]
 
 openai_client = OpenAiClient(
-    open_ai_api_key=OPEN_AI_API_KEY,
-    cache_store=InDatabaseCacheStorage()
+    open_ai_api_key=OPEN_AI_API_KEY, cache_store=InDatabaseCacheStorage()
 )
 
 
@@ -78,6 +77,7 @@ def workspace_row_to_prompt(row: BaseGoogleWorkspace, overview_summary: str):
 The plugin name is {row.name} {pricing}
 Let me tell you much more about the plugin: {overview_summary}
     """
+
 
 #     return f"""
 # Plugin info:
@@ -108,13 +108,13 @@ def parse_to_list(input_str: Optional[Any]):
 
     for line in lines:
         # Check if the line has asterisks or commas, handle both cases
-        if '*' in line:
+        if "*" in line:
             # Handle lines prefixed with '*'
-            items.extend([item.strip() for item in line.split('*') if item.strip()])
-        elif ',' in line:
-            items.extend([item.strip() for item in line.split(',') if item.strip()])
-        elif ';' in line:
-            items.extend([item.strip() for item in line.split(';') if item.strip()])
+            items.extend([item.strip() for item in line.split("*") if item.strip()])
+        elif "," in line:
+            items.extend([item.strip() for item in line.split(",") if item.strip()])
+        elif ";" in line:
+            items.extend([item.strip() for item in line.split(";") if item.strip()])
         else:
             items.append(line)
 
@@ -128,17 +128,25 @@ def parse_to_list(input_str: Optional[Any]):
 
 
 load_dotenv()
-YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get("YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL")
+YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
+    "YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL"
+)
 
 
 # TODO(P1, cost): This is a very expensive operation. We should consider running this in batches.
 #   https://platform.openai.com/docs/guides/batch/model-availability
-#with connect_to_postgres(POSTGRES_DATABASE_URL):
+# with connect_to_postgres(POSTGRES_DATABASE_URL):
 with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
-    latest_date = BaseGoogleWorkspace.select(fn.MAX(BaseGoogleWorkspace.p_date)).scalar()
+    latest_date = BaseGoogleWorkspace.select(
+        fn.MAX(BaseGoogleWorkspace.p_date)
+    ).scalar()
     print(f"LATEST P_DATE is {latest_date}")
 
-    query = BaseGoogleWorkspace.select().where(BaseGoogleWorkspace.p_date == latest_date).order_by(fn.COALESCE(BaseGoogleWorkspace.user_count, -1).desc())
+    query = (
+        BaseGoogleWorkspace.select()
+        .where(BaseGoogleWorkspace.p_date == latest_date)
+        .order_by(fn.COALESCE(BaseGoogleWorkspace.user_count, -1).desc())
+    )
 
     # Loop through each row and apply the OpenAI API
     for add_on_row in query.limit(200):
@@ -148,7 +156,9 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         while making sure you persist pricing information, who is it for and all relevant capabilities.
         My note is:  {add_on_row.overview}
         """
-        overview_summary = openai_client.run_prompt(prompt=summary_prompt, model=CHEAPEST_MODEL)
+        overview_summary = openai_client.run_prompt(
+            prompt=summary_prompt, model=CHEAPEST_MODEL
+        )
         # Fill in the form using OpenAI
         form_data_obj, err = openai_client.fill_in_form(
             form=plugin_intel_form,
@@ -157,7 +167,9 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         )
 
         if err:
-            print(f"ERROR: processing BaseGoogleWorkspace google_id {add_on_row.google_id}: {err}")
+            print(
+                f"ERROR: processing BaseGoogleWorkspace google_id {add_on_row.google_id}: {err}"
+            )
             continue
 
         form_data = form_data_obj.to_dict()
@@ -182,23 +194,29 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         plugin.company_slug = slugify_company_name(company_name)
 
         # Add new stuff to the Plugin table
-        plugin.pricing_tiers = parse_to_list(form_data.get('pricing_tiers'))
-        plugin.lowest_paid_tier = form_data.get('lowest_paid_tier')
+        plugin.pricing_tiers = parse_to_list(form_data.get("pricing_tiers"))
+        plugin.lowest_paid_tier = form_data.get("lowest_paid_tier")
         if plugin.lowest_paid_tier == 0:
             plugin.lowest_paid_tier = None
 
-        plugin.main_integrations = parse_to_list(form_data.get('main_integrations'))
+        plugin.main_integrations = parse_to_list(form_data.get("main_integrations"))
         plugin.overview_summary = overview_summary
-        plugin.elevator_pitch = form_data.get('elevator_pitch')
-        plugin.tags = parse_to_list(form_data.get('tags'))
+        plugin.elevator_pitch = form_data.get("elevator_pitch")
+        plugin.tags = parse_to_list(form_data.get("tags"))
 
-        if plugin.rating_count and plugin.rating_count > 20 and add_on_row.reviews.count("ReviewData") > 4:
+        if (
+            plugin.rating_count
+            and plugin.rating_count > 20
+            and add_on_row.reviews.count("ReviewData") > 4
+        ):
             # add_on_row.reviews is formatted as (for historical reasons):
             # [ReviewData(name='John Doe', rating=5, date='2022-01-01', review='Great app!'), ...]
             reviews_summary_prompt = f"""
             Summarize these customer reviews to fill in a section "Customers Say":  {add_on_row.reviews}
             """
-            plugin.reviews_summary = openai_client.run_prompt(reviews_summary_prompt, model=CHEAPEST_MODEL)
+            plugin.reviews_summary = openai_client.run_prompt(
+                reviews_summary_prompt, model=CHEAPEST_MODEL
+            )
 
         print(f"Plugin id: {plugin.id} saved (has {add_on_row.user_count} users)")
         plugin.save()

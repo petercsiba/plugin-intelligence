@@ -3,9 +3,17 @@ from typing import List
 
 from supawee.client import connect_to_postgres
 
-from batch_jobs.scraper.google_workspace import ScrapeAddOnDetailsJob, scrape_google_workspace_add_ons, \
-    get_google_id_from_marketplace_link, sync_scrape_add_on_details, process_add_on_page_response
-from batch_jobs.scraper.wayback import wayback_get_all_snapshot_urls, requests_get_with_retry
+from batch_jobs.scraper.google_workspace import (
+    ScrapeAddOnDetailsJob,
+    scrape_google_workspace_add_ons,
+    get_google_id_from_marketplace_link,
+    sync_scrape_add_on_details,
+    process_add_on_page_response,
+)
+from batch_jobs.scraper.wayback import (
+    wayback_get_all_snapshot_urls,
+    requests_get_with_retry,
+)
 from common.config import POSTGRES_DATABASE_URL
 from supabase.models.base import BaseGoogleWorkspace
 from supabase.models.data import GoogleWorkspace
@@ -42,11 +50,17 @@ def google_workspace_previous_domains() -> List[str]:
 # * 15,000-30,000 requests with 5-15 requests per minute
 # * 1,000-6,000 minutes = 16-100 hours runtime
 def backfill_google_workspace():
-    distinct_links = (BaseGoogleWorkspace
-                      .select(BaseGoogleWorkspace.link, BaseGoogleWorkspace.user_count)
-                      .distinct()
-                      .where(BaseGoogleWorkspace.link.is_null(False) & BaseGoogleWorkspace.user_count.is_null(False))
-                      .order_by(BaseGoogleWorkspace.user_count.desc()))
+    distinct_links = (
+        BaseGoogleWorkspace.select(
+            BaseGoogleWorkspace.link, BaseGoogleWorkspace.user_count
+        )
+        .distinct()
+        .where(
+            BaseGoogleWorkspace.link.is_null(False)
+            & BaseGoogleWorkspace.user_count.is_null(False)
+        )
+        .order_by(BaseGoogleWorkspace.user_count.desc())
+    )
     print("Distinct links count:", distinct_links.count())
 
     total_scraped = 0
@@ -55,16 +69,20 @@ def backfill_google_workspace():
         wayback_snapshots = []
         for previous_domain in google_workspace_previous_domains():
             target_url = add_on.link.replace("workspace.google.com", previous_domain)
-            wayback_snapshots.extend(wayback_get_all_snapshot_urls(target_url=target_url, day_step=1))
+            wayback_snapshots.extend(
+                wayback_get_all_snapshot_urls(target_url=target_url, day_step=1)
+            )
 
         scrape_jobs = []
         for snapshot in wayback_snapshots:
-            scrape_jobs.append(ScrapeAddOnDetailsJob(
-                url=snapshot.wayback_url(),
-                p_date=snapshot.p_date_str(),
-                marketplace_link=add_on.link,
-                google_id=get_google_id_from_marketplace_link(add_on.link),
-            ))
+            scrape_jobs.append(
+                ScrapeAddOnDetailsJob(
+                    url=snapshot.wayback_url(),
+                    p_date=snapshot.p_date_str(),
+                    marketplace_link=add_on.link,
+                    google_id=get_google_id_from_marketplace_link(add_on.link),
+                )
+            )
 
         print(f"Accumulated enough jobs {len(scrape_jobs)}, gonna scrape one-by-one...")
         for scrape_job in scrape_jobs:
@@ -72,7 +90,10 @@ def backfill_google_workspace():
                 print(f"Skipping as it is already scraped: {scrape_job.url}")
                 continue
 
-            print(f"Scraping ({scrape_job.google_id}, {scrape_job.p_date}) from ", scrape_job.url)
+            print(
+                f"Scraping ({scrape_job.google_id}, {scrape_job.p_date}) from ",
+                scrape_job.url,
+            )
             response = requests_get_with_retry(scrape_job.url)
             if response and response.status_code == 200:
                 process_add_on_page_response(scrape_job, response.text)
@@ -81,7 +102,9 @@ def backfill_google_workspace():
                 print(f"WARNING: cannot get contents of {scrape_job.url}")
 
         avg_per_minute = 60 * total_scraped / (time.time() - scraping_start)
-        print(f"Total scraped so far: {total_scraped}; on average {avg_per_minute} per minute")
+        print(
+            f"Total scraped so far: {total_scraped}; on average {avg_per_minute} per minute"
+        )
 
 
 # For Chrome Extensions

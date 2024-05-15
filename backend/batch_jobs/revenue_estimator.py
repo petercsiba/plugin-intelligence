@@ -17,8 +17,7 @@ from supabase.models.base import BaseGoogleWorkspace
 from supabase.models.data import Plugin, MarketplaceName, Plugin
 
 openai_client = OpenAiClient(
-    open_ai_api_key=OPEN_AI_API_KEY,
-    cache_store=InDatabaseCacheStorage()
+    open_ai_api_key=OPEN_AI_API_KEY, cache_store=InDatabaseCacheStorage()
 )
 
 google_ids = ["619840861140", "258179390912"]
@@ -49,7 +48,9 @@ class RevenueEstimatorInputs:
         """
 
 
-def add_on_to_inputs(plugin: Plugin, scraped_data: BaseGoogleWorkspace) -> RevenueEstimatorInputs:
+def add_on_to_inputs(
+    plugin: Plugin, scraped_data: BaseGoogleWorkspace
+) -> RevenueEstimatorInputs:
     return RevenueEstimatorInputs(
         name=scraped_data.name,
         developer_name=scraped_data.developer_name,
@@ -61,7 +62,7 @@ def add_on_to_inputs(plugin: Plugin, scraped_data: BaseGoogleWorkspace) -> Reven
         pricing_category=scraped_data.pricing,
         pricing_tiers=plugin.pricing_tiers,
         overview_summary=plugin.overview_summary,
-        search_terms=plugin.search_terms
+        search_terms=plugin.search_terms,
     )
 
 
@@ -71,8 +72,12 @@ client = OpenAI(api_key=OPEN_AI_API_KEY)
 def chatgpt_usage_pretty_print(model: str, usage: Usage):
     input_tok = usage.prompt_tokens
     output_tok = usage.completion_tokens
-    cost = chatgpt_cost_estimate_millionth_dollar(model, input_tok, output_tok) / 1_000_000
-    print(f"${cost} for model: {model} prompt tokens: {input_tok}, completion tokens: {output_tok}")
+    cost = (
+        chatgpt_cost_estimate_millionth_dollar(model, input_tok, output_tok) / 1_000_000
+    )
+    print(
+        f"${cost} for model: {model} prompt tokens: {input_tok}, completion tokens: {output_tok}"
+    )
 
 
 def chatgpt_cost_estimate_millionth_dollar(model, input_tok, output_tok):
@@ -101,13 +106,17 @@ def concatenate_assistant_messages(messages: List[Message]) -> str:
                 if isinstance(content_block, TextContentBlock):
                     concatenated_text.append(content_block.text.value)
                 else:
-                    print(f"Skipping non-text content block of type {type(content_block)}")
+                    print(
+                        f"Skipping non-text content block of type {type(content_block)}"
+                    )
         elif message.role == "user":
             break  # Stop once we hit the first user message
     return "\n\n".join(reversed(concatenated_text))
 
 
-def generate_revenue_estimate(inputs: RevenueEstimatorInputs) -> Tuple[Optional[str], Optional[str]]:
+def generate_revenue_estimate(
+    inputs: RevenueEstimatorInputs,
+) -> Tuple[Optional[str], Optional[str]]:
     # https://platform.openai.com/assistants/asst_1wT0hJmnfnlm8f3kLfHJyVqx
     assistant = client.beta.assistants.retrieve("asst_1wT0hJmnfnlm8f3kLfHJyVqx")
 
@@ -131,7 +140,7 @@ def generate_revenue_estimate(inputs: RevenueEstimatorInputs) -> Tuple[Optional[
     chatgpt_usage_pretty_print(run.model, run.usage)
 
     # If the run is completed, print the messages
-    if run.status == 'completed':
+    if run.status == "completed":
         messages = client.beta.threads.messages.list(thread_id=thread.id)
         response_text = concatenate_assistant_messages(messages)
         return response_text, thread.id
@@ -177,7 +186,9 @@ def extract_bounds(text: Optional[str]) -> Tuple[int, int]:
 
 
 load_dotenv()
-YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get("YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL")
+YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
+    "YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL"
+)
 
 
 def main():

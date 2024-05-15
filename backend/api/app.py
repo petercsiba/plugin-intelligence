@@ -76,8 +76,7 @@ async def add_cors_headers(request: Request, call_next):
 
         # Return a JSON response with CORS headers on error
         response = JSONResponse(
-            content={"detail": "Internal Server Error"},
-            status_code=500
+            content={"detail": "Internal Server Error"}, status_code=500
         )
 
     # Ensure CORS headers are added
@@ -120,12 +119,12 @@ def parse_number_from_string(input_string: Optional[str]):
         return None
 
     # Find all numbers in the string (this regex handles integers and floats)
-    numbers = re.findall(r'[-+]?\d*\.\d+|\d+', input_string)
+    numbers = re.findall(r"[-+]?\d*\.\d+|\d+", input_string)
 
     if numbers:
         # Attempt to convert the first number found to a float or integer
         number = numbers[0]
-        if '.' in number:
+        if "." in number:
             return float(number)
         else:
             return int(number)
@@ -137,13 +136,13 @@ def parse_number_from_string(input_string: Optional[str]):
 @app.get("/top-plugins/", response_model=List[TopPluginResponse])
 def get_top_plugins(limit: int = 20):
     if limit > MAX_LIMIT:
-        raise HTTPException(status_code=400, detail=f"Limit exceeds the maximum allowed value of {MAX_LIMIT}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Limit exceeds the maximum allowed value of {MAX_LIMIT}",
+        )
 
     # Query the top plugins by upper_bound
-    query = (Plugin
-             .select()
-             .order_by(Plugin.revenue_upper_bound.desc())
-             .limit(limit))
+    query = Plugin.select().order_by(Plugin.revenue_upper_bound.desc()).limit(limit)
 
     top_plugins = []
     for plugin in query:
@@ -183,34 +182,46 @@ class ChartsMainResponse(BaseModel):
 @app.get("/charts/arpu-bubble", response_model=List[ChartsMainResponse])
 def get_top_plugins(limit: int = 50, max_arpu_cents: int = 200):
     if limit > MAX_LIMIT:
-        raise HTTPException(status_code=400, detail=f"Limit exceeds the maximum allowed value of {MAX_LIMIT}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Limit exceeds the maximum allowed value of {MAX_LIMIT}",
+        )
 
     # Query the top plugins by upper_bound
-    query = (Plugin
-             .select()
-            .where(
-                (Plugin.user_count.is_null(False)) &
-                (Plugin.rating.is_null(False)) &
-                (Plugin.revenue_lower_bound.is_null(False)) &
-                (Plugin.revenue_upper_bound.is_null(False)) &
-                (Plugin.user_count > 1000) &
-                (Plugin.rating_count > 1) &
-                (Plugin.revenue_lower_bound > 0) &
-                (Plugin.revenue_upper_bound > 0)
-            )
-             .order_by(Plugin.revenue_upper_bound.desc())
-             .limit(limit))
+    query = (
+        Plugin.select()
+        .where(
+            (Plugin.user_count.is_null(False))
+            & (Plugin.rating.is_null(False))
+            & (Plugin.revenue_lower_bound.is_null(False))
+            & (Plugin.revenue_upper_bound.is_null(False))
+            & (Plugin.user_count > 1000)
+            & (Plugin.rating_count > 1)
+            & (Plugin.revenue_lower_bound > 0)
+            & (Plugin.revenue_upper_bound > 0)
+        )
+        .order_by(Plugin.revenue_upper_bound.desc())
+        .limit(limit)
+    )
 
     data = []
     for plugin in query:
         # Sometimes the upper bound is crazy
         # revenue_estimate = (plugin.revenue_lower_bound + plugin.upper_bound) // 2
         # TODO: Be better
-        revenue_estimate = int(0.9 * plugin.revenue_lower_bound + 0.1 * plugin.revenue_upper_bound)
+        revenue_estimate = int(
+            0.9 * plugin.revenue_lower_bound + 0.1 * plugin.revenue_upper_bound
+        )
 
         arpu_cents = int((100 * revenue_estimate) // plugin.user_count)
         if arpu_cents > max_arpu_cents:
-            print("WARNING: ARPU is too high for plugin", plugin.id, arpu_cents, revenue_estimate, plugin.user_count)
+            print(
+                "WARNING: ARPU is too high for plugin",
+                plugin.id,
+                arpu_cents,
+                revenue_estimate,
+                plugin.user_count,
+            )
             arpu_cents = max_arpu_cents
 
         plugin_response = ChartsMainResponse(
@@ -265,16 +276,18 @@ class PluginDetailsResponse(BaseModel):
     # openai_thread_id: Optional[str]
 
 
-def parse_fuzzy_list(list_str: Optional[str], max_elements: int = None) -> Optional[list]:
+def parse_fuzzy_list(
+    list_str: Optional[str], max_elements: int = None
+) -> Optional[list]:
     if list_str is None:
         return None
 
     list_str = list_str.replace("'", "").replace('"', "")
 
     # Split the string by commas and handle special cases
-    items = re.split(r',\s*(?![^[]*\])', list_str)  # noqa
+    items = re.split(r",\s*(?![^[]*\])", list_str)  # noqa
     # Further refine each item description
-    structured_items = [re.sub(r'[\*]\s*', '', item.strip()) for item in items]  # noqa
+    structured_items = [re.sub(r"[\*]\s*", "", item.strip()) for item in items]  # noqa
 
     if max_elements:
         structured_items = structured_items[:max_elements]
@@ -293,7 +306,7 @@ def prompt_output_to_html(prompt_output: Optional[str]) -> Optional[str]:
         return None
 
     # Pattern to detect LaTeX within \( ... \) or \[ ... \] delimiters
-    patterns = [r'\\\((.*?)\\\)', r'\\\[(.*?)\\\]']
+    patterns = [r"\\\((.*?)\\\)", r"\\\[(.*?)\\\]"]
 
     def replace_latex(match):
         latex_content = match.group(1).strip()
@@ -305,16 +318,13 @@ def prompt_output_to_html(prompt_output: Optional[str]) -> Optional[str]:
 
     # Convert the rest of the Markdown to HTML
     extensions = [
-        'fenced_code',  # Allows using fenced code blocks (```code```)
-        'codehilite'    # Syntax highlighting for code blocks
+        "fenced_code",  # Allows using fenced code blocks (```code```)
+        "codehilite",  # Syntax highlighting for code blocks
     ]
-    extension_configs = {
-        'codehilite': {
-            'use_pygments': True,
-            'css_class': 'highlight'
-        }
-    }
-    html = markdown.markdown(prompt_output, extensions=extensions, extension_configs=extension_configs)
+    extension_configs = {"codehilite": {"use_pygments": True, "css_class": "highlight"}}
+    html = markdown.markdown(
+        prompt_output, extensions=extensions, extension_configs=extension_configs
+    )
 
     return html.replace("\\$", "$")
 
@@ -343,14 +353,18 @@ async def get_plugin_details(plugin_id: int):
 
         # revenue stuff
         # TODO(P1, devx): For some WTF reason this translates to JSON
-        response.revenue_lower_bound = plugin.revenue_lower_bound,
-        response.revenue_upper_bound = plugin.revenue_upper_bound,
-        response.revenue_analysis_html = prompt_output_to_html(plugin.revenue_analysis),
+        response.revenue_lower_bound = (plugin.revenue_lower_bound,)
+        response.revenue_upper_bound = (plugin.revenue_upper_bound,)
+        response.revenue_analysis_html = (
+            prompt_output_to_html(plugin.revenue_analysis),
+        )
 
         response.elevator_pitch = plugin.elevator_pitch
         response.main_integrations = plugin.main_integrations
         response.overview_summary = plugin.overview_summary
-        response.overview_summary_html = prompt_output_to_html(plugin.overview_summary),
+        response.overview_summary_html = (
+            prompt_output_to_html(plugin.overview_summary),
+        )
         response.pricing_tiers = parse_fuzzy_list(plugin.pricing_tiers)
         response.lowest_paid_tier = plugin.lowest_paid_tier
         response.search_terms = plugin.search_terms
@@ -361,4 +375,6 @@ async def get_plugin_details(plugin_id: int):
         return response
 
     except DoesNotExist:
-        raise HTTPException(status_code=404, detail=f"Plugin with ID {plugin_id} not found.")
+        raise HTTPException(
+            status_code=404, detail=f"Plugin with ID {plugin_id} not found."
+        )

@@ -15,7 +15,9 @@ from supawee.client import connect_to_postgres
 from batch_jobs.common import (
     ASYNC_IO_MAX_PARALLELISM,
     find_tag_and_get_text,
-    listing_updated_str_to_date, extract_number_best_effort, is_html_in_english,
+    listing_updated_str_to_date,
+    extract_number_best_effort,
+    is_html_in_english,
 )
 from batch_jobs.scraper.search_terms import GOOGLE_WORKSPACE_SEARCH_TERMS
 from batch_jobs.scraper.settings import should_save_large_fields
@@ -71,7 +73,9 @@ def get_google_id_from_marketplace_link(link: str):
     return parsed_url.path.split("/")[-1]
 
 
-def get_add_ons_from_listing_page(listing_url: str, p_date: str) -> List[ScrapeAddOnDetailsJob]:
+def get_add_ons_from_listing_page(
+    listing_url: str, p_date: str
+) -> List[ScrapeAddOnDetailsJob]:
     print(f"getting add_ons from marketplace listing page {listing_url}")
     # Send a request to the URL
     response = requests.get(listing_url)
@@ -165,19 +169,25 @@ def parse_reviews(soup) -> List[ReviewData]:
 
 
 def parse_rating_info(soup: BeautifulSoup) -> Tuple[Optional[float], Optional[int]]:
-    rating_value_meta = soup.find('meta', itemprop='ratingValue')
-    rating = float(rating_value_meta.get('content')) if rating_value_meta else None
+    rating_value_meta = soup.find("meta", itemprop="ratingValue")
+    rating = float(rating_value_meta.get("content")) if rating_value_meta else None
 
-    rating_count_span = soup.find('span', itemprop='ratingCount')
-    rating_count = extract_number_best_effort(rating_count_span.text) if rating_count_span else None
+    rating_count_span = soup.find("span", itemprop="ratingCount")
+    rating_count = (
+        extract_number_best_effort(rating_count_span.text)
+        if rating_count_span
+        else None
+    )
 
     # The above should work, but sometimes this label has higher precision:
-    average_rating_divs = soup.find_all('div', attrs={'aria-label': lambda x: x and x.startswith('Average rating')})
+    average_rating_divs = soup.find_all(
+        "div", attrs={"aria-label": lambda x: x and x.startswith("Average rating")}
+    )
     if average_rating_divs:
         # Regular expression to extract the rating value
-        rating_pattern = re.compile(r'Average rating:\s*([0-9.]+)')
+        rating_pattern = re.compile(r"Average rating:\s*([0-9.]+)")
 
-        aria_label = average_rating_divs[0].get('aria-label', '')
+        aria_label = average_rating_divs[0].get("aria-label", "")
         match = rating_pattern.search(aria_label)
         if match:
             rating = match.group(1)
@@ -187,25 +197,33 @@ def parse_rating_info(soup: BeautifulSoup) -> Tuple[Optional[float], Optional[in
 
 def parse_downloads_count(soup: BeautifulSoup, url: str) -> Optional[int]:
     # <div aria-label="457,795 users have installed this app.">457,795</div>
-    user_div = soup.find('div', {'aria-label': lambda x: x and 'users have installed this app' in x})
+    user_div = soup.find(
+        "div", {"aria-label": lambda x: x and "users have installed this app" in x}
+    )
     if user_div:
-        aria_label = user_div.get('aria-label', '')
-        return int(extract_number_best_effort(aria_label.split(' ')[0]))
+        aria_label = user_div.get("aria-label", "")
+        return int(extract_number_best_effort(aria_label.split(" ")[0]))
 
     # 20210509075544 (is missing that aria-label div)
     user_count_str = find_tag_and_get_text(soup, "div", "LCopac qlfxzd")
     user_count = extract_number_best_effort(user_count_str)
     if user_count == 0:
-        print(f"WARNING: cannot find downloads_count_div LCopac NOR aria-label for url {url}")
+        print(
+            f"WARNING: cannot find downloads_count_div LCopac NOR aria-label for url {url}"
+        )
     return int(user_count)
 
 
 # TODO(P1, reliability): Consume all exceptions and keep on running the job
-def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html: str) -> None:
+def process_add_on_page_response(
+    scrape_job: ScrapeAddOnDetailsJob, add_on_html: str
+) -> None:
     soup = BeautifulSoup(add_on_html, "html.parser")
     if not is_html_in_english(soup):
         # TODO(P3, performance): In an ideal world we should skip downloading this html with a row in the DB
-        print(f"WARNING: page is not in English for {scrape_job.url}, rather skipping than getting wrong data.")
+        print(
+            f"WARNING: page is not in English for {scrape_job.url}, rather skipping than getting wrong data."
+        )
         return
 
     # This tag was there on 20210415205204
@@ -219,7 +237,9 @@ def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html:
         link=scrape_job.marketplace_link,
     )
     if not created:
-        print(f"INFO: will updated existing GoogleWorkspace entry {add_on.p_date} {add_on.google_id}")
+        print(
+            f"INFO: will updated existing GoogleWorkspace entry {add_on.p_date} {add_on.google_id}"
+        )
 
     add_on: GoogleWorkspace
     # For especially historical data, we want to keep the source URL for debugging / re-runs purposes.
@@ -239,7 +259,9 @@ def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html:
         add_on.developer_name = developer_a.text.strip()
         add_on.developer_link = developer_a["href"]
     else:
-        add_on.developer_name = find_tag_and_get_text(soup, tag_name="div", class_name="kmwdk")
+        add_on.developer_name = find_tag_and_get_text(
+            soup, tag_name="div", class_name="kmwdk"
+        )
         add_on.developer_link = None
 
     add_on.rating, add_on.rating_count = parse_rating_info(soup=soup)
@@ -302,12 +324,16 @@ def get_all_from_marketplace(p_date: str) -> List[ScrapeAddOnDetailsJob]:
     for listing_page in LISTS[:1]:
         scrape_jobs = get_add_ons_from_listing_page(listing_page, p_date=p_date)
 
-        result.update({scrape_job.marketplace_link: scrape_job for scrape_job in scrape_jobs})
+        result.update(
+            {scrape_job.marketplace_link: scrape_job for scrape_job in scrape_jobs}
+        )
 
     return list(result.values())
 
 
-async def scrape_google_workspace_add_ons(scrape_jobs: List[ScrapeAddOnDetailsJob]) -> None:
+async def scrape_google_workspace_add_ons(
+    scrape_jobs: List[ScrapeAddOnDetailsJob],
+) -> None:
     print(f"will run HTTP GET Details with {ASYNC_IO_MAX_PARALLELISM} parallelism")
     tasks = []
     semaphore = asyncio.Semaphore(ASYNC_IO_MAX_PARALLELISM)
