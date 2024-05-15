@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r common.txt -r requirements.txt
 
 # Copy only the necessary Python files and configurations
 # TODO(P2, devx): rather use .dockerignore
-COPY __init__.py /app/backend
+COPY ../__init__.py /app/backend
 COPY pyproject.toml /app/backend
 COPY setup.cfg /app/backend
 # COPY backend/api backend/api
@@ -33,4 +33,4 @@ COPY supabase/models /app/backend/supabase/models/
 # * .env file for local
 # * classic environmental variables (e.g. through fly.io secrets)
 
-CMD ["python", "-m", "batch_jobs.daily"]
+CMD ["python", "-m", "batch_jobs.scraper.daily_scrape"]
