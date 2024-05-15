@@ -16,6 +16,12 @@ primary_region = 'sjc'
     port = 80
     handlers = ['http']
 
+  [[services.processes]]
+    restart = "no"  # most likely it failed because of a bug in the code
+
+[scale]
+  count = 1
+
 [[vm]]
   size = 'shared-cpu-1x
   memory = '512mb'

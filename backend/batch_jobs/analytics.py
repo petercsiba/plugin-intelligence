@@ -192,7 +192,7 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         plugin.elevator_pitch = form_data.get('elevator_pitch')
         plugin.tags = parse_to_list(form_data.get('tags'))
 
-        if plugin.rating_count > 20:
+        if plugin.rating_count and plugin.rating_count > 20 and add_on_row.reviews.count("ReviewData") > 4:
             # add_on_row.reviews is formatted as (for historical reasons):
             # [ReviewData(name='John Doe', rating=5, date='2022-01-01', review='Great app!'), ...]
             reviews_summary_prompt = f"""

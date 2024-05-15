@@ -23,4 +23,4 @@ EXECUTE FUNCTION update_updated_at_column();
 
 
 -- update other tables with foreign keys:
-ALTER TABLE public.plugin ADD COLUMN company_slug bigint null;
+ALTER TABLE public.plugin ADD COLUMN company_slug TEXT NULL;
