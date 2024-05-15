@@ -114,25 +114,6 @@ class TopPluginResponse(BaseModel):
     main_tags: Optional[list] = None
 
 
-def parse_number_from_string(input_string: Optional[str]):
-    if input_string is None:
-        return None
-
-    # Find all numbers in the string (this regex handles integers and floats)
-    numbers = re.findall(r"[-+]?\d*\.\d+|\d+", input_string)
-
-    if numbers:
-        # Attempt to convert the first number found to a float or integer
-        number = numbers[0]
-        if "." in number:
-            return float(number)
-        else:
-            return int(number)
-
-    # Return None if no numbers are found
-    return None
-
-
 @app.get("/top-plugins/", response_model=List[TopPluginResponse])
 def get_top_plugins(limit: int = 20):
     if limit > MAX_LIMIT:
@@ -264,12 +245,12 @@ class PluginDetailsResponse(BaseModel):
 
     # Metadata
     elevator_pitch: Optional[str] = None
-    main_integrations: Optional[str] = None
+    main_integrations: Optional[list] = None
     overview_summary: Optional[str] = None
     overview_summary_html: Optional[str] = None
     reviews_summary: Optional[str] = None
     reviews_summary_html: Optional[str] = None
-    tags: Optional[str] = None
+    tags: Optional[list] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -353,26 +334,19 @@ async def get_plugin_details(plugin_id: int):
         response.rating_count = plugin.rating_count
 
         # revenue stuff
-        # TODO(P1, devx): For some WTF reason this translates to JSON
-        response.revenue_lower_bound = (plugin.revenue_lower_bound,)
-        response.revenue_upper_bound = (plugin.revenue_upper_bound,)
-        response.revenue_analysis_html = (
-            prompt_output_to_html(plugin.revenue_analysis),
-        )
+        response.revenue_lower_bound = plugin.revenue_lower_bound
+        response.revenue_upper_bound = plugin.revenue_upper_bound
+        response.revenue_analysis_html = prompt_output_to_html(plugin.revenue_analysis)
 
         response.elevator_pitch = plugin.elevator_pitch
-        response.main_integrations = plugin.main_integrations
+        response.main_integrations = parse_fuzzy_list(plugin.main_integrations)
         response.overview_summary = plugin.overview_summary
-        response.overview_summary_html = (
-            prompt_output_to_html(plugin.overview_summary),
-        )
+        response.overview_summary_html = prompt_output_to_html(plugin.overview_summary)
         response.reviews_summary = plugin.reviews_summary
-        response.reviews_summary_html = (
-            prompt_output_to_html(plugin.reviews_summary),
-        )
+        response.reviews_summary_html = prompt_output_to_html(plugin.reviews_summary)
         response.pricing_tiers = parse_fuzzy_list(plugin.pricing_tiers)
         response.lowest_paid_tier = plugin.lowest_paid_tier
-        response.tags = plugin.tags
+        response.tags = parse_fuzzy_list(plugin.tags)
 
         PluginDetailsResponse.model_validate(response, strict=True)
 

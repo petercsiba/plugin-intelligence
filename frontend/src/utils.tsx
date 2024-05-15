@@ -1,5 +1,7 @@
 // For some super-weird reason, the Python FastAPI server converts my None values into [null] in JSON
 // No idea why, spent almost an hour of my life just that I can write this hacky function.
+// OMG FACEPALM, somehow the code reformatted to add (value, ) so everything was a tuple :/ Likely copy-pasta.
+// WELL, I guess this function ain't needed anymore, but I'll keep it here for posterity.
 export function fixThatArrayWithNullShit<T>(input: T | null | undefined | Array<T | null | undefined>): T | null | undefined {
   // Check if the input is null or undefined
   if (input === null || input === undefined) {
@@ -67,7 +69,6 @@ export function formatNumberShort(value: number | null): string {
 
   // Format without suffix if below the thousands threshold
   let formattedValue: string;
-  console.log('Current value:', value, 'Type:', typeof value);
   if (value < 10) {
     formattedValue = "N/A"
     try {

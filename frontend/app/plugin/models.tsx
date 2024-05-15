@@ -34,12 +34,12 @@ export interface PluginDetailsResponse {
     revenue_upper_bound?: number;
 
     elevator_pitch?: string;
-    main_integrations?: string;
+    main_integrations?: string[];
     overview_summary?: string;
     overview_summary_html?: string;
     reviews_summary?: string;
     reviews_summary_html?: string;
-    tags?: string;
+    tags?: string[];
 
     created_at: string;
     updated_at?: string;

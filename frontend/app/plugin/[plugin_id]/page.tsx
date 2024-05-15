@@ -16,6 +16,7 @@ import {PluginDetailsResponse} from "../models";
 import ExternalLink from "@/components/ExternalLink";
 import {fixThatArrayWithNullShit, formatCurrency, formatNumber} from "@/utils";
 import dynamic from "next/dynamic";
+import ListBoxOneLine from "@/components/ListBoxOneLine";
 
 const BoxWithInnerHtml = dynamic(
     () => import('./BoxWithInnerHtml'),
@@ -64,10 +65,6 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
         ? `${formatCurrency(lower_bound)} - ${formatCurrency(upper_bound)}`
         : "N/A";
 
-    // Convert comma-separated lists
-    const mainIntegrations = plugin && plugin.main_integrations ? plugin.main_integrations.split(",").join(", ") : "N/A";
-    const tags = plugin && plugin.tags ? plugin.tags.split(",").join(", ") : "N/A";
-
     return (
         <Container maxWidth="md">
             <Paper elevation={3} style={{ padding: "2em", marginTop: "2em" }}>
@@ -109,23 +106,20 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                         <ListItemText primary="Revenue Estimate" secondary={revenueRange} />
                         <ListItemText
                             primary="Pricing Tiers"
-                            secondary={
-                                <Box display="flex" alignItems="center" flexWrap="wrap">
-                                    {plugin.pricing_tiers?.map((tier, index, array) => (
-                                        <React.Fragment key={index}>
-                                            <Typography variant="body2">{tier}</Typography>
-                                            {index < array.length - 1 && <Divider orientation="vertical" flexItem style={{ margin: '0 8px' }} />}
-                                        </React.Fragment>
-                                    )) || <Typography variant="body2">Unknown</Typography>}
-                                </Box>
-                            }
+                            secondary={<ListBoxOneLine listOfStrings={plugin.pricing_tiers} />}
                         />
                     </ListItem>
                     <ListItem>
-                        <ListItemText primary="Main Integrations" secondary={mainIntegrations} />
+                        <ListItemText
+                            primary="Main Integrations"
+                            secondary={<ListBoxOneLine listOfStrings={plugin.main_integrations} />}
+                        />
                     </ListItem>
                     <ListItem>
-                        <ListItemText primary="Tags" secondary={tags} />
+                        <ListItemText
+                            primary="Tags"
+                            secondary={<ListBoxOneLine listOfStrings={plugin.tags} />}
+                        />
                     </ListItem>
                 </List>
 
