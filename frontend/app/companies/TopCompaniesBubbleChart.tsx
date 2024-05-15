@@ -73,7 +73,7 @@ const TopCompaniesBubbleChart = () => {
       // @ts-ignore
     .range(['#f44336', '#FFEB3B', TOP_RATING_COLOR, TOP_RATING_COLOR]);
 
-  const logTicks = [1000, 10000, 100000, 1000000, 10000000, 100000000];
+  // const logTicks = [1000, 10000, 100000, 1000000, 10000000, 100000000];
 
   return (
     <Box
@@ -88,7 +88,7 @@ const TopCompaniesBubbleChart = () => {
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <CartesianGrid />
-          <XAxis type="number" dataKey="sum_download_count" scale={scaleLog().base(10)} domain={[1000, 100000000]} name="Downloads" ticks={logTicks} tickFormatter={(value) => formatNumber(value)}>
+          <XAxis type="number" dataKey="sum_download_count" scale={scaleLog().base(10)} domain={['dataMin', 'dataMax']} name="Downloads" tickFormatter={(value) => formatNumber(value)}>
             <Label value="Downloads (log10)" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
           </XAxis>
           <YAxis type="number" dataKey="count_plugin" scale={scaleLog().base(2)} domain={[1, 'dataMax']} name="Plugin Count">
