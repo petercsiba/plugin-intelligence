@@ -1,3 +1,4 @@
+import argparse
 import os
 from typing import Optional, Any
 
@@ -160,16 +161,23 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
     "YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL"
 )
 
+# Set up argument parser
+parser = argparse.ArgumentParser(description='Overwrite p_date if provided.')
+parser.add_argument('--p_date', type=str, help='The date to overwrite p_date')
+args = parser.parse_args()
 
 # TODO(P1, cost): This is somewhat expensive operation.
 #   We should separate out the field updates and the OpenAI API calls.
 # with connect_to_postgres(POSTGRES_DATABASE_URL):
 with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
-    latest_date = BaseGoogleWorkspace.select(
-        fn.MAX(BaseGoogleWorkspace.p_date)
-    ).scalar()
-    print(f"LATEST P_DATE is {latest_date}")
-    latest_date = "2024-05-12"
+    # Determine the latest p_date, either from the argument or the database
+    if args.p_date:
+        latest_date = args.p_date
+    else:
+        latest_date = BaseGoogleWorkspace.select(
+            fn.MAX(BaseGoogleWorkspace.p_date)
+        ).scalar()
+    print(f"P_DATE set to {latest_date}")
 
     query = (
         BaseGoogleWorkspace.select()
