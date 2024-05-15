@@ -51,6 +51,13 @@ supabase start
 
 ## Development Workflow
 
+### Running Tests
+```shell
+# For whatever reason, the tests are not running with the correct PYTHONPATH :/
+# One day debug: https://chat.openai.com/share/1c47dfca-be7b-46f2-ad95-081d41346b18
+PYTHONPATH=/Users/petercsiba/code/plugin-intelligence/backend pytest
+```
+
 ### Committing Changes
 We use `pre-commit` to run flake8, isort, black. Easiest to see results:
 ```shell

@@ -1,5 +1,6 @@
 git+https://github.com/petercsiba/gpt-form-filler
 pydantic
 python-dotenv
+python-slugify
 pytz
 git+https://github.com/petercsiba/supawee

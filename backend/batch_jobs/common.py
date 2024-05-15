@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from typing import Optional
+from urllib.parse import urlparse, urlunparse
 
 from bs4 import Tag, BeautifulSoup
 
@@ -75,3 +76,48 @@ def is_html_in_english(soup: BeautifulSoup) -> bool:
     # Optionally, check text content for further validation (if necessary)
     # This part can be expanded with more sophisticated language detection if needed
     return False
+
+
+def standardize_url(url: str) -> Optional[str]:
+    try:
+        # Ensure the URL has a scheme
+        if not urlparse(url).scheme:
+            url = 'http://' + url
+
+        # Parse the URL
+        parsed_url = urlparse(url)
+
+        # Check if the scheme and netloc are present
+        if not parsed_url.scheme or not parsed_url.netloc or len(parsed_url.scheme) == 0:
+            return None
+        print("scheme: ", parsed_url.scheme)
+
+        # Ensure netloc does not contain invalid characters like "://"
+        if '://' in parsed_url.netloc or not parsed_url.netloc:
+            return None
+
+        # Upgrade http to https, keep other schemes as is
+        scheme = 'https' if parsed_url.scheme in ['http', 'https'] else parsed_url.scheme
+
+        # Add www if missing
+        netloc = parsed_url.netloc.lower()
+        if len(netloc.split(".")) <= 2:
+            netloc = 'www.' + netloc
+
+        # Remove default port 80 if present
+        if netloc.endswith(':80'):
+            netloc = netloc[:-3]
+
+        # Standardize the rest of the URL components
+        path = parsed_url.path if parsed_url.path else '/'
+        params = parsed_url.params
+        query = parsed_url.query
+        fragment = parsed_url.fragment
+
+        # Rebuild the URL
+        standardized_url = urlunparse((scheme, netloc, path, params, query, fragment)).lower()
+        return standardized_url
+    except Exception as e:
+        # Return None if any error occurs
+        print(f"Error standardizing URL {url}: ", e)
+        return None

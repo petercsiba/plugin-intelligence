@@ -49,6 +49,21 @@ class BaseChromeExtension(BaseDatabaseModel):
         indexes = ((("google_id", "p_date"), True),)
 
 
+class BaseCompany(BaseDatabaseModel):
+    created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
+    display_name = TextField(null=True)
+    id = BigAutoField()
+    legal_name = TextField(null=True)
+    slug = TextField(unique=True)
+    type = TextField(null=True)
+    updated_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
+    website_url = TextField(null=True)
+
+    class Meta:
+        schema = "public"
+        table_name = "company"
+
+
 class BaseGoogleWorkspace(BaseDatabaseModel):
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
     description = TextField(null=True)
@@ -89,6 +104,7 @@ class BaseGoogleWorkspace(BaseDatabaseModel):
 
 
 class BasePlugin(BaseDatabaseModel):
+    company_slug = BigIntegerField(null=True)
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
     developer_link = TextField(null=True)
     developer_name = TextField(null=True)

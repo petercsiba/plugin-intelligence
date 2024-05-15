@@ -8,6 +8,8 @@ from peewee import fn
 from supawee.client import connect_to_postgres
 from gpt_form_filler.openai_client import CHEAPEST_MODEL
 
+from batch_jobs.common import standardize_url
+from common.company import standardize_company_name, slugify_company_name
 from common.config import POSTGRES_DATABASE_URL, OPEN_AI_API_KEY
 from common.gpt import InDatabaseCacheStorage
 from common.utils import now_in_utc
@@ -174,8 +176,10 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         plugin.rating = add_on_row.rating
         plugin.rating_count = add_on_row.rating_count
         plugin.user_count = add_on_row.user_count
-        plugin.developer_link = add_on_row.developer_link
-        plugin.developer_name = add_on_row.developer_name
+        plugin.developer_link = standardize_url(add_on_row.developer_link)
+        company_name = standardize_company_name(add_on_row.developer_name)
+        plugin.developer_name = company_name
+        plugin.company_slug = slugify_company_name(company_name)
 
         # Add new stuff to the Plugin table
         plugin.pricing_tiers = parse_to_list(form_data.get('pricing_tiers'))
