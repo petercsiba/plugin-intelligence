@@ -4,32 +4,21 @@ import { ScatterChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Scatter, Re
 import NextLink from 'next/link';
 import Box from '@mui/material/Box';
 import * as d3 from 'd3-scale';
-import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
+import {formatNumber, formatNumberShort} from "@/utils";
 import { scaleLog } from 'd3-scale';
+import {CompaniesTopResponse} from "./models";
+import {fetchTopCompanies} from "./driver";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL
 // There is somewhat few plugins with below 3.0 rating; and 3.0 is itself quite low so lets just do red there.
 const MIN_RATING = 3.0;
 const TOP_RATING = 5.0;
 const TOP_RATING_COLOR = '#4caf50'; // Green
 
-// Define the shape of a bubble data object
-interface BubbleData {
-  id: string;
-  name: string;
-
-  user_count: number;
-  user_count_thousands: number;
-  avg_rating: number;  // float
-  revenue_estimate: number;
-  arpu_cents: number;
-  arpu_dollars: number;
-}
 
 interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{
-    payload: BubbleData;
+    payload: CompaniesTopResponse;
   }>;
   label?: string;
 }
@@ -39,13 +28,13 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
     const data = payload[0].payload;
 
     return (
+        // TODO(P0, no <p> in <div>): Use a list or a table for better semantics
         <div className="custom-tooltip" style={{backgroundColor: "#fff", padding: "10px", border: "1px solid #ccc"}}>
-            <strong>{data.name}</strong>
+            <strong>{data.display_name}</strong>
             <ul>
-                <li className="label">{`Downloads: ${formatNumberShort(data.user_count)}`}</li>
-                <li>{`ARPU: ${formatCurrency(data.arpu_dollars)}`}</li>
-                <li>{`Average Rating: ${data.avg_rating}`}</li>
-                <li>{`Revenue*: ${formatCurrency(data.revenue_estimate)}`}</li>
+                <li>{`Plugin Count: ${data.count_plugin}`}</li>
+                <li className="label">{`Total Downloads: ${formatNumberShort(data.sum_download_count)}`}</li>
+                <li>{`Average Rating: ${data.avg_avg_rating}`}</li>
             </ul>
         </div>
     );
@@ -55,16 +44,14 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
 };
 
 
-const ArpuBubbleChartComponent = () => {
+const TopCompaniesBubbleChart = () => {
     // State to store the fetched data with BubbleData type
-    const [data, setBubbleData] = useState<BubbleData[]>([]);
+    const [data, setBubbleData] = useState<CompaniesTopResponse[]>([]);
 
     // Function to fetch bubble data from an API
     const fetchBubbleData = async () => {
       try {
-        const response = await fetch(`${baseUrl}/charts/plugins-arpu-bubble`);
-        const data: BubbleData[] = await response.json(); // Type the response explicitly
-        setBubbleData(data);
+        setBubbleData(await fetchTopCompanies());
       } catch (error) {
         console.error('Error fetching bubble data:', error);
       }
@@ -77,8 +64,7 @@ const ArpuBubbleChartComponent = () => {
 
 
   // Color scale function using d3-scale
-  // TODO(P0, ux): Maybe better is to just
-  const colorScale = d3.scaleLinear()
+  const ratingColorScale = d3.scaleLinear()
     .domain([MIN_RATING, 4, 4.8, TOP_RATING])
       // Ignore TypeScript checking for `.range()` as it returns a string array
       //     Red (#f44336): For the lowest ratings (Material Design Red 500).
@@ -102,43 +88,44 @@ const ArpuBubbleChartComponent = () => {
       <ResponsiveContainer width="100%" height="100%">
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <CartesianGrid />
-          <XAxis type="number" scale={scaleLog().base(10)} domain={[1000, 100000000]} dataKey="user_count" name="Users" ticks={logTicks} tickFormatter={(value) => formatNumber(value)}>
-            <Label value="Users" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
+          <XAxis type="number" dataKey="sum_download_count" scale={scaleLog().base(10)} domain={[1000, 100000000]} name="Downloads" ticks={logTicks} tickFormatter={(value) => formatNumber(value)}>
+            <Label value="Downloads" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
           </XAxis>
-          <YAxis type="number" dataKey="arpu_dollars" name="ARPU" tickFormatter={(value) => formatCurrency(value)}>
-              <Label value="ARPU" offset={11} position="insideTopLeft" style={{ color: 'black', fontWeight: 'bold'}} />
+          <YAxis type="number" dataKey="count_plugin" domain={[1, 'dataMax']} name="Plugin Count">
+              <Label value="Plugin Count" offset={11} position="insideTopLeft" style={{ color: 'black', fontWeight: 'bold'}} />
           </YAxis>
             <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: "3 3" }} />
                 <Legend
         payload={[
-          { value: 'Revenue Estimate (Size)', type: 'circle', color: '#8884d8' },
+          { value: 'Revenue Estimate (Size)', type: 'circle', color: '#8884d8' }, // TODO: (actually calculate this)
           { value: 'Average Rating (Color)', type: 'circle', color: TOP_RATING_COLOR },
         ]}
       />
           <Scatter
-            name="Estimated ARPU to Downloads; Size is Revenue Estimate; Color is Average Rating"
+            name="Plugin Developed to Downloads; Size is Revenue Estimate; Color is Average Rating"
             data={data}
             fill="#8884d8"
-            shape={(props: { cx?: any; cy?: any; payload?: BubbleData; }) => {
+            shape={(props: { cx?: any; cy?: any; payload?: CompaniesTopResponse; }) => {
               const { payload } = props;
 
               // @ts-ignore - payload is possibly undefined
-              let radius = Math.sqrt(payload.revenue_estimate) / 150
-              radius = Math.max(5, Math.min(50, radius));
+              // let radius = Math.sqrt(payload.revenue_estimate) / 150
+              // radius = Math.max(5, Math.min(50, radius));
+              let radius = 20
               // revenue = (150 * r)^2; so the maximum display is (50 * 150) ^ 2 = $11,250,000
 
               // @ts-ignore
-              const avg_rating = Math.max(MIN_RATING, payload?.avg_rating);
+              const avg_rating = Math.max(MIN_RATING, payload?.avg_avg_rating);
 
               return (
                   // @ts-ignore - payload is possibly undefined
-                    <NextLink href={`/plugins/${payload.id}`} passHref>
+                    <NextLink href={`/companies/${payload?.slug}/detail`} passHref>
                     <circle
                       cx={props.cx}
                       cy={props.cy}
                       r={radius}
                       // @ts-ignore (this somehow just works)
-                      fill={colorScale(avg_rating)}
+                      fill={ratingColorScale(avg_rating)}
                       stroke="black"
                     />
                 </NextLink>
@@ -151,4 +138,4 @@ const ArpuBubbleChartComponent = () => {
   );
 };
 
-export default ArpuBubbleChartComponent;
+export default TopCompaniesBubbleChart;

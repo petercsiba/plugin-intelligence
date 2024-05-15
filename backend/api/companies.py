@@ -42,11 +42,11 @@ def get_companies_top(limit: int = 20, min_count: int = 1, max_count: int = 1000
     ranking_query = (Plugin
              .select(Plugin.company_slug,
                      fn.COUNT(Plugin.id).alias('count_plugin'),
-                     fn.SUM(Plugin.user_count).alias('sum_download_count'),
+                     fn.SUM(fn.COALESCE(Plugin.user_count, 0)).alias('sum_download_count'),
                      fn.AVG(Plugin.avg_rating).alias('avg_avg_rating'))
              .group_by(Plugin.company_slug)
              .having(fn.COUNT(Plugin.id) >= min_count, fn.COUNT(Plugin.id) <= max_count)
-             .order_by(fn.SUM(Plugin.user_count).desc())
+             .order_by(fn.SUM(fn.COALESCE(Plugin.user_count, 0)).desc())
              .limit(limit))
     print("Ranking query", get_formatted_sql(ranking_query))
 

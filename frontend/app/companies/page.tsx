@@ -12,15 +12,8 @@ import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow 
 import PageLoading from "@/components/PageLoading";
 import NoResultsFound from "@/components/NoResultsFound";
 import PageTitle from "@/components/PageTitle";
-
-const baseUrl = process.env.NEXT_PUBLIC_API_URL
-
-const fetchTopCompanies = async (): Promise<CompaniesTopResponse[]> => {
-    const url = `${baseUrl}/companies/top`
-    console.log("Attempting to fetch companies from", url);
-    const response = await fetch(url);
-    return await response.json();
-};
+import { fetchTopCompanies } from './driver';
+import TopCompaniesBubbleChart from "./TopCompaniesBubbleChart";
 
 export default function HomePage() {
     const [loading, setLoading] = useState(true);
@@ -47,7 +40,7 @@ export default function HomePage() {
     return (
         <Container maxWidth="lg">
             <PageTitle title="Top Plugin Companies By Downloads" />
-
+            <TopCompaniesBubbleChart />
             <TableContainer component={Paper}>
                 <Table size="small"> {/* Smaller cell padding */}
                     <TableHead>
