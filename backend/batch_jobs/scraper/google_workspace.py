@@ -18,6 +18,7 @@ from batch_jobs.common import (
     listing_updated_str_to_date, extract_number_best_effort, is_html_in_english,
 )
 from batch_jobs.scraper.search_terms import GOOGLE_WORKSPACE_SEARCH_TERMS
+from batch_jobs.scraper.settings import should_save_large_fields
 from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import GoogleWorkspace
 
@@ -251,7 +252,8 @@ def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html:
     add_on.description = find_tag_and_get_text(soup, "div", "kmwdk")
     add_on.pricing = find_tag_and_get_text(soup, "span", "P0vMD")
     add_on.fill_in_works_with(get_works_with_list(soup=soup))
-    add_on.overview = find_tag_and_get_text(soup, "pre", "nGA4ed")
+    if should_save_large_fields(scrape_job.p_date):
+        add_on.overview = find_tag_and_get_text(soup, "pre", "nGA4ed")
 
     img_logo_tag = soup.find("img", class_="TS9dEf")
     add_on.logo_link = img_logo_tag.get("src") if img_logo_tag else None
@@ -259,7 +261,8 @@ def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html:
     add_on.featured_img_link = featured_img_tag.get("src") if featured_img_tag else None
 
     add_on.developer_link = get_developer_link(soup=soup)
-    add_on.permissions = parse_permissions(soup=soup)
+    if should_save_large_fields(scrape_job.p_date):
+        add_on.permissions = parse_permissions(soup=soup)
     add_on.reviews = parse_reviews(soup=soup)
 
     # NOTE: yes this blocks the event loop and could benefit from asyncio,

@@ -108,7 +108,7 @@ def get_extensions_from_category_page(url: str) -> List[ExtensionDataBasic]:
         extension_data = ExtensionDataBasic(
             name=extension_name,
             rating=find_tag_and_get_text(extension_element, "span", "Vq0ZA"),
-            rating_count=rating_count,
+            rating_count=int(rating_count),
             # [1:] removes the first dot in the relative link
             link=f"https://chromewebstore.google.com{link_span['href'][1:]}",
             description=find_tag_and_get_text(extension_element, "p", "Uufqmb"),
@@ -144,7 +144,7 @@ def get_extensions_from_search_page(url: str) -> List[ExtensionDataBasic]:
         extension_data = ExtensionDataBasic(
             name=extension_name,
             rating=find_tag_and_get_text(extension_element, "span", "Vq0ZA"),
-            rating_count=rating_count,
+            rating_count=int(rating_count),
             # [1:] removes the first dot in the relative link
             link=f"https://chromewebstore.google.com{link_span['href'][1:]}",
             description=find_tag_and_get_text(extension_element, "p", "g3IrHd"),
@@ -208,10 +208,11 @@ def process_extension_page_response(
         re.sub("[^0-9]", "", category_and_users_tag.text)
     )
 
-    overview_div = soup.find("div", class_="uORbKe")
-    chrome_extension.overview = "\n".join(
-        [p_tag.text for p_tag in overview_div.find_all("p")]
-    )
+    if True:  # and should_save_large_fields(scrape_job.p_date):
+        overview_div = soup.find("div", class_="uORbKe")
+        chrome_extension.overview = "\n".join(
+            [p_tag.text for p_tag in overview_div.find_all("p")]
+        )
 
     chrome_extension.released_version = find_tag_and_get_text(soup, "div", "pDlpAd")
 
@@ -233,9 +234,10 @@ def process_extension_page_response(
     )
     chrome_extension.developer_email = find_tag_and_get_text(soup, "div", "yNyGQd")
 
-    chrome_extension.permissions = [
-        span_tag.text for span_tag in soup.find_all("span", "PuNHYb")
-    ]
+    if True:  # and should_save_large_fields(scrape_job.p_date):
+        chrome_extension.permissions = [
+            span_tag.text for span_tag in soup.find_all("span", "PuNHYb")
+        ]
 
     # TODO(P2, feature): Review text from chrome_extension.link + "/reviews
 
