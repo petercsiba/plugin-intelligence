@@ -25,9 +25,9 @@ const BoxWithInnerHtml = dynamic(
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
-// Function to fetch plugin details
+// Function to fetch plugins details
 async function fetchPluginDetails(plugin_id: string): Promise<PluginDetailsResponse | null> {
-    const response = await fetch(`${baseUrl}/plugin/${plugin_id}/details`, {
+    const response = await fetch(`${baseUrl}/plugins/${plugin_id}/details`, {
         cache: "no-store", // Adjust caching as needed
     });
 

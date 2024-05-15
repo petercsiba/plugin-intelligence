@@ -9,7 +9,7 @@ import Box from '@mui/material/Box';
 import NextLink from "next/link";
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
-import {TopPluginResponse} from "./plugin/models";
+import {TopPluginResponse} from "./plugins/models";
 import ArpuBubbleChartComponent from "./ArpuBubbleChart";
 import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
 import {Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
@@ -17,8 +17,9 @@ import {Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
 const fetchTopPlugins = async (): Promise<TopPluginResponse[]> => {
-    console.log("Attempting to fetch plugins from", `${baseUrl}/top-plugins/`);
-    const response = await fetch(`${baseUrl}/top-plugins/`);
+    const url = `${baseUrl}/plugins/top`
+    console.log("Attempting to fetch plugins from", url);
+    const response = await fetch(url);
     return await response.json();
 };
 
@@ -134,7 +135,7 @@ export default function HomePage() {
                                     </Box>
 
                                 </TableCell>
-                                {/*<TableCell>{plugin.plugin_type}</TableCell>*/}
+                                {/*<TableCell>{plugins.plugin_type}</TableCell>*/}
                                 <TableCell>
                                     {plugin.revenue_lower_bound && plugin.revenue_upper_bound ? (
                                         `${formatCurrency(plugin.revenue_lower_bound)} - ${formatCurrency(plugin.revenue_upper_bound)}`
@@ -143,7 +144,7 @@ export default function HomePage() {
                                 <TableCell>{formatNumberShort(plugin.user_count)}</TableCell>
                                 <TableCell>{formatCurrency(plugin.lowest_paid_tier)}</TableCell>
                                 <TableCell>
-                                    <NextLink href={`/plugin/${plugin.id}`} passHref>
+                                    <NextLink href={`/plugins/${plugin.id}`} passHref>
                                         <Button variant="contained" color="primary" fullWidth> {/* Full width on mobile */}
                                             View
                                         </Button>

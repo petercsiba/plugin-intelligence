@@ -60,7 +60,7 @@ const ArpuBubbleChartComponent = () => {
     // Function to fetch bubble data from an API
     const fetchBubbleData = async () => {
       try {
-        const response = await fetch(`${baseUrl}/charts/arpu-bubble`);
+        const response = await fetch(`${baseUrl}/charts/plugins-arpu-bubble`);
         const data: BubbleData[] = await response.json(); // Type the response explicitly
         setBubbleData(data);
       } catch (error) {
@@ -130,7 +130,7 @@ const ArpuBubbleChartComponent = () => {
 
               return (
                   // @ts-ignore - payload is possibly undefined
-                    <NextLink href={`/plugin/${payload.id}`} passHref>
+                    <NextLink href={`/plugins/${payload.id}`} passHref>
                     <circle
                       cx={props.cx}
                       cy={props.cy}
