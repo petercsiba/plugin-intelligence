@@ -44,7 +44,7 @@ function debugError(error: unknown): void {
   }
 }
 
-export function formatNumberShort(value: number | null): string {
+export function formatNumberShort(value: number | null | undefined): string {
   if (value == null) {
     return 'N/A';
   }
@@ -87,7 +87,10 @@ export function formatNumberShort(value: number | null): string {
   return cleanTrailingZero(formattedValue);
 }
 
-export function formatNumber(value: number): string {
+export function formatNumber(value: number | null | undefined): string {
+  if (value == null) {
+    return 'N/A';
+  }
   // Use Intl.NumberFormat to format the number with thousands separators
   return new Intl.NumberFormat('en-US').format(value);
 }

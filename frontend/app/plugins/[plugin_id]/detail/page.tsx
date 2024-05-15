@@ -12,7 +12,7 @@ import {
     Divider,
 } from "@mui/material";
 import Box from "@mui/material/Box";
-import {PluginDetailsResponse} from "../models";
+import {PluginDetailsResponse} from "../../models";
 import ExternalLink from "@/components/ExternalLink";
 import {fixThatArrayWithNullShit, formatCurrency, formatNumber} from "@/utils";
 import dynamic from "next/dynamic";

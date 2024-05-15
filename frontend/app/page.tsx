@@ -4,15 +4,16 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
 import NextLink from "next/link";
 import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
 import {TopPluginResponse} from "./plugins/models";
 import ArpuBubbleChartComponent from "./ArpuBubbleChart";
-import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
+import {formatCurrency, formatNumberShort} from "@/utils";
 import {Divider, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import PageLoading from "@/components/PageLoading";
+import NoResultsFound from "@/components/NoResultsFound";
+import PageTitle from "@/components/PageTitle";
+import ListBoxOneLine from "@/components/ListBoxOneLine";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
@@ -41,63 +42,13 @@ export default function HomePage() {
         })();
     }, []);
 
-    if (loading) {
-        return (
-            <Container maxWidth="lg">
-                <Box
-                    sx={{
-                        my: 4,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                >
-                    <CircularProgress />
-                </Box>
-            </Container>
-        );
-    }
-    if (plugins.length === 0) {
-        return (
-            <Container maxWidth="lg">
-                <Box
-                    sx={{
-                        my: 4,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Typography variant="h5" color="textSecondary">
-                        No plugins found.
-                    </Typography>
-                </Box>
-            </Container>
-        );
-    }
+    if (loading) return <PageLoading />;
+
+    if (plugins.length === 0) return <NoResultsFound model_name={"Plugins"} />;
 
     return (
         <Container maxWidth="lg">
-            <Box
-                sx={{
-                    my: 4,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                }}
-            >
-                <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-                    Plugin Intelligence - Top Google Plugins By Estimated Revenue
-                </Typography>
-                {/*
-                <Link href="/about" color="secondary" underline="hover">
-                    Go to the about page
-                </Link>
-                 */}
-            </Box>
+            <PageTitle title="Top Google Plugins By Estimated Revenue" />
             <ArpuBubbleChartComponent />
             <TableContainer component={Paper}>
                 <Table size="small"> {/* Smaller cell padding */}
@@ -123,17 +74,8 @@ export default function HomePage() {
                                     )}
                                 </TableCell>
                                 <TableCell style={{fontWeight: "bold"}}>{plugin.name}</TableCell>
-                                {/*TODO(format tags), there should be just a general util */}
                                 <TableCell>
-                                    <Box display="flex" alignItems="center" flexWrap="wrap">
-                                        {plugin.main_tags?.map((tag, index, array) => (
-                                            <React.Fragment key={index}>
-                                                <Typography variant="body2">{tag}</Typography>
-                                                {index < array.length - 1 && <Divider orientation="vertical" flexItem style={{ margin: '0 8px' }} />}
-                                            </React.Fragment>
-                                        )) || <Typography variant="body2">Unknown</Typography>}
-                                    </Box>
-
+                                    <ListBoxOneLine listOfStrings={plugin.main_tags} />
                                 </TableCell>
                                 {/*<TableCell>{plugins.plugin_type}</TableCell>*/}
                                 <TableCell>
@@ -144,7 +86,7 @@ export default function HomePage() {
                                 <TableCell>{formatNumberShort(plugin.user_count)}</TableCell>
                                 <TableCell>{formatCurrency(plugin.lowest_paid_tier)}</TableCell>
                                 <TableCell>
-                                    <NextLink href={`/plugins/${plugin.id}`} passHref>
+                                    <NextLink href={`/plugins/${plugin.id}/detail`} passHref>
                                         <Button variant="contained" color="primary" fullWidth> {/* Full width on mobile */}
                                             View
                                         </Button>
