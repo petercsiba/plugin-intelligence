@@ -89,10 +89,10 @@ const TopCompaniesBubbleChart = () => {
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <CartesianGrid />
           <XAxis type="number" dataKey="sum_download_count" scale={scaleLog().base(10)} domain={[1000, 100000000]} name="Downloads" ticks={logTicks} tickFormatter={(value) => formatNumber(value)}>
-            <Label value="Downloads" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
+            <Label value="Downloads (log10)" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
           </XAxis>
-          <YAxis type="number" dataKey="count_plugin" domain={[1, 'dataMax']} name="Plugin Count">
-              <Label value="Plugin Count" offset={11} position="insideTopLeft" style={{ color: 'black', fontWeight: 'bold'}} />
+          <YAxis type="number" dataKey="count_plugin" scale={scaleLog().base(2)} domain={[1, 'dataMax']} name="Plugin Count">
+              <Label value="Plugin Count (log2)" offset={11} position="insideTopLeft" style={{ color: 'black', fontWeight: 'bold'}} />
           </YAxis>
             <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: "3 3" }} />
                 <Legend
