@@ -94,7 +94,6 @@ def standardize_url(url: str) -> Optional[str]:
             or len(parsed_url.scheme) == 0
         ):
             return None
-        print("scheme: ", parsed_url.scheme)
 
         # Ensure netloc does not contain invalid characters like "://"
         if "://" in parsed_url.netloc or not parsed_url.netloc:

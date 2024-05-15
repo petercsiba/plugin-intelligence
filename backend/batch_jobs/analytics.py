@@ -127,6 +127,34 @@ def parse_to_list(input_str: Optional[Any]):
     return ", ".join(repr(item) for item in cleaned_items)
 
 
+def remove_excessive_repetitions(s, chunk_size=12, max_repetitions=2):
+    # Dictionary to count occurrences of each chunk
+    chunk_counts = {}
+    i = 0
+    output = []
+
+    while i < len(s):
+        # Extract a chunk of specified size
+        chunk = s[i:i+chunk_size]
+
+        if chunk in chunk_counts:
+            # Increment the count of the chunk
+            chunk_counts[chunk] += 1
+        else:
+            # Add the chunk to the dictionary with an initial count of 1
+            chunk_counts[chunk] = 1
+
+        # Append the chunk to the output only if it hasn't exceeded the allowed repetitions
+        if chunk_counts[chunk] <= max_repetitions:
+            output.append(chunk)
+
+        # Move to the next chunk
+        i += chunk_size
+
+    # Join the output list back into a string
+    return ''.join(output)
+
+
 load_dotenv()
 YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
     "YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL"
@@ -141,6 +169,7 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         fn.MAX(BaseGoogleWorkspace.p_date)
     ).scalar()
     print(f"LATEST P_DATE is {latest_date}")
+    latest_date = "2024-05-12"
 
     query = (
         BaseGoogleWorkspace.select()
@@ -157,13 +186,14 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         My note is:  {add_on_row.overview}
         """
         overview_summary = openai_client.run_prompt(
-            prompt=summary_prompt, model=CHEAPEST_MODEL
+            prompt=summary_prompt, model=CHEAPEST_MODEL, print_prompt=False
         )
         # Fill in the form using OpenAI
         form_data_obj, err = openai_client.fill_in_form(
             form=plugin_intel_form,
             text=workspace_row_to_prompt(add_on_row, overview_summary),
             model=CHEAPEST_MODEL,
+            print_prompt=False,
         )
 
         if err:
@@ -211,11 +241,12 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         ):
             # add_on_row.reviews is formatted as (for historical reasons):
             # [ReviewData(name='John Doe', rating=5, date='2022-01-01', review='Great app!'), ...]
+            cleaned_reviews = remove_excessive_repetitions(add_on_row.reviews, chunk_size=12, max_repetitions=2)
             reviews_summary_prompt = f"""
-            Summarize these customer reviews to fill in a section "Customers Say":  {add_on_row.reviews}
+            Summarize these customer reviews to fill in a section "Customers Say":  {cleaned_reviews}
             """
             plugin.reviews_summary = openai_client.run_prompt(
-                reviews_summary_prompt, model=CHEAPEST_MODEL
+                reviews_summary_prompt, model=CHEAPEST_MODEL, print_prompt=False
             )
 
         print(f"Plugin id: {plugin.id} saved (has {add_on_row.user_count} users)")
