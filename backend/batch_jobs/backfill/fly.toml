@@ -3,7 +3,7 @@
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'extension-scraper-daily'
+app = 'plugin-intelligence-backfill-scraper'
 primary_region = 'sjc'
 
 [build]
@@ -22,5 +22,5 @@ primary_region = 'sjc'
     handlers = ['http']
 
 [[vm]]
-  size = 'shared-cpu-1x
+  size = 'shared-cpu-1x'
   memory = '256mb'

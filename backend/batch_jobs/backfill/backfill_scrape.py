@@ -1,9 +1,6 @@
-import asyncio
-import os
 import time
 from typing import List
 
-from dotenv import load_dotenv
 from supawee.client import connect_to_postgres
 
 from batch_jobs.scraper.google_workspace import ScrapeAddOnDetailsJob, scrape_google_workspace_add_ons, \
@@ -39,6 +36,11 @@ def google_workspace_previous_domains() -> List[str]:
     ]
 
 
+# Estimated time:
+# * About 3,000 apps in the marketplace
+# * Lets say 5-10 historical links for each
+# * 15,000-30,000 requests with 5-15 requests per minute
+# * 1,000-6,000 minutes = 16-100 hours runtime
 def backfill_google_workspace():
     distinct_links = (BaseGoogleWorkspace
                       .select(BaseGoogleWorkspace.link, BaseGoogleWorkspace.user_count)
@@ -85,10 +87,6 @@ def backfill_google_workspace():
 # For Chrome Extensions
 # https://chrome.google.com/webstore/detail/kami-pdf-sign-edit-review/iljojpiodmlhoehoecppliohmplbgeij?hl=en&__hstc=20629287.a7f712def3fc231023cd88e3b92265a1.1713973492755.1713973492755.1715724869156.2&__hssc=20629287.1.1715724869156&__hsfp=2560732712
 
-
-load_dotenv()
-YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get("YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL")
-
 if __name__ == "__main__":
-    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+    with connect_to_postgres(POSTGRES_DATABASE_URL):
         backfill_google_workspace()

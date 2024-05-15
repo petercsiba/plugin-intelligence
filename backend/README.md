@@ -122,8 +122,22 @@ docker build --no-cache -t extension-scraper-daily -f batch_jobs/Dockerfile .
 docker run --env-file .env -p 4000:4000  extension-scraper-daily
 ```
 
-### Update Secrets Fly.io
+### Create New Machine on Fly.io
+```shell
+# Do this and hit `Y` to update name and machine size / count
+fly launch  && rm Procfile
+# NOTE: Procfile is not needed as we deploy with Dockerfile
+```
+
+Then merge the generated `backend/fly.toml` into one of the existing ones scattered around the project.
+Move it next to your Dockerfile. (one per directory)
+
 If you gonna add secrets, or want to use a different database do sth like this:
 ```shell
 fly secrets set "POSTGRES_DATABASE_URL=postgres://postgres.ngtdkctpkhzyqvkzshxk:<your-password>@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
+```
+
+To deploy it:
+```shell
+fly deploy --config batch_jobs/fly.toml
 ```

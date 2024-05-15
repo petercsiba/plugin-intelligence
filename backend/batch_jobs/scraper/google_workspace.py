@@ -204,6 +204,7 @@ def parse_downloads_count(soup: BeautifulSoup, url: str) -> Optional[int]:
 def process_add_on_page_response(scrape_job: ScrapeAddOnDetailsJob, add_on_html: str) -> None:
     soup = BeautifulSoup(add_on_html, "html.parser")
     if not is_html_in_english(soup):
+        # TODO(P3, performance): In an ideal world we should skip downloading this html with a row in the DB
         print(f"WARNING: page is not in English for {scrape_job.url}, rather skipping than getting wrong data.")
         return
 
