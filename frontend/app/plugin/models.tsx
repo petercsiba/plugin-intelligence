@@ -37,7 +37,8 @@ export interface PluginDetailsResponse {
     main_integrations?: string;
     overview_summary?: string;
     overview_summary_html?: string;
-    search_terms?: string;
+    reviews_summary?: string;
+    reviews_summary_html?: string;
     tags?: string;
 
     created_at: string;

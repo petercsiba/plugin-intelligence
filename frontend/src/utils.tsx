@@ -42,7 +42,10 @@ function debugError(error: unknown): void {
   }
 }
 
-export function formatNumberShort(value: number): string {
+export function formatNumberShort(value: number | null): string {
+  if (value == null) {
+    return 'N/A';
+  }
   // Define suffixes and their thresholds
   const suffixes = [
     { threshold: 1e9, suffix: "B" }, // Billions

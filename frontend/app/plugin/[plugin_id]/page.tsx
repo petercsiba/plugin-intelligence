@@ -56,6 +56,8 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
     // FIX SHIT
     const lower_bound = fixThatArrayWithNullShit(plugin.revenue_lower_bound)
     const upper_bound = fixThatArrayWithNullShit(plugin.revenue_upper_bound)
+    const reviews_summary_html = fixThatArrayWithNullShit(plugin.reviews_summary_html)
+    const overview_summary_html = fixThatArrayWithNullShit(plugin.overview_summary_html)
     const revenue_analysis_html = fixThatArrayWithNullShit(plugin.revenue_analysis_html)
 
     const revenueRange = (lower_bound != null && upper_bound != null)
@@ -64,7 +66,6 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
 
     // Convert comma-separated lists
     const mainIntegrations = plugin && plugin.main_integrations ? plugin.main_integrations.split(",").join(", ") : "N/A";
-    const searchTerms = plugin && plugin.search_terms ? plugin.search_terms.split(",").join(", ") : "N/A";
     const tags = plugin && plugin.tags ? plugin.tags.split(",").join(", ") : "N/A";
 
     return (
@@ -124,9 +125,6 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                         <ListItemText primary="Main Integrations" secondary={mainIntegrations} />
                     </ListItem>
                     <ListItem>
-                        <ListItemText primary="Search Terms" secondary={searchTerms} />
-                    </ListItem>
-                    <ListItem>
                         <ListItemText primary="Tags" secondary={tags} />
                     </ListItem>
                 </List>
@@ -136,11 +134,14 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                 {plugin.elevator_pitch ? (
                     <Box mt={4}>
                         <Typography variant="h5">Elevator Pitch</Typography>
-                        <Typography paragraph>{plugin.elevator_pitch || "N/A"}</Typography>
+                        <Typography paragraph>{plugin.elevator_pitch}</Typography>
                     </Box>
                 ) : null}
-                {plugin.overview_summary_html ? (
-                    <BoxWithInnerHtml heading="Overview Summary" htmlContent={plugin.overview_summary_html} />
+                {reviews_summary_html ? (
+                    <BoxWithInnerHtml heading="Customers Say" htmlContent={reviews_summary_html} />
+                ) : null}
+                {overview_summary_html ? (
+                    <BoxWithInnerHtml heading="Overview Summary" htmlContent={overview_summary_html} />
                 ) : null}
                 {revenue_analysis_html ? (
                     <BoxWithInnerHtml heading="Revenue Analysis" htmlContent={revenue_analysis_html} />

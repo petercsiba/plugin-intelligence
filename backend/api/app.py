@@ -267,7 +267,8 @@ class PluginDetailsResponse(BaseModel):
     main_integrations: Optional[str] = None
     overview_summary: Optional[str] = None
     overview_summary_html: Optional[str] = None
-    search_terms: Optional[str] = None
+    reviews_summary: Optional[str] = None
+    reviews_summary_html: Optional[str] = None
     tags: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -365,9 +366,12 @@ async def get_plugin_details(plugin_id: int):
         response.overview_summary_html = (
             prompt_output_to_html(plugin.overview_summary),
         )
+        response.reviews_summary = plugin.reviews_summary
+        response.reviews_summary_html = (
+            prompt_output_to_html(plugin.reviews_summary),
+        )
         response.pricing_tiers = parse_fuzzy_list(plugin.pricing_tiers)
         response.lowest_paid_tier = plugin.lowest_paid_tier
-        response.search_terms = plugin.search_terms
         response.tags = plugin.tags
 
         PluginDetailsResponse.model_validate(response, strict=True)

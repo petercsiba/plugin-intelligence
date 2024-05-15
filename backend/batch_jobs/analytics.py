@@ -133,8 +133,8 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
 )
 
 
-# TODO(P1, cost): This is a very expensive operation. We should consider running this in batches.
-#   https://platform.openai.com/docs/guides/batch/model-availability
+# TODO(P1, cost): This is somewhat expensive operation.
+#   We should separate out the field updates and the OpenAI API calls.
 # with connect_to_postgres(POSTGRES_DATABASE_URL):
 with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
     latest_date = BaseGoogleWorkspace.select(
@@ -149,8 +149,8 @@ with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
     )
 
     # Loop through each row and apply the OpenAI API
-    for add_on_row in query.limit(200):
-        # Although GPT-4 was able to fill_in_form, GPT-3.5 requires more handholding so we pre-process the info.
+    for add_on_row in query:
+        # Although GPT-4 is able to fill_in_form directly, GPT-3.5 requires more handholding so we pre-process the info.
         summary_prompt = f"""
         Summarize this plugin description,
         while making sure you persist pricing information, who is it for and all relevant capabilities.
