@@ -1,8 +1,3 @@
-# fly.toml app configuration file generated for plugin-intelligence-api on 2024-05-06T06:22:11-07:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
 app = 'plugin-intelligence-api-v2'
 primary_region = 'sjc'
 
@@ -46,4 +41,4 @@ destination="/data"
 
 [[vm]]
   size = 'shared-cpu-1x'
-  memory = '256mb'
+  memory = '512mb'
