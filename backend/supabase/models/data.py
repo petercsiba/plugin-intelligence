@@ -1,5 +1,7 @@
 from typing import Optional, Union
 
+from peewee import DoesNotExist
+
 from supabase.models.base import (
     BaseChromeExtension,
     BaseGoogleWorkspace,
@@ -66,6 +68,25 @@ class GoogleWorkspace(BaseGoogleWorkspace):
 class ChromeExtension(BaseChromeExtension):
     class Meta:
         db_table = "chrome_extension"
+
+    @staticmethod
+    def exists(google_id: str, p_date: str) -> bool:
+        query = BaseChromeExtension.select().where(
+            (BaseChromeExtension.google_id == google_id)
+            & (BaseChromeExtension.p_date == p_date)
+        )
+        return query.exists()
+
+    @staticmethod
+    def get_by_unique_key(google_id: str, p_date: str) -> Optional["ChromeExtension"]:
+        query = BaseChromeExtension.select().where(
+            (BaseChromeExtension.google_id == google_id)
+            & (BaseChromeExtension.p_date == p_date)
+        )
+        try:
+            return query.get()
+        except DoesNotExist:
+            return None  # or handle the exception as needed
 
 
 class Plugin(BasePlugin):

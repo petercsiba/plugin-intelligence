@@ -5,14 +5,14 @@
 import asyncio
 import re
 import urllib
-from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from urllib.parse import quote
 
 import aiohttp
 import requests
 from bs4 import BeautifulSoup
+from pydantic import BaseModel
 from supawee.client import connect_to_postgres
 
 from batch_jobs.common import (
@@ -20,9 +20,10 @@ from batch_jobs.common import (
     find_tag_and_get_text,
     listing_updated_str_to_date,
     extract_number_best_effort,
-    is_html_in_english,
+    is_html_in_english, standardize_url,
 )
 from batch_jobs.scraper.search_terms import CHROME_EXTENSION_SEARCH_TERMS
+from batch_jobs.scraper.settings import should_save_large_fields
 from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import ChromeExtension
 
@@ -30,7 +31,7 @@ SEARCH_URL = "https://chromewebstore.google.com/search/"
 # The "minimalRating=5" filter usually gets the newer / less popular ones as it's impossible to maintain only fives.
 LISTS = (
     [
-        SEARCH_URL + quote(term) + "?minimalRating=5"
+        SEARCH_URL + quote(term) + "?sortBy=highestRated"
         for term in CHROME_EXTENSION_SEARCH_TERMS
     ]
     + [SEARCH_URL + quote(term) for term in CHROME_EXTENSION_SEARCH_TERMS]
@@ -75,16 +76,29 @@ LISTS = (
 )
 
 
-@dataclass
-class ExtensionDataBasic:
-    name: str
-    rating: str
-    rating_count: int
-    link: str
-    description: str
+class ScrapeChromeExtensionJob(BaseModel):
+    # can either be a marketplace_link OR wayback url
+    # NOTE: The slug part of URL is only for SEO, you can put anything there
+    # https://chromewebstore.google.com/detail/HELLO-WORLD-HAHAHA/fheoggkfdfchfphceeifdbepaooicaho
+    url: str
+    # Y-m-d, also determines the format of the data to be scraped
+    p_date: str
+    # Part of Unique Key
+    google_id: str
+
+    # Optional stuff to help with the scraping
+    name: Optional[str] = None
+    marketplace_link: Optional[str] = None
 
 
-def get_extensions_from_category_page(url: str) -> List[ExtensionDataBasic]:
+def get_marketplace_link(soup: BeautifulSoup) -> str:
+    # They seem to re-use the same class names across different page types
+    link_span = soup.find("a", class_="UvhDdd")
+    # [1:] removes the first dot in the relative link
+    return f"https://chromewebstore.google.com{link_span['href'][1:]}"
+
+
+def get_extensions_from_category_page(url: str, p_date: str) -> List[ScrapeChromeExtensionJob]:
     print(f"getting chrome extension from {url} (assuming category page)")
     # Send a request to the URL
     response = requests.get(url)
@@ -98,21 +112,16 @@ def get_extensions_from_category_page(url: str) -> List[ExtensionDataBasic]:
     result = []
     for extension_element in extension_elements:
         extension_name = find_tag_and_get_text(extension_element, "p", "GzKZcb")
-        print(f"parsing extension {extension_name}")
-        rating_count_span = find_tag_and_get_text(extension_element, "span", "Y30PE")
-        rating_count = extract_number_best_effort(
-            rating_count_span.replace(")", "").replace("(", "").strip()
-        )
-        link_span = extension_element.find("a", class_="UvhDdd")
+        marketplace_link = get_marketplace_link(extension_element)
 
         # Fill in the data available from the listings table page, more will be filled from individual pages.
-        extension_data = ExtensionDataBasic(
+        extension_data = ScrapeChromeExtensionJob(
+            url=marketplace_link,
+            p_date=p_date,
+            # Optional stuff
             name=extension_name,
-            rating=find_tag_and_get_text(extension_element, "span", "Vq0ZA"),
-            rating_count=int(rating_count),
-            # [1:] removes the first dot in the relative link
-            link=f"https://chromewebstore.google.com{link_span['href'][1:]}",
-            description=find_tag_and_get_text(extension_element, "p", "Uufqmb"),
+            google_id=get_extension_id_from_link(marketplace_link),
+            marketplace_link=marketplace_link,
         )
         result.append(extension_data)
 
@@ -120,7 +129,7 @@ def get_extensions_from_category_page(url: str) -> List[ExtensionDataBasic]:
     return result
 
 
-def get_extensions_from_search_page(url: str) -> List[ExtensionDataBasic]:
+def get_extensions_from_search_page(url: str, p_date: str) -> List[ScrapeChromeExtensionJob]:
     print(f"getting chrome extension from {url} (assuming search page)")
     # Send a request to the URL
     response = requests.get(url)
@@ -134,21 +143,17 @@ def get_extensions_from_search_page(url: str) -> List[ExtensionDataBasic]:
     result = []
     for extension_element in extension_elements:
         extension_name = find_tag_and_get_text(extension_element, "h2", "CiI2if")
-        # print(f"parsing extension {extension_name}")
-        rating_count_span = find_tag_and_get_text(extension_element, "span", "Y30PE")
-        rating_count = extract_number_best_effort(
-            rating_count_span.replace(")", "").replace("(", "").strip()
-        )
-        link_span = extension_element.find("a", class_="q6LNgd")
+        marketplace_link = get_marketplace_link(extension_element)
 
+        # description = find_tag_and_get_text(extension_element, "p", "g3IrHd"),
         # Fill in the data available from the listings table page, more will be filled from individual pages.
-        extension_data = ExtensionDataBasic(
+        extension_data = ScrapeChromeExtensionJob(
+            url=marketplace_link,
+            p_date=p_date,
+            # Optional stuff
             name=extension_name,
-            rating=find_tag_and_get_text(extension_element, "span", "Vq0ZA"),
-            rating_count=int(rating_count),
-            # [1:] removes the first dot in the relative link
-            link=f"https://chromewebstore.google.com{link_span['href'][1:]}",
-            description=find_tag_and_get_text(extension_element, "p", "g3IrHd"),
+            google_id=get_extension_id_from_link(marketplace_link),
+            marketplace_link=marketplace_link,
         )
         result.append(extension_data)
 
@@ -156,70 +161,58 @@ def get_extensions_from_search_page(url: str) -> List[ExtensionDataBasic]:
     return result
 
 
-def get_extensions(url: str) -> List[ExtensionDataBasic]:
+def get_extensions_from_listing_page(url: str, p_date: str) -> List[ScrapeChromeExtensionJob]:
     if "/search/" in url:
-        return get_extensions_from_search_page(url)
+        return get_extensions_from_search_page(url, p_date=p_date)
 
-    return get_extensions_from_category_page(url)
+    return get_extensions_from_category_page(url, p_date=p_date)
+
+
+# Yeah, there libraries for this BUT I want more control and transparency.
+async def fetch_with_retry(url: str, params=None, retry_limit=3) -> Optional[aiohttp.ClientResponse]:
+    retry_count = 0
+
+    while retry_count < retry_limit:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, allow_redirects=True) as response:
+                    if response.status == 200:
+                        return response
+                    else:
+                        print(f"ERROR: could not get data, status code: {response.status}")
+                        return None
+        except aiohttp.ClientConnectorError as e:
+            sleep_time = sleep_time = 70 * 2**retry_count
+            retry_count += 1
+            print(f"ClientConnectorError {e}")
+            print(f"Sleeping {sleep_time} seconds and retrying {url}")
+            await asyncio.sleep(sleep_time)
+
+    return None
 
 
 # TODO(P2, devx): Cleanliness would dictate to reuse the one in Google Workspace
 async def async_research_extension_more(
-    chrome_extension: ChromeExtension, semaphore: asyncio.Semaphore
+    scrape_job: ScrapeChromeExtensionJob, semaphore: asyncio.Semaphore
 ) -> None:
     async with semaphore:
-        print(
-            f"getting more extension data for {chrome_extension.name} from {chrome_extension.link}"
-        )
-        async with aiohttp.ClientSession() as session:
-            async with session.get(chrome_extension.link) as response:
-                if response.status != 200:
-                    print("WARNING: could not get data")
-                    return
-                extension_html = await response.text()
-                process_extension_page_response(chrome_extension, extension_html)
-                # NOTE: yes this blocks the event loop and could benefit from asyncio,
-                # but DB calls are usually way faster (3-10ms) than the HTTP GET (100-1000ms) above so it is fine.
-                chrome_extension.save()
+        response = await fetch_with_retry(scrape_job.url)
+        if response is None:
+            print(f"ERROR: cannot fetch data from url {scrape_job.url}")
+
+        extension_html = await response.text()
+        if "https://archive.org" not in str(response.url):
+            # In case of redirects, which happen when we do not know the exact URL
+            print(f"marketplace_link updated to {response.url}")
+            scrape_job.marketplace_link = response.url
+
+        process_extension_page_response(scrape_job, extension_html)
 
 
-# TODO(P1, reliability): Consume all exceptions and keep on running the job
-def process_extension_page_response(
-    chrome_extension: ChromeExtension, extension_html: str
-):
-    soup = BeautifulSoup(extension_html, "html.parser")
-    if not is_html_in_english(soup):
-        # print(f"WARNING: page is not in English for {scrape_job.url}, rather skipping than getting wrong data.")
-        return
-
-    chrome_extension.name = find_tag_and_get_text(soup, "h1", "Pa2dE")
-    chrome_extension.landing_page_url = find_tag_and_get_text(soup, "a", "cJI8ee")
-    chrome_extension.is_featured = soup.find("span", class_="OmOMFc") is not None
-
-    img_logo_tag = soup.find("img", class_="rBxtY")
-    chrome_extension.logo_link = img_logo_tag.get("src") if img_logo_tag else None
-    featured_img_tag = soup.find("img", class_="VuCTZc")
-    chrome_extension.featured_img_link = (
-        featured_img_tag.get("src") if featured_img_tag else None
-    )
-
-    category_and_users_tag = soup.find("div", class_="F9iKBc")
-    chrome_extension.categories = [
-        category_tag.text for category_tag in category_and_users_tag.find_all("a")
-    ]
-    chrome_extension.user_count = extract_number_best_effort(
-        re.sub("[^0-9]", "", category_and_users_tag.text)
-    )
-
-    if True:  # and should_save_large_fields(scrape_job.p_date):
-        overview_div = soup.find("div", class_="uORbKe")
-        chrome_extension.overview = "\n".join(
-            [p_tag.text for p_tag in overview_div.find_all("p")]
-        )
-
-    chrome_extension.released_version = find_tag_and_get_text(soup, "div", "pDlpAd")
-
+def parse_listing_updated(soup: BeautifulSoup, chrome_extension: ChromeExtension):
     listing_updated_li = soup.find("li", class_="kBFnc")
+    if listing_updated_li is None:
+        listing_updated_li = soup.find("li", class_="ZbWJPd uBIrad")
     if listing_updated_li:
         listing_updated_str = " ".join(
             [div_tag.text for div_tag in listing_updated_li.find_all("div")]
@@ -228,21 +221,157 @@ def process_extension_page_response(
             listing_updated_str.replace("Updated", "").strip()
         )
     else:
-        print(f"WARNING: cannot find listing updated for {chrome_extension.link}")
+        print(f"WARNING: cannot find listing updated for {chrome_extension.source_url}")
 
+
+def parse_developer_info(soup: BeautifulSoup, chrome_extension: ChromeExtension):
+    # NAME
     chrome_extension.developer_name = find_tag_and_get_text(soup, "div", "C2WXF")
+    if len(chrome_extension.developer_name) == 0:
+        offered_by_li = soup.find("li", class_='ZbWJPd T7iRm')
+        if offered_by_li:
+            developer_name = ' '.join(offered_by_li.stripped_strings).replace('Offered by', '').strip()
+            chrome_extension.developer_name = developer_name
+        # else: We can try getting it from the address below
+
+    # ADDRESS
+    # <div class="Fm8Cnb">Cloudhiker<br>Sedanstraße 24
+    # Berlin 12167
+    # DE</div>
+    developer_address_div = soup.find('div', class_='Fm8Cnb')
+    if developer_address_div:
+        full_text = developer_address_div.decode_contents().strip()
+        text_parts = full_text.split('<br>')
+        if len(chrome_extension.developer_name) == 0:
+            chrome_extension.developer_name = text_parts[0].strip()
+        if len(text_parts) > 1:
+            chrome_extension.developer_address = (' '.join(text_parts[1:])).strip()
+
+    # LINK
     developer_link_a = soup.find("a", "XQ8Hh")
+    if not developer_link_a:
+        developer_link_a = soup.find("a", "Gztlsc")
     chrome_extension.developer_link = (
         developer_link_a.get("href") if developer_link_a else None
     )
-    chrome_extension.developer_email = find_tag_and_get_text(soup, "div", "yNyGQd")
 
-    if True:  # and should_save_large_fields(scrape_job.p_date):
+    # EMAIL
+    chrome_extension.developer_email = find_tag_and_get_text(soup, "div", "yNyGQd", "AxYQf")
+
+    # NAME one more time
+    if len(chrome_extension.developer_name) == 0:
+        # They have to provide some link, so lets just assume the name from it
+        chrome_extension.developer_name = standardize_url(chrome_extension.developer_link)
+
+    # TODO(P2, data): We can access developer_type from the amount of verification it has from Chrome
+    # div class HPTfYd-IqDDtd  like "Good record" or "No violations"
+
+
+# TODO(P0, data): Make sure this works with historical versions of the plugin page
+# TODO(P1, reliability): Consume all exceptions and keep on running the job
+# TODO(P2, data completeness): There is also /reviews page (defaults to "newest :/" and /support page)
+# NOTE: It might happen that `extension_html` is "This item is not available" page
+def process_extension_page_response(
+    scrape_job: ScrapeChromeExtensionJob, extension_html: str,
+):
+    soup = BeautifulSoup(extension_html, "html.parser")
+    if not is_html_in_english(soup):
+        # print(f"WARNING: page is not in English for {scrape_job.url}, rather skipping than getting wrong data.")
+        return
+
+    # With "get_or_create" and later .save() we essentially get ON CONFLICT UPDATE (in two statements).
+    chrome_extension, created = ChromeExtension.get_or_create(
+        google_id=scrape_job.google_id,
+        p_date=scrape_job.p_date,
+        # marketplace_link might be unknown for plugins which were removed from the store
+    )
+    chrome_extension: ChromeExtension
+    if created:
+        print(f"INFO: will CREATE new ChromeExtension entry for {scrape_job.p_date} {scrape_job.google}")
+    else:
+        print(
+            f"INFO: will UPDATE existing ChromeExtension entry {scrape_job.p_date} {scrape_job.google_id}"
+        )
+
+    # MAIN STUFF
+    # Fill in optional scrape job params if they are not provided (MAYBE just better to always get them)
+    if scrape_job.name is None:
+        name = find_tag_and_get_text(soup, "h1", "Pa2dE", "eFHPDf")
+    else:
+        name = scrape_job.name
+
+    if scrape_job.marketplace_link is None:
+        marketplace_link = get_marketplace_link(soup)
+    else:
+        marketplace_link = scrape_job.marketplace_link
+    chrome_extension.name = name
+    chrome_extension.link = marketplace_link
+    chrome_extension.source_url = scrape_job.url
+
+    chrome_extension.landing_page_url = find_tag_and_get_text(soup, "a", "cJI8ee")
+    chrome_extension.is_featured = soup.find("span", class_="OmOMFc") is not None
+
+    # GOING AS THE PAGE GOES: TOP OF THE PAGE
+    img_logo_tag = soup.find("img", class_="rBxtY")
+    chrome_extension.logo_link = img_logo_tag.get("src") if img_logo_tag else None
+    featured_img_tag = soup.find("img", class_="VuCTZc")
+    if not featured_img_tag:
+        featured_img_tag = soup.find("img", class_="LAhvXe")
+    chrome_extension.featured_img_link = (
+        featured_img_tag.get("src") if featured_img_tag else None
+    )
+
+    category_and_users_tag = soup.find("div", class_="F9iKBc")
+    if category_and_users_tag:
+        chrome_extension.categories = [
+            category_tag.text for category_tag in category_and_users_tag.find_all("a")
+        ]
+        # HARD DATA - THE MOST IMPORTANT PART
+        chrome_extension.user_count = extract_number_best_effort(
+            re.sub("[^0-9]", "", category_and_users_tag.text)
+        )
+    else:
+        print(f"WARNING: cannot find category and user count for {scrape_job.url}")
+
+    # e.g. 11.7K ratings
+    rating_count_str = find_tag_and_get_text(soup, "p", "xJEoWe")
+    chrome_extension.rating_count = extract_number_best_effort(rating_count_str)
+    if chrome_extension.rating_count == 0:
+        # They actually say that rating = 5 if there are no ratings, but we will just leave it as None
+        chrome_extension.rating = None
+    else:
+        chrome_extension.rating = find_tag_and_get_text(soup, "span", "Vq0ZA")
+
+    # TODO(P2, verify): This seems to be hidden on the details page, but they using the same class name
+    #   as on the listing page so might just work!
+    chrome_extension.description = find_tag_and_get_text(soup, "p", "Uufqmb")
+    if should_save_large_fields(scrape_job.p_date):
+        overview_div = soup.find("div", class_="uORbKe")
+        if overview_div:
+            chrome_extension.overview = "\n".join(
+                [p_tag.text for p_tag in overview_div.find_all("p")]
+            )
+
+    chrome_extension.released_version = find_tag_and_get_text(soup, "div", "pDlpAd", "N3EXSc")
+
+    parse_listing_updated(soup, chrome_extension)
+    parse_developer_info(soup, chrome_extension)
+
+    # This can be Empty, maybe we should set it NONE
+    # E.g. "The developer has disclosed that it will not collect or use your data"
+    if should_save_large_fields(scrape_job.p_date):
         chrome_extension.permissions = [
             span_tag.text for span_tag in soup.find_all("span", "PuNHYb")
         ]
+        if len(chrome_extension.permissions) == 0:
+            chrome_extension.permissions = [
+                span_tag.text for span_tag in soup.find_all("span", "jnapE")
+            ]
 
-    # TODO(P2, feature): Review text from chrome_extension.link + "/reviews
+    # NOTE: yes this could benefit from asyncio,
+    # but DB calls are usually way faster (3-10ms) than the HTTP GET (100-1000ms) to get here so it is fine.
+    chrome_extension.save()
+    # TODO(P2, feature): Review text from chrome_extension.link + "/reviews (unfortunately it defaults to "newest" :/)
 
 
 # looks like bmnlcjabgnpnenekpadlanbbkooimhnj
@@ -251,7 +380,28 @@ def get_extension_id_from_link(link: str) -> str:
     return parsed_url.path.split("/")[-1]
 
 
-async def get_all_chrome_extensions(p_date: str) -> None:
+async def scrape_chrome_extensions_in_parallel(scrape_jobs: List[ScrapeChromeExtensionJob], rescrape_existing=False):
+    tasks = []
+    semaphore = asyncio.Semaphore(ASYNC_IO_MAX_PARALLELISM)
+
+    for scrape_job in scrape_jobs:
+        if ChromeExtension.exists(scrape_job.google_id, scrape_job.p_date) and not rescrape_existing:
+            print(f"INFO: skipping already scraped extension {scrape_job.google_id} {scrape_job.p_date}")
+            continue
+
+        # Schedule the task with semaphore
+        task = async_research_extension_more(scrape_job, semaphore)
+        tasks.append(asyncio.create_task(task))
+        # sync_research_extension_more(chrome_extension)
+
+    if len(tasks) > 0:
+        print(
+            f"INFO: Main 'thread' waiting on all {len(tasks)} asyncio tasks START"
+        )
+        await asyncio.gather(*tasks)
+
+
+async def get_all_chrome_extensions_from_marketplace(p_date: str) -> None:
     researched_extensions = set()
     print(
         f"will run individual app HTTP GET with {ASYNC_IO_MAX_PARALLELISM} max parallelism"
@@ -259,59 +409,22 @@ async def get_all_chrome_extensions(p_date: str) -> None:
 
     # for listing_page in LISTS:
     for listing_page in LISTS:
-        extensions = get_extensions(listing_page)
-
-        tasks = []
-        semaphore = asyncio.Semaphore(ASYNC_IO_MAX_PARALLELISM)
-
-        for extension_data in extensions:
+        scrape_jobs_candidates = get_extensions_from_listing_page(listing_page, p_date=p_date)
+        next_scrape_jobs = []
+        for scrape_job in scrape_jobs_candidates:
             # Already visited? In-memory version
-            link = extension_data.link
+            link = scrape_job.marketplace_link
             if link in researched_extensions:
+                print(f"INFO: skipping already researched extension {scrape_job.marketplace_link}")
                 continue
+            next_scrape_jobs.append(scrape_job)
             researched_extensions.add(link)
 
-            # Already visited? In-database version. NOTE: to re-scrape this needs to be removed
-            google_id = get_extension_id_from_link(link)
-            exists = (
-                ChromeExtension.select()
-                .where(
-                    (ChromeExtension.google_id == google_id)
-                    & (ChromeExtension.p_date == p_date)
-                )
-                .exists()
-            )
-            if exists:
-                continue
-
-            # With "get_or_create" and later .save() we essentially get ON CONFLICT UPDATE (in two statements).
-            # TODO(P2, correctness): get_or_create doesn't work when unique key is (google_id, p_date) and more
-            # columns.
-            chrome_extension, created = ChromeExtension.get_or_create(
-                google_id=google_id,
-                p_date=p_date,
-                name=extension_data.name,
-                link=extension_data.link,
-            )
-            chrome_extension: ChromeExtension
-            chrome_extension.rating = extension_data.rating
-            chrome_extension.rating_count = extension_data.rating_count
-            chrome_extension.description = extension_data.description
-
-            # Schedule the task with semaphore
-            task = async_research_extension_more(chrome_extension, semaphore)
-            tasks.append(asyncio.create_task(task))
-            # sync_research_extension_more(chrome_extension)
-
-        if len(tasks) > 0:
-            print(
-                f"INFO: Main 'thread' waiting on all {len(tasks)} asyncio tasks START"
-            )
-            await asyncio.gather(*tasks)
+        await scrape_chrome_extensions_in_parallel(next_scrape_jobs, rescrape_existing=True)
 
 
 if __name__ == "__main__":
     # We will ignore the complexity of timezones
-    p_date = datetime.today().strftime("%Y-%m-%d")
+    batch_job_p_date = datetime.today().strftime("%Y-%m-%d")
     with connect_to_postgres(POSTGRES_DATABASE_URL):
-        asyncio.run(get_all_chrome_extensions(p_date))
+        asyncio.run(get_all_chrome_extensions_from_marketplace(batch_job_p_date))

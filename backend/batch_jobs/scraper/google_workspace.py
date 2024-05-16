@@ -235,7 +235,7 @@ def process_add_on_page_response(
     )
     if not created:
         print(
-            f"INFO: will updated existing GoogleWorkspace entry {add_on.p_date} {add_on.google_id}"
+            f"INFO: will UPDATE existing GoogleWorkspace entry {add_on.p_date} {add_on.google_id}"
         )
 
     add_on: GoogleWorkspace

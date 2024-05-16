@@ -8,12 +8,16 @@ from bs4 import Tag, BeautifulSoup
 # How many concurrent HTTP GET can run in the scraper. The ideal here depends on the provisioned machine,
 # and how the scraper target domain is sensitive. This is a super-basic scraper, but if it ain't working
 # might make sense to use a library / service.
-ASYNC_IO_MAX_PARALLELISM = 1
+# NOTE: With 10, I got rate-limited by Chrome Extension Store
+ASYNC_IO_MAX_PARALLELISM = 6
 
 
 # We return empty string for convenience so we can chain with .replace() or .strip() without checking for None
-def find_tag_and_get_text(element: Tag, tag_name: str, class_name: str) -> str:
+def find_tag_and_get_text(element: Tag, tag_name: str, class_name: str, backup_class_name: Optional[str] = None) -> str:
     found_element = element.find(tag_name, class_=class_name)
+    if not found_element and backup_class_name:
+        return find_tag_and_get_text(element, tag_name, class_name=backup_class_name, backup_class_name=None)
+
     return found_element.text.strip() if found_element else ""
 
 
@@ -78,7 +82,10 @@ def is_html_in_english(soup: BeautifulSoup) -> bool:
     return False
 
 
-def standardize_url(url: str) -> Optional[str]:
+def standardize_url(url: Optional[str]) -> Optional[str]:
+    if url is None:
+        return None
+
     try:
         # Ensure the URL has a scheme
         if not urlparse(url).scheme:
