@@ -7,8 +7,6 @@ from typing import List
 from dotenv import load_dotenv
 from supawee.client import connect_to_postgres
 
-from batch_jobs.scraper.chrome_extensions import ScrapeChromeExtensionJob, scrape_chrome_extensions_in_parallel, \
-    get_scrape_job_for_google_id
 from batch_jobs.scraper.google_workspace import (
     ScrapeAddOnDetailsJob,
     scrape_google_workspace_add_ons,
@@ -115,65 +113,6 @@ def backfill_google_workspace():
             f"Total scraped so far: {total_scraped}; on average {avg_per_minute} per minute"
         )
 
-# TODO(P0, data): For historical Chrome Extension user/rating data use this repo as Wayback Machine will take forever:
-#   100,000 Chrome Extensions, up to once a month, 4 years back, say 10 historical datapoints on average
-#   1,000,000 Wayback Machine requests, with 5-15 requests per minute, 1,000 to 3,000 hours runtime (50-150 days).
-# https://github.com/palant/chrome-extension-manifests-dataset?tab=readme-ov-file
-# They have 8 historical datapoints, which is nice:
-# manifests-2021-10-30/ manifests-2022-09-08/ manifests-2023-05-08/ manifests-2023-06-05/ manifests-2023-11-17/ manifests-2024-01-12/  # noqa
-# manifests-2022-08-08/ manifests-2023-03-15/ manifests-2023-06-01/ manifests-2023-09-21/ manifests-2023-11-29/ manifests-2024-04-13/  # noqa
-# cat manifests-2024-04-13/aaaaahnmcjcoomdncaekjkjedgagpnln.json
-# ---
-# name: Contextual Search for YouTube
-# version: 1.0.0.14
-# category_slug: productivity/tools
-# rating: 4.769230769230769
-# rating_count: 13
-# user_count: 908
-# release_date: '2022-07-31T10:26:25.000Z'
-# size: 13.0KiB
-# languages:
-#   - English
-# description: >-
-#   Allows the user search YouTube for a term by highlighting text and selecting
-#   'Search YouTube for...' from the right click menu.
-# publisher_account: Gryff
-# ---
-#
-# {
-#   "update_url": "https://clients2.google.com/service/update2/crx",
-#   "manifest_version": 3,
-#   "name": "Contextual Search for YouTube",
-#   "background": {
-#     "service_worker": "searchyoutube.js"
-#   },
-#   "description": "Allows the user search YouTube for a term by highlighting text and selecting 'Search YouTube for...' from the right click menu.",
-#   "icons": {
-#     "16": "SmallIcon.png",
-#     "48": "MediumIcon.png"
-#   },
-#   "version": "1.0.0.14",
-#   "permissions": [
-#     "contextMenus"
-#   ]
-# }
-
-
-# For Chrome Extensions
-async def backfill_chrome_extensions_list():
-    batch_job_p_date = datetime.today().strftime("%Y-%m-%d")
-
-    with open("batch_jobs/backfill/data/chrome-extensions-google-id-full.txt", "r") as f:
-        google_id_list = f.read().splitlines()
-
-    # NOTE: The slug part is only for SEO, you can put anything there
-    scrape_jobs = []
-    for google_id in google_id_list:
-        scrape_jobs.append(get_scrape_job_for_google_id(google_id, batch_job_p_date))
-
-    scrape_jobs.reverse()   # Just that I already did the first N
-    await scrape_chrome_extensions_in_parallel(scrape_jobs, rescrape_existing=False)
-
 
 load_dotenv()
 YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
@@ -183,5 +122,4 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
 
 if __name__ == "__main__":
     with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
-        asyncio.run(backfill_chrome_extensions_list())
-        # backfill_google_workspace()
+        backfill_google_workspace()

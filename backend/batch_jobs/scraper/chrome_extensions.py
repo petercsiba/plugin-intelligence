@@ -174,6 +174,7 @@ async def fetch_with_retry(url: str, params=None, retry_limit=3) -> Tuple[Option
     retry_count = 0
 
     while retry_count < retry_limit:
+        print("chrome extension fetch_with_retry", url, params, retry_count)
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, params=params, allow_redirects=True) as response:
@@ -402,13 +403,14 @@ def get_extension_id_from_link(link: str) -> str:
 
 
 async def scrape_chrome_extensions_in_parallel(scrape_jobs: List[ScrapeChromeExtensionJob], rescrape_existing=False):
+    print("Gonna scrape_chrome_extensions_in_parallel for ", len(scrape_jobs), " extensions")
     tasks = []
     semaphore = asyncio.Semaphore(ASYNC_IO_MAX_PARALLELISM)
 
     for scrape_job in scrape_jobs:
-        if ChromeExtension.exists(scrape_job.google_id, scrape_job.p_date) and not rescrape_existing:
-            print(f"INFO: skipping already scraped extension {scrape_job.google_id} {scrape_job.p_date}")
-            continue
+        # if ChromeExtension.exists(scrape_job.google_id, scrape_job.p_date) and not rescrape_existing:
+        #     print(f"INFO: skipping already scraped extension {scrape_job.google_id} {scrape_job.p_date}")
+        #     continue
 
         # Schedule the task with semaphore
         task = async_research_extension_more(scrape_job, semaphore)
