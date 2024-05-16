@@ -13,7 +13,9 @@ import ExternalLink from "@/components/ExternalLink";
 import dynamic from "next/dynamic";
 import {fetchCompanyDetails} from "../../driver";
 import NoResultsFound from "@/components/NoResultsFound";
-import {formatNumber, formatNumberShort } from "@/utils";
+import {formatNumberShort } from "@/utils";
+import PluginTable from "../../../plugins/PluginTable";
+import {fetchCompanyPlugins} from "../../../plugins/driver";
 
 const BoxWithInnerHtml = dynamic(
     () => import('@/components/BoxWithInnerHtml'),
@@ -22,6 +24,8 @@ const BoxWithInnerHtml = dynamic(
 
 export default async function CompanyDetailsPage({ params }: { params: { company_slug: string } }) {
     const company = await fetchCompanyDetails(params.company_slug);
+    const plugins = await fetchCompanyPlugins(params.company_slug);
+    // console.log("plugins", plugins)
 
     if (!company) return <NoResultsFound model_name={`Company named "${params.company_slug}"`} />;
 
@@ -81,6 +85,12 @@ export default async function CompanyDetailsPage({ params }: { params: { company
                 {company.overview_summary_html ? (
                     <BoxWithInnerHtml heading="Overview Summary" htmlContent={company.overview_summary_html} />
                 ) : null}
+            </Paper>
+            <Paper elevation={3} style={{ padding: "2em", marginTop: "2em" }}>
+                <Typography variant="h4" gutterBottom>
+                    Plugins of {company.display_name}
+                </Typography>
+                <PluginTable plugins={plugins} />
             </Paper>
         </Container>
     );

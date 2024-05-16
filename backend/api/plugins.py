@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
-from peewee import DoesNotExist
+from peewee import DoesNotExist, Query, fn
 from pydantic import BaseModel
 
 from api.config import MAX_LIMIT
@@ -46,8 +46,18 @@ def get_plugins_top(limit: int = 20):
         )
 
     # Query the top plugins by upper_bound
-    query = Plugin.select().order_by(Plugin.revenue_upper_bound.desc()).limit(limit)
+    query = Plugin.select().order_by(fn.COALESCE(Plugin.revenue_upper_bound, 0).desc()).limit(limit)
+    return _list_plugins(query)
 
+
+@plugins_router.get("/plugins/company/{company_slug}", response_model=List[PluginsTopResponse])
+def get_plugins_for_company(company_slug: str):
+    # Query the top plugins by upper_bound
+    query = Plugin.select().where(Plugin.company_slug == company_slug).order_by(fn.COALESCE(Plugin.user_count, 0).desc())
+    return _list_plugins(query)
+
+
+def _list_plugins(query: Query) -> List[PluginsTopResponse]:
     top_plugins = []
     for plugin in query:
         plugin_response = PluginsTopResponse(
