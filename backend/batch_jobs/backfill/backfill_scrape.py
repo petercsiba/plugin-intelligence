@@ -25,6 +25,9 @@ from supabase.models.base import BaseGoogleWorkspace
 from supabase.models.data import GoogleWorkspace
 
 MIN_BATCH = 100
+# TODO(P1, completenesse): Did first run with day_steps=1, BUT unsure if there is too much value in that
+#   this really only affects the most popular ones
+WAYBACK_DAY_STEPS = 30
 
 
 def google_workspace_previous_domains() -> List[str]:
@@ -76,7 +79,7 @@ def backfill_google_workspace():
         for previous_domain in google_workspace_previous_domains():
             target_url = add_on.link.replace("workspace.google.com", previous_domain)
             wayback_snapshots.extend(
-                wayback_get_all_snapshot_urls(target_url=target_url, day_step=1)
+                wayback_get_all_snapshot_urls(target_url=target_url, day_step=WAYBACK_DAY_STEPS)
             )
 
         scrape_jobs = []
