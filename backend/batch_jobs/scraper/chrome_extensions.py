@@ -6,12 +6,13 @@ import asyncio
 import re
 import urllib
 from datetime import datetime
-from typing import List, Optional
-from urllib.parse import quote
+from typing import List, Optional, Tuple
+from urllib.parse import quote, urlparse
 
 import aiohttp
 import requests
 from bs4 import BeautifulSoup
+from peewee import fn
 from pydantic import BaseModel
 from supawee.client import connect_to_postgres
 
@@ -169,7 +170,7 @@ def get_extensions_from_listing_page(url: str, p_date: str) -> List[ScrapeChrome
 
 
 # Yeah, there libraries for this BUT I want more control and transparency.
-async def fetch_with_retry(url: str, params=None, retry_limit=3) -> Optional[aiohttp.ClientResponse]:
+async def fetch_with_retry(url: str, params=None, retry_limit=3) -> Tuple[Optional[str], Optional[str]]:
     retry_count = 0
 
     while retry_count < retry_limit:
@@ -177,18 +178,19 @@ async def fetch_with_retry(url: str, params=None, retry_limit=3) -> Optional[aio
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, params=params, allow_redirects=True) as response:
                     if response.status == 200:
-                        return response
+                        extension_html = await response.text()
+                        return extension_html, str(response.url)
                     else:
                         print(f"ERROR: could not get data, status code: {response.status}")
-                        return None
-        except aiohttp.ClientConnectorError as e:
-            sleep_time = sleep_time = 70 * 2**retry_count
+                        return None, None
+        except (aiohttp.ClientConnectorError, aiohttp.client.ClientConnectionError) as e:
+            sleep_time = 70 * 2**retry_count
             retry_count += 1
             print(f"ClientConnectorError {e}")
             print(f"Sleeping {sleep_time} seconds and retrying {url}")
             await asyncio.sleep(sleep_time)
 
-    return None
+    return None, None
 
 
 # TODO(P2, devx): Cleanliness would dictate to reuse the one in Google Workspace
@@ -196,17 +198,16 @@ async def async_research_extension_more(
     scrape_job: ScrapeChromeExtensionJob, semaphore: asyncio.Semaphore
 ) -> None:
     async with semaphore:
-        response = await fetch_with_retry(scrape_job.url)
-        if response is None:
+        response_text, response_url = await fetch_with_retry(scrape_job.url)
+        if response_text is None:
             print(f"ERROR: cannot fetch data from url {scrape_job.url}")
 
-        extension_html = await response.text()
-        if "https://archive.org" not in str(response.url):
+        if "https://archive.org" not in response_url:
             # In case of redirects, which happen when we do not know the exact URL
-            print(f"marketplace_link updated to {response.url}")
-            scrape_job.marketplace_link = response.url
+            print(f"marketplace_link updated to {response_url}")
+            scrape_job.marketplace_link = response_url
 
-        process_extension_page_response(scrape_job, extension_html)
+        process_extension_page_response(scrape_job, response_text)
 
 
 def parse_listing_updated(soup: BeautifulSoup, chrome_extension: ChromeExtension):
@@ -241,11 +242,15 @@ def parse_developer_info(soup: BeautifulSoup, chrome_extension: ChromeExtension)
     developer_address_div = soup.find('div', class_='Fm8Cnb')
     if developer_address_div:
         full_text = developer_address_div.decode_contents().strip()
-        text_parts = full_text.split('<br>')
+        split_pattern = re.compile(r'<br\s*/?>', re.IGNORECASE)
+        text_parts = split_pattern.split(full_text)
+        print("developer_address_div", full_text, " PARTS: ", text_parts)
         if len(chrome_extension.developer_name) == 0:
             chrome_extension.developer_name = text_parts[0].strip()
         if len(text_parts) > 1:
-            chrome_extension.developer_address = (' '.join(text_parts[1:])).strip()
+            address_text = (' '.join(text_parts[1:])).strip()
+            # save it as a list of lines
+            chrome_extension.developer_address = address_text.split('\n')
 
     # LINK
     developer_link_a = soup.find("a", "XQ8Hh")
@@ -258,10 +263,26 @@ def parse_developer_info(soup: BeautifulSoup, chrome_extension: ChromeExtension)
     # EMAIL
     chrome_extension.developer_email = find_tag_and_get_text(soup, "div", "yNyGQd", "AxYQf")
 
-    # NAME one more time
+    # try LINK one more time
+    # e.g. https://chromewebstore.google.com/detail/quixy-toolbox-free-text-e/dmfjonjeonmaoehpjaonkjgfdjanapbe
+    if chrome_extension.developer_link is None:
+        if chrome_extension.developer_email:
+            email_chunks = chrome_extension.developer_email.split('@')
+            chrome_extension.developer_link = email_chunks[1] if len(email_chunks) > 1 else None
+    if chrome_extension.developer_link is None:
+        # Try to get it from the Privacy Policy field
+        privacy_policy_a = soup.find("a", "SYhWge")
+        if privacy_policy_a:
+            parsed_url = urlparse(privacy_policy_a.get("href"))
+            scheme = parsed_url.scheme if parsed_url.scheme else "https"
+            chrome_extension.developer_link = standardize_url(f"{scheme}://{parsed_url.netloc}/")
+
+    # try NAME one more time
     if len(chrome_extension.developer_name) == 0:
-        # They have to provide some link, so lets just assume the name from it
-        chrome_extension.developer_name = standardize_url(chrome_extension.developer_link)
+        if chrome_extension.developer_link:
+            # They usually provide some link, so lets just assume the name from it
+            parsed_developer_url = urlparse(chrome_extension.developer_link)
+            chrome_extension.developer_name = str(parsed_developer_url.netloc)
 
     # TODO(P2, data): We can access developer_type from the amount of verification it has from Chrome
     # div class HPTfYd-IqDDtd  like "Good record" or "No violations"
@@ -287,7 +308,7 @@ def process_extension_page_response(
     )
     chrome_extension: ChromeExtension
     if created:
-        print(f"INFO: will CREATE new ChromeExtension entry for {scrape_job.p_date} {scrape_job.google}")
+        print(f"INFO: will CREATE new ChromeExtension entry for {scrape_job.p_date} {scrape_job.google_id}")
     else:
         print(
             f"INFO: will UPDATE existing ChromeExtension entry {scrape_job.p_date} {scrape_job.google_id}"
@@ -401,26 +422,47 @@ async def scrape_chrome_extensions_in_parallel(scrape_jobs: List[ScrapeChromeExt
         await asyncio.gather(*tasks)
 
 
-async def get_all_chrome_extensions_from_marketplace(p_date: str) -> None:
+async def get_all_chrome_extensions_from_marketplace(p_date: str) -> List[ScrapeChromeExtensionJob]:
     researched_extensions = set()
+    scrape_jobs = []
     print(
         f"will run individual app HTTP GET with {ASYNC_IO_MAX_PARALLELISM} max parallelism"
     )
 
-    # for listing_page in LISTS:
+    # TODO(P1, runtime): Ideally this would be a generator so we can start scraping while parsing listing pages
     for listing_page in LISTS:
-        scrape_jobs_candidates = get_extensions_from_listing_page(listing_page, p_date=p_date)
-        next_scrape_jobs = []
-        for scrape_job in scrape_jobs_candidates:
+        get_extensions_from_listing_page(listing_page, p_date=p_date)
+        for scrape_job in scrape_jobs:
             # Already visited? In-memory version
             link = scrape_job.marketplace_link
             if link in researched_extensions:
                 print(f"INFO: skipping already researched extension {scrape_job.marketplace_link}")
                 continue
-            next_scrape_jobs.append(scrape_job)
+            scrape_jobs.append(scrape_job)
             researched_extensions.add(link)
 
-        await scrape_chrome_extensions_in_parallel(next_scrape_jobs, rescrape_existing=True)
+    return scrape_jobs
+
+
+def get_scrape_job_for_google_id(google_id, p_date):
+    return ScrapeChromeExtensionJob(
+        url=f"https://chromewebstore.google.com/detail/HELLO-WORLD-HAHAHA/{google_id}",
+        p_date=p_date,
+        google_id=google_id,
+    )
+
+
+def get_all_chrome_extensions_from_database(p_date: str) -> List[ScrapeChromeExtensionJob]:
+    # For Chrome Extensions we only need the google_id to scrape it with the HAHAHA Hack
+    distinct_google_ids = (ChromeExtension
+                           .select(ChromeExtension.google_id)
+                           .distinct())
+
+    # Execute the query and fetch the results
+    result = []
+    for entry in distinct_google_ids:
+        result.append(get_scrape_job_for_google_id(entry.google_id, p_date))
+    return result
 
 
 if __name__ == "__main__":

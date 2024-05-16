@@ -7,7 +7,8 @@ from typing import List
 from dotenv import load_dotenv
 from supawee.client import connect_to_postgres
 
-from batch_jobs.scraper.chrome_extensions import ScrapeChromeExtensionJob, scrape_chrome_extensions_in_parallel
+from batch_jobs.scraper.chrome_extensions import ScrapeChromeExtensionJob, scrape_chrome_extensions_in_parallel, \
+    get_scrape_job_for_google_id
 from batch_jobs.scraper.google_workspace import (
     ScrapeAddOnDetailsJob,
     scrape_google_workspace_add_ons,
@@ -165,12 +166,7 @@ async def backfill_chrome_extensions_list():
     # NOTE: The slug part is only for SEO, you can put anything there
     scrape_jobs = []
     for google_id in google_id_list:
-        scrape_job = ScrapeChromeExtensionJob(
-            url=f"https://chromewebstore.google.com/detail/HELLO-WORLD-HAHAHA/{google_id}",
-            p_date=batch_job_p_date,
-            google_id=google_id,
-        )
-        scrape_jobs.append(scrape_job)
+        scrape_jobs.append(get_scrape_job_for_google_id(google_id, batch_job_p_date))
 
     scrape_jobs.reverse()   # Just that I already did the first N
     await scrape_chrome_extensions_in_parallel(scrape_jobs, rescrape_existing=False)

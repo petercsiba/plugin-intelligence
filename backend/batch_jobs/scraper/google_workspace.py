@@ -9,6 +9,7 @@ from urllib.parse import quote
 import aiohttp
 import requests
 from bs4 import BeautifulSoup
+from peewee import fn
 from pydantic import BaseModel
 from supawee.client import connect_to_postgres
 
@@ -224,6 +225,7 @@ def process_add_on_page_response(
         return
 
     # This tag was there on 20210415205204
+    # TODO(P2, reliability): This is a critical field, and will NOT work with de-listed apps.
     name = find_tag_and_get_text(soup, "span", "BfHp9b")
 
     # With "get_or_create" and later .save() we essentially get ON CONFLICT UPDATE (in two statements).
@@ -330,6 +332,33 @@ def get_all_from_marketplace(p_date: str) -> List[ScrapeAddOnDetailsJob]:
         )
 
     return list(result.values())
+
+
+def get_all_google_workspace_from_database(p_date: str) -> List[ScrapeAddOnDetailsJob]:
+    # Define the subquery to get the latest p_date for each google_id
+    subquery = (GoogleWorkspace
+                .select(GoogleWorkspace.google_id, fn.MAX(GoogleWorkspace.p_date).alias('max_p_date'))
+                .group_by(GoogleWorkspace.google_id)
+                .alias('subquery'))
+
+    # Join the subquery with the original table to get the source_url
+    query = (GoogleWorkspace
+             .select(GoogleWorkspace.google_id, GoogleWorkspace.source_url, GoogleWorkspace.link)
+             .join(subquery, on=(
+            (GoogleWorkspace.google_id == subquery.c.google_id) &
+            (GoogleWorkspace.p_date == subquery.c.max_p_date)
+    )))
+
+    # Execute the query and fetch the results
+    result = []
+    for entry in query:
+        result.append(ScrapeAddOnDetailsJob(
+            url=entry.source_url if entry.source_url else entry.link,
+            p_date=p_date,
+            google_id=entry.google_id,
+            marketplace_link=entry.link,
+        ))
+    return result
 
 
 async def scrape_google_workspace_add_ons(
