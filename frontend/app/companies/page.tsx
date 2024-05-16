@@ -15,6 +15,7 @@ import PageTitle from "@/components/PageTitle";
 import { fetchTopCompanies } from './driver';
 import TopCompaniesBubbleChart from "./TopCompaniesBubbleChart";
 
+
 export default function HomePage() {
     const [loading, setLoading] = useState(true);
     const [companies, setCompanies] = useState<CompaniesTopResponse[]>([]);

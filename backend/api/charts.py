@@ -7,6 +7,7 @@ from supawee.client import database_proxy
 
 from api.config import MAX_LIMIT
 from api.plugins import PluginsTopResponse
+from api.utils import rating_in_bounds
 from supabase.models.data import Plugin, GoogleWorkspace
 
 from fastapi import APIRouter
@@ -78,7 +79,7 @@ def get_charts_plugin_arpu_bubble(limit: int = 50, max_arpu_cents: int = 200):
             # math stuff
             user_count=plugin.user_count,
             user_count_thousands=plugin.user_count // 1000,
-            avg_rating=plugin.avg_rating,
+            avg_rating=rating_in_bounds(plugin.avg_rating),
             revenue_estimate=revenue_estimate,
             arpu_cents=arpu_cents,
             arpu_dollars=arpu_cents / 100.0,

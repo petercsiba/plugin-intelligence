@@ -58,6 +58,15 @@ def prompt_output_to_html(prompt_output: Optional[str]) -> Optional[str]:
     return html.replace("\\$", "$")
 
 
+def rating_in_bounds(rating: Optional[float], debug_str="") -> Optional[float]:
+    if rating is None:
+        return None
+    if rating < 0 or rating > 5:
+        print(f"Rating out of bounds {rating}. To debug: {debug_str}")
+
+    return min(5.0, max(0.0, rating))
+
+
 def get_formatted_sql(peewee_query):
     # Extract the SQL query and parameters from the Peewee query object
     sql, params = peewee_query.sql()

@@ -6,7 +6,7 @@ from peewee import DoesNotExist
 from pydantic import BaseModel
 
 from api.config import MAX_LIMIT
-from api.utils import prompt_output_to_html, parse_fuzzy_list
+from api.utils import prompt_output_to_html, parse_fuzzy_list, rating_in_bounds
 from supabase.models.base import BasePlugin
 from supabase.models.data import Plugin
 
@@ -57,7 +57,7 @@ def get_plugins_top(limit: int = 20):
             marketplace_link=plugin.marketplace_link,
             img_logo_link=plugin.logo_link,
             user_count=plugin.user_count,
-            avg_rating=plugin.avg_rating,
+            avg_rating=rating_in_bounds(plugin.avg_rating, f"plugin_id={plugin.id}"),
             rating_count=plugin.rating_count,
             revenue_lower_bound=plugin.revenue_lower_bound,
             revenue_upper_bound=plugin.revenue_upper_bound,
@@ -124,7 +124,7 @@ async def get_plugin_details(plugin_id: int):
 
         # objective stuff
         response.user_count = plugin.user_count
-        response.avg_rating = plugin.avg_rating
+        response.avg_rating = rating_in_bounds(plugin.avg_rating, f"plugin_id={plugin_id}")
         response.rating_count = plugin.rating_count
 
         # revenue stuff

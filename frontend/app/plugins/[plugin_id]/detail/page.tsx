@@ -1,7 +1,5 @@
 import React from "react";
-import NextLink from "next/link";
 import {
-    Button,
     Container,
     Paper,
     Rating,
@@ -9,7 +7,6 @@ import {
     List,
     ListItem,
     ListItemText,
-    Divider,
 } from "@mui/material";
 import Box from "@mui/material/Box";
 import {PluginDetailsResponse} from "../../models";
@@ -17,9 +14,10 @@ import ExternalLink from "@/components/ExternalLink";
 import {fixThatArrayWithNullShit, formatCurrency, formatNumber} from "@/utils";
 import dynamic from "next/dynamic";
 import ListBoxOneLine from "@/components/ListBoxOneLine";
+import NoResultsFound from "@/components/NoResultsFound";
 
 const BoxWithInnerHtml = dynamic(
-    () => import('./BoxWithInnerHtml'),
+    () => import('@/components/BoxWithInnerHtml'),
     { ssr: false }  // This will disable server-side rendering for the component
 );
 
@@ -41,18 +39,7 @@ async function fetchPluginDetails(plugin_id: string): Promise<PluginDetailsRespo
 
 export default async function PluginDetailsPage({ params }: { params: { plugin_id: string } }) {
     const plugin = await fetchPluginDetails(params.plugin_id);
-    if (!plugin) {
-        return (
-            <div>
-                <p>Oops! Something went wrong. Please try again later or go back to the main page.</p>
-                <NextLink href="/">
-                    <Button variant="contained" color="primary">
-                        Back to Main Page
-                    </Button>
-                </NextLink>
-            </div>
-        );
-    }
+    if (!plugin) return <NoResultsFound model_name={`Plugin with id "${params.plugin_id}"`} />;
 
     // FIX SHIT
     const lower_bound = fixThatArrayWithNullShit(plugin.revenue_lower_bound)

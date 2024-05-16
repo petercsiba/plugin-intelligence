@@ -408,9 +408,10 @@ async def scrape_chrome_extensions_in_parallel(scrape_jobs: List[ScrapeChromeExt
     semaphore = asyncio.Semaphore(ASYNC_IO_MAX_PARALLELISM)
 
     for scrape_job in scrape_jobs:
-        # if ChromeExtension.exists(scrape_job.google_id, scrape_job.p_date) and not rescrape_existing:
-        #     print(f"INFO: skipping already scraped extension {scrape_job.google_id} {scrape_job.p_date}")
-        #     continue
+        # TODO(P1, performance): Somehow this query gets stuck, but then rest of the code runs fine :/
+        if ChromeExtension.exists(scrape_job.google_id, scrape_job.p_date) and not rescrape_existing:
+            print(f"INFO: skipping already scraped extension {scrape_job.google_id} {scrape_job.p_date}")
+            continue
 
         # Schedule the task with semaphore
         task = async_research_extension_more(scrape_job, semaphore)
