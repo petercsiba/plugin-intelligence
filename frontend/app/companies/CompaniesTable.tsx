@@ -1,5 +1,6 @@
 import {formatNumber, formatNumberShort} from "@/utils";
 
+import Image from 'next/image';
 import NextLink from "next/link";
 import Button from '@mui/material/Button';
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
@@ -7,7 +8,7 @@ import {CompaniesTopResponse} from "./models";
 
 
 interface CompaniesTableProps {
-  companies: CompaniesTopResponse[];
+    companies: CompaniesTopResponse[];
 }
 
 const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
@@ -34,7 +35,14 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
                         <TableRow key={company.slug}>
                             <TableCell>
                                 {company.img_logo_link ? (
-                                    <img src={company.img_logo_link} alt={company.display_name} style={{width: 48}}/>
+
+                                    <Image
+                                        src={company.img_logo_link}
+                                        alt={company.display_name}
+                                        width={48}
+                                        height={48}
+                                    />
+
                                 ) : (
                                     ''
                                 )}

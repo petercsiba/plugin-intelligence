@@ -1,7 +1,7 @@
 import React from 'react';
 import Container from '@mui/material/Container';
 import MarketplaceCompanies from "../MarketplaceCompanies";
-import {MarketplaceName} from "../models";
+import { MarketplaceName } from "../models";
 import MarketplacePlugins from "../MarketplacePlugins";
 import PageTitle from "@/components/PageTitle";
 import SubPageTitle from "@/components/SubPageTitle";
@@ -23,7 +23,7 @@ export default function GoogleWorkspace() {
                     <li><strong>Google Workspace Users</strong>: More than 3 billion</li>
                 </ul>
 
-                For instance, since 2017, Atlassian's Trello integration with Gmail has garnered over 7 million installs,
+                For instance, since 2017, Atlassian&apos;s Trello integration with Gmail has garnered over 7 million installs,
                 demonstrating the potential reach and impact of well-developed integrations.
             </Container>
             <MarketplaceCompanies marketplaceName={MarketplaceName.GOOGLE_WORKSPACE} />
