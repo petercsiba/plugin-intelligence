@@ -3,15 +3,15 @@ import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-export default function About() {
+export default function Pricing() {
     return (
         <Container maxWidth="lg">
             <Box sx={{ my: 4 }}>
                 <Typography variant="h4" component="h1">
-                    About Us
+                    Pricing
                 </Typography>
                 <Typography variant="body1">
-                    This is the About page of our Next.js application using Material-UI.
+                    Talk to sales to get a quote.
                 </Typography>
             </Box>
         </Container>

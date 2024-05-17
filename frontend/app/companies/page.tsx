@@ -47,8 +47,7 @@ export default function HomePage() {
                     <TableHead>
                         <TableRow>
                             <TableCell>Logo</TableCell>
-                            <TableCell>Name</TableCell>
-                            {/* TODO(P1, ux): Add tooltip what does this mean */}
+                            <TableCell style={{ maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Name</TableCell>
                             <TableCell>Total Downloads</TableCell>
                             <TableCell>Plugin Count</TableCell>
                             <TableCell>Average Rating</TableCell>
@@ -65,7 +64,7 @@ export default function HomePage() {
                                         ''
                                     )}
                                 </TableCell>
-                                <TableCell style={{fontWeight: "bold"}}>{company.display_name}</TableCell>
+                                <TableCell style={{ fontWeight: "bold", maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{company.display_name}</TableCell>
                                 <TableCell>{formatNumberShort(company.sum_download_count)}</TableCell>
                                 <TableCell>{company.count_plugin}</TableCell>
                                 <TableCell>{formatNumber(company.avg_avg_rating)}</TableCell>
@@ -81,7 +80,6 @@ export default function HomePage() {
                     </TableBody>
                 </Table>
             </TableContainer>
-
         </Container>
     );
 }
