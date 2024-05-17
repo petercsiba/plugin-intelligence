@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import * as d3 from 'd3-scale';
 import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
 import { scaleLog } from 'd3-scale';
+import {MarketplaceName} from "../marketplaces/models";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 // There is somewhat few plugins with below 3.0 rating; and 3.0 is itself quite low so lets just do red there.
@@ -55,14 +56,18 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
 };
 
 
-const ArpuBubbleChartComponent = () => {
+interface ArpuBubbleChartComponentProps {
+    marketplaceName: MarketplaceName;
+}
+
+const ArpuBubbleChartComponent: React.FC<ArpuBubbleChartComponentProps> = ({ marketplaceName }) => {
     // State to store the fetched data with BubbleData type
     const [data, setBubbleData] = useState<BubbleData[]>([]);
 
     // Function to fetch bubble data from an API
     const fetchBubbleData = async () => {
       try {
-        const response = await fetch(`${baseUrl}/charts/plugins-arpu-bubble`);
+        const response = await fetch(`${baseUrl}/charts/plugins-arpu-bubble?marketplace_name=${marketplaceName}`);
         const data: BubbleData[] = await response.json(); // Type the response explicitly
         setBubbleData(data);
       } catch (error) {

@@ -32,23 +32,29 @@ const NavigationBar = () => {
     <AppBar position="static" sx={{ backgroundColor: 'black' }}>
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            <Link href="/" passHref>
               <Box
                 component="img"
                 src="/logo/plugin-intelligence-logo-white-on-transparent-full.png"
                 alt="Plugin Intelligence Logo"
                 sx={{ height: 48 }}
               />
+            </Link>
         </Typography>
-        <Button color="inherit">
-              <Box
-                component="img"
-                src="/icons/google-workspace-logo.png"
-                alt="Google Workspace Marketplace Logo"
-                sx={{ mr: 0.5, width: 16, height: 16 }}
-              />
-          Google Workspace
-        </Button>
-        <Button color="inherit">
+        {/*TODO: Change after we have a proper landing page */}
+        <StyledLink href="/" passHref>
+            <Button color="inherit">
+                  <Box
+                    component="img"
+                    src="/icons/google-workspace-logo.png"
+                    alt="Google Workspace Marketplace Logo"
+                    sx={{ mr: 0.5, width: 16, height: 16 }}
+                  />
+              Google Workspace
+            </Button>
+        </StyledLink>
+        <StyledLink href="/marketplaces/chrome_extensions" passHref>
+            <Button color="inherit">
               <Box
                 component="img"
                 src="/icons/chrome-webstore-logo.svg"
@@ -56,7 +62,8 @@ const NavigationBar = () => {
                 sx={{ mr: 0.5, width: 16, height: 16 }}
               />
           Chrome Extensions
-        </Button>
+            </Button>
+        </StyledLink>
         {/*<Button color="inherit">Salesforce AppExchange</Button>*/}
         <Button color="inherit" onClick={handleMenuClick}>
           More
@@ -72,6 +79,7 @@ const NavigationBar = () => {
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
         >
+        <StyledLink href="/pricing" passHref>
           <MenuItem onClick={handleMenuClose}>
               <Box
                 component="img"
@@ -81,6 +89,8 @@ const NavigationBar = () => {
               />
               Wordpress Plugins
           </MenuItem>
+       </StyledLink>
+        <StyledLink href="/pricing" passHref>
           <MenuItem onClick={handleMenuClose}>
               <Box
                 component="img"
@@ -90,6 +100,8 @@ const NavigationBar = () => {
               />
               Shopify App Store
           </MenuItem>
+       </StyledLink>
+        <StyledLink href="/pricing" passHref>
           <MenuItem onClick={handleMenuClose}>
               <Box
                 component="img"
@@ -99,8 +111,10 @@ const NavigationBar = () => {
               />
             Salesforce App Exchange
           </MenuItem>
+       </StyledLink>
+        <StyledLink href="/pricing" passHref>
           {/*  https://monday.com/marketplace*/}
-          <MenuItem onClick={handleMenuClose}>
+           <MenuItem onClick={handleMenuClose}>
               <Box
                 component="img"
                 src="/icons/monday-logo.png"
@@ -108,13 +122,14 @@ const NavigationBar = () => {
                 sx={{ mr: 0.5, width: 16, height: 16 }}
               />
               Monday App Marketplace
-          </MenuItem>
+            </MenuItem>
+          </StyledLink>
         </Menu>
         <StyledLink href="/pricing" passHref>
           <Button color="inherit">Pricing</Button>
         </StyledLink>
         <Link href="/pricing" passHref>
-            <Button variant="contained" sx={{ backgroundColor: 'blue', color: 'white' }}>
+            <Button variant="contained" sx={{ backgroundColor: 'yellowgreen', color: 'black' }}>
                 Connect Data
               <Box
                 component="img"

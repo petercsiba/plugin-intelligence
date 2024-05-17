@@ -8,8 +8,7 @@ from pydantic import BaseModel
 from api.config import MAX_LIMIT
 from api.utils import prompt_output_to_html, parse_fuzzy_list, rating_in_bounds
 from supabase.models.base import BasePlugin
-from supabase.models.data import Plugin
-
+from supabase.models.data import Plugin, MarketplaceName
 
 plugins_router = APIRouter()
 
@@ -38,7 +37,7 @@ class PluginsTopResponse(BaseModel):
 
 
 @plugins_router.get("/plugins/top", response_model=List[PluginsTopResponse])
-def get_plugins_top(limit: int = 20):
+def get_plugins_top(limit: int = 20, marketplace_name: Optional[MarketplaceName] = None):
     if limit > MAX_LIMIT:
         raise HTTPException(
             status_code=400,
@@ -47,6 +46,8 @@ def get_plugins_top(limit: int = 20):
 
     # Query the top plugins by upper_bound
     query = Plugin.select().order_by(fn.COALESCE(Plugin.revenue_upper_bound, 0).desc()).limit(limit)
+    if marketplace_name:
+        query = query.where(Plugin.marketplace_name == marketplace_name)
     return _list_plugins(query)
 
 

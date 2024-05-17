@@ -10,7 +10,7 @@ const PageTitle: React.FC<TitleProps> = ({ title }) => {
     return (
         <Box
             sx={{
-                my: 4,
+                mt: 4,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',

@@ -8,6 +8,7 @@ import {formatNumber, formatNumberShort} from "@/utils";
 import { scaleLog } from 'd3-scale';
 import {CompaniesTopResponse} from "./models";
 import {fetchTopCompanies} from "./driver";
+import {MarketplaceName} from "../marketplaces/models";
 
 // There is somewhat few plugins with below 3.0 rating; and 3.0 is itself quite low so lets just do red there.
 const MIN_RATING = 3.0;
@@ -43,15 +44,18 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
     return null;
 };
 
+interface TopCompaniesBubbleChartProps {
+    marketplaceName: MarketplaceName;
+}
 
-const TopCompaniesBubbleChart = () => {
+const TopCompaniesBubbleChart: React.FC<TopCompaniesBubbleChartProps> = ({ marketplaceName }) => {
     // State to store the fetched data with BubbleData type
     const [data, setBubbleData] = useState<CompaniesTopResponse[]>([]);
 
     // Function to fetch bubble data from an API
     const fetchBubbleData = async () => {
       try {
-        setBubbleData(await fetchTopCompanies());
+        setBubbleData(await fetchTopCompanies(marketplaceName));
       } catch (error) {
         console.error('Error fetching bubble data:', error);
       }

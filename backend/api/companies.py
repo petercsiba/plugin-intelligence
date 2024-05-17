@@ -6,8 +6,7 @@ from pydantic import BaseModel
 
 from api.config import MAX_LIMIT
 from api.utils import get_formatted_sql, rating_in_bounds
-from supabase.models.base import BaseCompany
-from supabase.models.data import Plugin
+from supabase.models.data import Plugin, MarketplaceName
 
 companies_router = APIRouter()
 
@@ -27,7 +26,7 @@ class CompaniesTopResponse(BaseModel):
 
 
 @companies_router.get("/companies/top", response_model=List[CompaniesTopResponse])
-def get_companies_top(limit: int = 20, min_count: int = 1, max_count: int = 10000):
+def get_companies_top(limit: int = 20, min_count: int = 1, max_count: int = 10000, marketplace_name: Optional[MarketplaceName] = None):
     if limit > MAX_LIMIT:
         raise HTTPException(
             status_code=400,
@@ -59,6 +58,9 @@ def get_companies_top(limit: int = 20, min_count: int = 1, max_count: int = 1000
     companies_query = (Plugin
              .select()
              .where(Plugin.company_slug.in_(slugs_needed)))
+    if marketplace_name:
+        companies_query = companies_query.where(Plugin.marketplace_name == marketplace_name)
+
     companies_results = list(companies_query)
     slug_map: Dict[str, Plugin] = {
         company.company_slug: company for company in companies_results
@@ -112,7 +114,7 @@ class CompanyDetailsResponse(BaseModel):
 
 
 @companies_router.get("/companies/{company_slug}/details", response_model=CompanyDetailsResponse)
-async def get_plugin_details(company_slug: str):
+async def get_company_details(company_slug: str):
     plugins = list(Plugin.select().where(Plugin.company_slug == company_slug))
     if len(plugins) == 0:
         raise HTTPException(status_code=404, detail="Company not found")

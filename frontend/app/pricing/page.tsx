@@ -1,19 +1,17 @@
 import React from 'react';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
+import PageTitle from "@/components/PageTitle";
 
 export default function Pricing() {
     return (
         <Container maxWidth="lg">
-            <Box sx={{ my: 4 }}>
-                <Typography variant="h4" component="h1">
-                    Pricing
-                </Typography>
+            <PageTitle title="Pricing" />
+            <Container maxWidth="sm">
                 <Typography variant="body1">
                     Talk to sales to get a quote.
                 </Typography>
-            </Box>
+            </Container>
         </Container>
     );
 }

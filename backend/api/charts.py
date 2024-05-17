@@ -9,7 +9,7 @@ from supawee.client import database_proxy
 from api.config import MAX_LIMIT
 from api.plugins import PluginsTopResponse
 from api.utils import rating_in_bounds, get_formatted_sql
-from supabase.models.data import Plugin, GoogleWorkspace
+from supabase.models.data import Plugin, GoogleWorkspace, MarketplaceName
 
 from fastapi import APIRouter
 charts_router = APIRouter()
@@ -29,7 +29,7 @@ class ChartsMainResponse(BaseModel):
 
 
 @charts_router.get("/charts/plugins-arpu-bubble", response_model=List[ChartsMainResponse])
-def get_charts_plugin_arpu_bubble(limit: int = 50, max_arpu_cents: int = 200):
+def get_charts_plugin_arpu_bubble(limit: int = 50, max_arpu_cents: int = 200, marketplace_name: Optional[MarketplaceName] = None):
     if limit > MAX_LIMIT:
         raise HTTPException(
             status_code=400,
@@ -52,6 +52,8 @@ def get_charts_plugin_arpu_bubble(limit: int = 50, max_arpu_cents: int = 200):
         .order_by(Plugin.revenue_upper_bound.desc())
         .limit(limit)
     )
+    if marketplace_name:
+        query = query.where(Plugin.marketplace_name == marketplace_name)
 
     data = []
     for plugin in query:
