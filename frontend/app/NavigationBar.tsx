@@ -53,7 +53,7 @@ const NavigationBar = () => {
               Google Workspace
             </Button>
         </StyledLink>
-        <StyledLink href="/marketplaces/chrome_extensions" passHref>
+        <StyledLink href="/marketplaces/chrome_extension" passHref>
             <Button color="inherit">
               <Box
                 component="img"

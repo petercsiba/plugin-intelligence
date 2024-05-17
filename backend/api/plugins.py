@@ -94,6 +94,11 @@ class PluginDetailsResponse(BaseModel):
     avg_rating: Optional[float] = None
     rating_count: Optional[int] = None
 
+    # Developer stuff
+    # developer_link = Optional[str] = None
+    company_slug: Optional[str] = None
+    developer_name: Optional[str] = None
+
     # Money Stuff
     revenue_analysis_html: Optional[str] = None
     pricing_tiers: Optional[list] = None
@@ -137,6 +142,10 @@ async def get_plugin_details(plugin_id: int):
         response.user_count = plugin.user_count
         response.avg_rating = rating_in_bounds(plugin.avg_rating, f"plugin_id={plugin_id}")
         response.rating_count = plugin.rating_count
+
+        # developer stuff
+        response.company_slug = plugin.company_slug
+        response.developer_name = plugin.developer_name
 
         # revenue stuff
         response.revenue_lower_bound = plugin.revenue_lower_bound

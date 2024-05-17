@@ -52,7 +52,7 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
                             <TableCell>
                                 <NextLink href={`/companies/${company.slug}/detail`} passHref>
                                     <Button variant="contained" color="primary" fullWidth> {/* Full width on mobile */}
-                                        View
+                                        Details
                                     </Button>
                                 </NextLink>
                             </TableCell>

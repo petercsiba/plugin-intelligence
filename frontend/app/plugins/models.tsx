@@ -1,3 +1,5 @@
+import {MarketplaceName} from "../marketplaces/models";
+
 export interface TopPluginResponse {
   id: number;
   name: string;
@@ -18,7 +20,7 @@ export interface TopPluginResponse {
 export interface PluginDetailsResponse {
     id: number;
     name: string;
-    marketplace_name: string;
+    marketplace_name?: MarketplaceName;
     marketplace_id: string;
     marketplace_link: string;
     img_logo_link?: string;
@@ -26,6 +28,9 @@ export interface PluginDetailsResponse {
     user_count: number;
     avg_rating?: number;
     rating_count?: number;
+
+    company_slug?: string;
+    developer_name?: string;
 
     revenue_analysis_html?: string;
     pricing_tiers?: string[];

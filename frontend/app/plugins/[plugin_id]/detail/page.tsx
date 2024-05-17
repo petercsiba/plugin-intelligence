@@ -7,6 +7,7 @@ import {
     List,
     ListItem,
     ListItemText,
+    Button,
 } from "@mui/material";
 import Box from "@mui/material/Box";
 import {PluginDetailsResponse} from "../../models";
@@ -17,6 +18,8 @@ import ListBoxOneLine from "@/components/ListBoxOneLine";
 import NoResultsFound from "@/components/NoResultsFound";
 import PluginTimeseriesChart from "../../PluginTimeseriesChart";
 import {fetchPluginTimeseries} from "../../driver";
+import NextLink from "next/link";
+import {marketplaceNameToHref} from "../../../marketplaces/models";
 
 const BoxWithInnerHtml = dynamic(
     () => import('@/components/BoxWithInnerHtml'),
@@ -79,19 +82,20 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                 <List>
                     <ListItem>
                         <ListItemText
-                            primary="Marketplace ID"
-                            secondary={plugin.marketplace_id || "N/A"}
-                        />
-                        <ListItemText
-                            primary={`See on ${plugin.marketplace_name} Marketplace`}
+                            primary="Marketplace"
                             secondary={
+                            <NextLink href={marketplaceNameToHref(plugin.marketplace_name)} passHref>
+                                <Button color="primary">
+                                    {plugin.marketplace_name}
+                                </Button>
+                            </NextLink>
+                            }
+                        />
                                 <ExternalLink
                                     href={plugin.marketplace_link || "#"}
                                 >
-                                    Link
+                                    {`See on ${plugin.marketplace_name} Marketplace`}
                                 </ExternalLink>
-                            }
-                        />
                     </ListItem>
                     <ListItem>
                         <ListItemText primary="Revenue Estimate" secondary={revenueRange} />
@@ -111,6 +115,13 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                             primary="Tags"
                             secondary={<ListBoxOneLine listOfStrings={plugin.tags} />}
                         />
+                    </ListItem>
+                    <ListItem>
+                        <ListItemText primary={<strong>Developer</strong>} secondary={
+                            <NextLink href={`/companies/${plugin.company_slug}/detail`} passHref>
+                                <Button color="primary">{plugin.developer_name}</Button>
+                            </NextLink>
+                        } />
                     </ListItem>
                 </List>
 
