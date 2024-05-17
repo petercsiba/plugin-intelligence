@@ -56,9 +56,9 @@ const PluginTimeseriesChart: React.FC<Props> = ({data}) => {
             >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="p_date" />
-                <YAxis yAxisId="user_count_axis" domain={['dataMin', 'dataMax']} stroke="#8884d8" tickFormatter={(value) => formatNumberShort(value)} />
-                <YAxis yAxisId="rating_count_axis" orientation="right" domain={['dataMin', 'dataMax']} stroke="#82ca9d" />
-                <YAxis yAxisId="avg_rating_axis" orientation="right" domain={['dataMin', 'dataMax']} stroke="#ffc658" />
+                <YAxis yAxisId="user_count_axis" domain={[0, 'dataMax']} stroke="#8884d8" tickFormatter={(value) => formatNumberShort(value)} />
+                <YAxis yAxisId="rating_count_axis" orientation="right" domain={[0, 'dataMax']} stroke="#82ca9d" />
+                <YAxis yAxisId="avg_rating_axis" orientation="right" domain={[0, 5]} stroke="#ffc658" />
 
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
