@@ -1,8 +1,11 @@
 import asyncio
+import random
+import string
 from datetime import datetime
 
 from supawee.client import connect_to_postgres
 
+from batch_jobs.backfill.backfill_scrape import backfill_chrome_extension_with_wayback
 from batch_jobs.scraper.chrome_extensions import get_scrape_job_for_google_id, scrape_chrome_extensions_in_parallel
 from common.config import POSTGRES_DATABASE_URL
 
@@ -10,6 +13,7 @@ from common.config import POSTGRES_DATABASE_URL
 # TODO(P0, data): For historical Chrome Extension user/rating data use this repo as Wayback Machine will take forever:
 #   100,000 Chrome Extensions, up to once a month, 4 years back, say 10 historical datapoints on average
 #   1,000,000 Wayback Machine requests, with 5-15 requests per minute, 1,000 to 3,000 hours runtime (50-150 days).
+# TODO: Also add released_date and other stuff while doing it
 # https://github.com/palant/chrome-extension-manifests-dataset?tab=readme-ov-file
 # They have 8 historical datapoints, which is nice:
 # manifests-2021-10-30/ manifests-2022-09-08/ manifests-2023-05-08/ manifests-2023-06-05/ manifests-2023-11-17/ manifests-2024-01-12/  # noqa
@@ -67,6 +71,13 @@ async def backfill_chrome_extensions_list():
     await scrape_chrome_extensions_in_parallel(scrape_jobs, rescrape_existing=False)
 
 
+def generate_random_shard_prefix() -> str:
+    letters = string.ascii_lowercase[:16]  # 'a' to 'p'
+    return ''.join(random.choice(letters) for _ in range(2))
+
+
 if __name__ == "__main__":
     with connect_to_postgres(POSTGRES_DATABASE_URL):
-        asyncio.run(backfill_chrome_extensions_list())
+        # asyncio.run(backfill_chrome_extensions_list())
+        shard_prefix = generate_random_shard_prefix()
+        backfill_chrome_extension_with_wayback(shard_prefix=shard_prefix)

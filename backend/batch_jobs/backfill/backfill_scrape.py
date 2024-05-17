@@ -5,8 +5,10 @@ from datetime import datetime
 from typing import List
 
 from dotenv import load_dotenv
+from peewee import fn
 from supawee.client import connect_to_postgres
 
+from batch_jobs.scraper.chrome_extensions import ScrapeChromeExtensionJob, process_extension_page_response
 from batch_jobs.scraper.google_workspace import (
     ScrapeAddOnDetailsJob,
     scrape_google_workspace_add_ons,
@@ -19,8 +21,8 @@ from batch_jobs.scraper.wayback import (
     requests_get_with_retry,
 )
 from common.config import POSTGRES_DATABASE_URL
-from supabase.models.base import BaseGoogleWorkspace
-from supabase.models.data import GoogleWorkspace
+from supabase.models.base import BaseGoogleWorkspace, BaseChromeExtension
+from supabase.models.data import GoogleWorkspace, ChromeExtension
 
 MIN_BATCH = 100
 # TODO(P1, completenesse): Did first run with day_steps=1, BUT unsure if there is too much value in that
@@ -111,6 +113,82 @@ def backfill_google_workspace():
         avg_per_minute = 60 * total_scraped / (time.time() - scraping_start)
         print(
             f"Total scraped so far: {total_scraped}; on average {avg_per_minute} per minute"
+        )
+
+
+def backfill_chrome_extension_with_wayback(shard_prefix: str):
+    # Subquery to get the most recent link for each google_id
+    subquery = (
+        BaseChromeExtension
+        .select(
+            BaseChromeExtension.google_id,
+            fn.MAX(BaseChromeExtension.p_date).alias('max_p_date')
+        )
+        .group_by(BaseChromeExtension.google_id)
+    )
+
+    # Main query to join with the subquery and get the required fields
+    distinct_links_query = (
+        BaseChromeExtension
+        .select(
+            BaseChromeExtension.link,
+            BaseChromeExtension.google_id,
+            BaseChromeExtension.user_count
+        )
+        .join(
+            subquery,
+            on=(
+                    (BaseChromeExtension.google_id == subquery.c.google_id) &
+                    (BaseChromeExtension.p_date == subquery.c.max_p_date)
+            )
+        )
+        .where(BaseChromeExtension.link.is_null(False) & BaseChromeExtension.google_id.startswith(shard_prefix))
+        .order_by(fn.COALESCE(BaseChromeExtension.user_count, 0).desc())
+    )
+
+    # Execute the query
+    distinct_links = distinct_links_query.execute()
+
+    print("Distinct links count:", len(distinct_links))
+
+    total_scraped = 0
+    scraping_start = time.time()
+    for partial_chrome_extension in distinct_links:
+        marketplace_link = partial_chrome_extension.link
+        wayback_snapshots = wayback_get_all_snapshot_urls(target_url=marketplace_link, day_step=WAYBACK_DAY_STEPS)
+
+        scrape_jobs = []
+        for snapshot in wayback_snapshots:
+            scrape_jobs.append(
+                ScrapeChromeExtensionJob(
+                    url=snapshot.wayback_url(),
+                    p_date=snapshot.p_date_str(),
+                    marketplace_link=marketplace_link,
+                    google_id=partial_chrome_extension.google_id,
+                )
+            )
+
+        # TODO(P3, devx): This is duplicate code from backfill_google_workspace, at some point we will abstract this
+        print(f"Accumulated enough jobs {len(scrape_jobs)}, gonna scrape one-by-one...")
+        for scrape_job in scrape_jobs:
+            if ChromeExtension.exists(scrape_job.google_id, scrape_job.p_date):
+                print(f"Skipping as it is already scraped: {scrape_job.url}")
+                continue
+
+            print(
+                f"Scraping ({scrape_job.google_id}, {scrape_job.p_date}) from ",
+                scrape_job.url,
+            )
+            response = requests_get_with_retry(scrape_job.url)
+            if response and response.status_code == 200:
+                process_extension_page_response(scrape_job, response.text)
+                total_scraped += 1
+            else:
+                print(f"WARNING: cannot get contents of {scrape_job.url}")
+
+        avg_per_minute = 60 * total_scraped / (time.time() - scraping_start)
+        print(
+            f"Shard={shard_prefix}: Total scraped so far: {total_scraped}; on average {avg_per_minute} per minute"
         )
 
 
