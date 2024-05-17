@@ -44,3 +44,11 @@ export interface PluginDetailsResponse {
     created_at: string;
     updated_at?: string;
 }
+
+export interface PluginTimeseriesData {
+    marketplace_id: string
+    p_date: string
+    user_count: number
+    avg_rating?: number
+    rating_count?: number
+}

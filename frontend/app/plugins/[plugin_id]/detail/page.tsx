@@ -15,6 +15,8 @@ import {fixThatArrayWithNullShit, formatCurrency, formatNumber} from "@/utils";
 import dynamic from "next/dynamic";
 import ListBoxOneLine from "@/components/ListBoxOneLine";
 import NoResultsFound from "@/components/NoResultsFound";
+import PluginTimeseriesChart from "../../PluginTimeseriesChart";
+import {fetchPluginTimeseries} from "../../driver";
 
 const BoxWithInnerHtml = dynamic(
     () => import('@/components/BoxWithInnerHtml'),
@@ -40,6 +42,8 @@ async function fetchPluginDetails(plugin_id: string): Promise<PluginDetailsRespo
 export default async function PluginDetailsPage({ params }: { params: { plugin_id: string } }) {
     const plugin = await fetchPluginDetails(params.plugin_id);
     if (!plugin) return <NoResultsFound model_name={`Plugin with id "${params.plugin_id}"`} />;
+
+    const timeseriesData = await fetchPluginTimeseries(params.plugin_id);
 
     // FIX SHIT
     const lower_bound = fixThatArrayWithNullShit(plugin.revenue_lower_bound)
@@ -109,6 +113,12 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                         />
                     </ListItem>
                 </List>
+
+                {/* Timeseries Chart */}
+                <Box mt={4}>
+                    <Typography variant="h5">Historical Downloads & Ratings</Typography>
+                    <PluginTimeseriesChart data={timeseriesData} />
+                </Box>
 
                 {/* Blog-style Content */}
 

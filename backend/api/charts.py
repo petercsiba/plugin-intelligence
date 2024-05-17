@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from fastapi import HTTPException
 from peewee import fn
@@ -7,7 +8,7 @@ from supawee.client import database_proxy
 
 from api.config import MAX_LIMIT
 from api.plugins import PluginsTopResponse
-from api.utils import rating_in_bounds
+from api.utils import rating_in_bounds, get_formatted_sql
 from supabase.models.data import Plugin, GoogleWorkspace
 
 from fastapi import APIRouter
@@ -88,6 +89,58 @@ def get_charts_plugin_arpu_bubble(limit: int = 50, max_arpu_cents: int = 200):
         data.append(plugin_response)
 
     return data
+
+
+# To get good historical data candidates:
+#   SELECT p.id, w.google_id, COUNT(*) FROM google_workspace w
+#   JOIN plugin p ON p.marketplace_id = w.google_id
+#   GROUP BY 1, 2 ORDER BY 3 DESC
+
+class TimeseriesData(BaseModel):
+    marketplace_id: str
+    p_date: str
+    user_count: int
+    avg_rating: Optional[float] = None
+    rating_count: Optional[int] = None
+
+
+def maybe_decimal_to_float(value):
+    if value is None:
+        return None
+    return float(value)
+
+
+# TODO: Also support multiple plugins for a company
+@charts_router.get("/charts/plugins-timeseries/{plugin_id}", response_model=List[TimeseriesData])
+def get_charts_plugins_timeseries(plugin_id: str):
+    plugin = Plugin.get_by_id(plugin_id)
+    plugin: Plugin
+
+    query = GoogleWorkspace.select(
+        GoogleWorkspace.google_id,
+        GoogleWorkspace.p_date,
+        GoogleWorkspace.user_count,
+        GoogleWorkspace.rating,
+        GoogleWorkspace.rating_count,
+    ).where(GoogleWorkspace.google_id == plugin.marketplace_id).order_by(GoogleWorkspace.p_date.asc())
+
+    print(get_formatted_sql(query))
+
+    response = []
+    for item in query:
+        # Better omit then display 0
+        if item.user_count is None or item.user_count == 0:
+            continue
+
+        response.append(TimeseriesData(
+            marketplace_id=item.google_id,
+            # TODO: We should return date object
+            p_date=item.p_date.strftime("%Y-%m-%d"),
+            user_count=item.user_count,
+            avg_rating=maybe_decimal_to_float(item.rating),
+            rating_count=item.rating_count,
+        ))
+    return response
 
 
 # @charts_router.get("/charts/plugins-biggest-jumpers", response_model=List[PluginsTopResponse]):
