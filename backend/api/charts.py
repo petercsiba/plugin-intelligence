@@ -1,15 +1,11 @@
-from datetime import datetime
 from typing import List, Optional
 
 from fastapi import HTTPException
-from peewee import fn
 from pydantic import BaseModel
-from supawee.client import database_proxy
 
 from api.config import MAX_LIMIT
-from api.plugins import PluginsTopResponse
 from api.utils import rating_in_bounds, get_formatted_sql
-from supabase.models.data import Plugin, GoogleWorkspace, MarketplaceName
+from supabase.models.data import Plugin, MarketplaceName
 
 from fastapi import APIRouter
 charts_router = APIRouter()
@@ -112,19 +108,22 @@ def maybe_decimal_to_float(value):
     return float(value)
 
 
-# TODO: Also support multiple plugins for a company
+# TODO(P0, ux): Also support multiple plugins for a company
 @charts_router.get("/charts/plugins-timeseries/{plugin_id}", response_model=List[TimeseriesData])
 def get_charts_plugins_timeseries(plugin_id: str):
     plugin = Plugin.get_by_id(plugin_id)
     plugin: Plugin
 
-    query = GoogleWorkspace.select(
-        GoogleWorkspace.google_id,
-        GoogleWorkspace.p_date,
-        GoogleWorkspace.user_count,
-        GoogleWorkspace.rating,
-        GoogleWorkspace.rating_count,
-    ).where(GoogleWorkspace.google_id == plugin.marketplace_id).order_by(GoogleWorkspace.p_date.asc())
+    db_model = plugin.marketplace_name_to_timeseries_db_model()
+    timeseries_id = plugin.marketplace_name_to_timeseries_id()
+
+    query = db_model.select(
+        timeseries_id,  # e.g. GoogleWorkspace.google_id
+        db_model.p_date,
+        db_model.user_count,
+        db_model.rating,
+        db_model.rating_count,
+    ).where(timeseries_id == plugin.marketplace_id).order_by(db_model.p_date.asc())
 
     print(get_formatted_sql(query))
 

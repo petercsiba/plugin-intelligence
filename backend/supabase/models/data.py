@@ -32,6 +32,9 @@ class GoogleWorkspace(BaseGoogleWorkspace):
         )
         return query.exists()
 
+    def get_marketplace_id(self):
+        return self.google_id
+
     # Takes in subset of
     # ['Google Drive', 'Google Docs', 'Google Sheets', 'Google Slides', 'Google Forms', 'Google Calendar',
     #  'Gmail', 'Google Meet', 'Google Classroom', 'Google Chat']
@@ -46,23 +49,6 @@ class GoogleWorkspace(BaseGoogleWorkspace):
         self.with_meet = "Google Meet" in works_with
         self.with_classroom = "Google Classroom" in works_with
         self.with_chat = "Google Chat" in works_with
-
-    # For debugging purposes
-    def display(self):
-        print("--- App Data ---")
-        print(f"Name: {self.name}")
-        print(f"Developer: {self.developer}")
-        print(f"Rating: {self.rating} out of {self.rating_count} reviews")
-        print(f"Users: {self.user_count}")
-        print(f"Link: {self.link}")
-        print(f"Listing Updated: {self.listing_updated}")
-        print(f"Description: {self.description}")
-        print(f"Pricing: {self.pricing}")
-        # print(f'Works With: {", ".join(self.works_with)}')
-        # print(f"Developer Link: {self.developer_link}")
-        # print(f'Permissions: {", ".join(self.permissions)}')
-        reviews_str = "\n".join([str(r) for r in self.reviews])
-        print(f"Most Relevant Reviews: {reviews_str}")
 
 
 class ChromeExtension(BaseChromeExtension):
@@ -88,10 +74,31 @@ class ChromeExtension(BaseChromeExtension):
         except DoesNotExist:
             return None  # or handle the exception as needed
 
+    def get_marketplace_id(self):
+        return self.google_id
+
 
 class Plugin(BasePlugin):
     class Meta:
         db_table = "plugin"
+
+    def marketplace_name_to_timeseries_db_model(self):
+        if self.marketplace_name == MarketplaceName.GOOGLE_WORKSPACE:
+            return GoogleWorkspace
+        if self.marketplace_name == MarketplaceName.CHROME_EXTENSION:
+            return ChromeExtension
+        raise ValueError(
+            f"Non-implemented marketplace name: {self.marketplace_name} for marketplace_name_to_db_object"
+        )
+
+    def marketplace_name_to_timeseries_id(self):
+        if self.marketplace_name == MarketplaceName.GOOGLE_WORKSPACE:
+            return GoogleWorkspace.google_id
+        if self.marketplace_name == MarketplaceName.CHROME_EXTENSION:
+            return ChromeExtension.google_id
+        raise ValueError(
+            f"Non-implemented marketplace name: {self.marketplace_name} for marketplace_name_to_db_object"
+        )
 
     def get_scraped_data(self) -> Optional[Union[GoogleWorkspace, ChromeExtension]]:
         if self.marketplace_name == MarketplaceName.GOOGLE_WORKSPACE:
