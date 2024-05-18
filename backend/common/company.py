@@ -1,13 +1,20 @@
 import re
+from typing import Optional
+
 from slugify import slugify
 
 
-def slugify_company_name(name: str) -> str:
+def slugify_company_name(name: Optional[str]) -> Optional[str]:
+    if name is None:
+        return None
     return slugify(standardize_company_name(name))
 
 
 # TODO: Double-check this is idempotent, i.e. we can call it indefinitely and yields the same result
-def standardize_company_name(name: str) -> str:
+def standardize_company_name(name: Optional[str]) -> Optional[str]:
+    if name is None:
+        return None
+
     # List of common suffixes and terms to remove
     suffixes = [
         "Inc",

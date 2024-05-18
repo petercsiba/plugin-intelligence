@@ -108,6 +108,8 @@ class BasePlugin(BaseDatabaseModel):
     avg_rating = DecimalField(null=True)
     company_slug = TextField(null=True)
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")])
+    developer_address = TextField(null=True)
+    developer_email = TextField(null=True)
     developer_link = TextField(null=True)
     developer_name = TextField(null=True)
     elevator_pitch = TextField(null=True)
