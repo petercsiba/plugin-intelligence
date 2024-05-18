@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any, List
 from urllib.parse import urlparse, urlunparse
 
 from bs4 import Tag, BeautifulSoup
@@ -46,6 +46,41 @@ def extract_number_best_effort(number_str: Optional[str]) -> float:
     if suffix in multiplier:
         number *= multiplier[suffix]
     return number
+
+
+# Pretty handy for GPT outputs, or weird scraping outputs.
+# https://chat.openai.com/share/ade62ab0-d1d7-4d17-bc60-89e42b67bfb3
+def extract_list_best_effort(input_str: Optional[Any]) -> Optional[List[str]]:
+    if input_str is None:
+        return None
+
+    if isinstance(input_str, list):
+        return [repr(item) for item in input_str]
+
+    items = []
+
+    # Split the input string by lines
+    lines = str(input_str).strip().splitlines()
+
+    for line in lines:
+        # Check if the line has asterisks or commas, handle both cases
+        if "*" in line:
+            # Handle lines prefixed with '*'
+            items.extend([item.strip() for item in line.split("*") if item.strip()])
+        elif "," in line:
+            items.extend([item.strip() for item in line.split(",") if item.strip()])
+        elif ";" in line:
+            items.extend([item.strip() for item in line.split(";") if item.strip()])
+        else:
+            items.append(line)
+
+    cleaned_items = []
+    for item in items:
+        cleaned_item = item.strip()
+        if cleaned_item:
+            cleaned_items.append(item)
+
+    return [repr(item) for item in cleaned_items]
 
 
 def listing_updated_str_to_date(listing_updated_str: str) -> datetime.date:

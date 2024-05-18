@@ -112,6 +112,7 @@ class BasePlugin(BaseDatabaseModel):
     developer_name = TextField(null=True)
     elevator_pitch = TextField(null=True)
     id = BigAutoField()
+    listing_updated = DateField(null=True)
     logo_link = TextField(null=True)
     lowest_paid_tier = DecimalField(null=True)
     main_integrations = TextField(null=True)
