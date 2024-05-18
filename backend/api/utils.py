@@ -7,7 +7,9 @@ import markdown
 
 
 def extract_list_from_str_best_effort(list_str: str) -> list:
-    list_str = list_str.replace("'", "").replace('"', "")
+    list_str = list_str.replace("'", "").replace('"', "").strip()
+    if len(list_str) == 0:
+        return []
 
     # Split the string by commas and handle special cases
     items = re.split(r",\s*(?![^[]*\])", list_str)  # noqa
@@ -37,11 +39,16 @@ def parse_fuzzy_list(
         parsed_list = parsed_list[:max_elements]
 
     # For stuff like ["'AWS'", "'IAM'", "'Switch Roles'", "'SSO'", "'SAML'"]
-    parsed_list = [item.strip("'\"") for item in parsed_list]
+    parsed_list = [str(item).strip("'\"") for item in parsed_list]
 
-    parsed_list = [item.capitalize() for item in parsed_list if item]
+    result = []
+    for item in parsed_list:
+        # Capitalize the first letter of each item IF not already
+        if item and len(item) > 0 and item[0].islower():
+            item = item.capitalize()
+        result.append(item)
 
-    return parsed_list
+    return result
 
 
 def convert_latex_to_mathml(latex_str: str) -> str:

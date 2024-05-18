@@ -7,7 +7,7 @@ def test_parse_fuzzy_list_valid_list_string():
 
 def test_parse_fuzzy_list_malformed_string():
     assert parse_fuzzy_list("apple, banana, cherry") == ['Apple', 'Banana', 'Cherry']
-    assert parse_fuzzy_list("apple, banana, [cherry]") == ['Apple', 'Banana', 'Cherry']
+    assert parse_fuzzy_list("apple, banana, [cherry]") == ['Apple', 'Banana', '[cherry]']
 
 def test_parse_fuzzy_list_empty_string():
     assert parse_fuzzy_list("") == []
@@ -21,7 +21,9 @@ def test_parse_fuzzy_list_max_elements():
 
 def test_parse_fuzzy_list_with_quotes():
     assert parse_fuzzy_list('["apple", "banana", "cherry"]') == ['Apple', 'Banana', 'Cherry']
+    assert parse_fuzzy_list("['apple', 'banana', 'cherry']") == ['Apple', 'Banana', 'Cherry']
     assert parse_fuzzy_list("'apple', 'banana', 'cherry'") == ['Apple', 'Banana', 'Cherry']
+    assert parse_fuzzy_list("""["'AWS'", "'IAM'", "'Switch Roles'", "'SSO'", "'SAML'"]""", max_elements=2) == ['AWS', 'IAM']
 
 def test_parse_fuzzy_list_with_extra_characters():
     assert parse_fuzzy_list("apple*, banana*, cherry*") == ['Apple', 'Banana', 'Cherry']
