@@ -153,3 +153,19 @@ For batch jobs you might want to set restart policy to `no` so you can detect er
 ```shell
 fly m update 9080ee4a653d08 --restart no
 ```
+
+## Adding New Marketplaces
+TODO: Extend this section with more details.
+
+Just a few mind notes for now:
+* Extend the `MarketplaceName` enum object
+* Add a new timeseries table to DB for the new marketplace (see `google_workspace`)
+* Write a scraper in `batch_jobs/scraper/new_marketplace_name.py`
+* Run it locally until you confident it works well
+* Add it to the `daily_scrape.py` and run it
+* Add a translation from the timeseries object to the `Plugin` object in `upsert_plugins.py`
+* Run it for all
+* Now most backend work should be done
+* Add a new `MarketplaceName` to the frontend
+* Add a new route to `marketplaces/marketplace_name/page.tsx`
+* You likely need to extend `nextConfig.images.domains` to allow 3rd party images through Next server
