@@ -91,7 +91,8 @@ const TopCompaniesBubbleChart: React.FC<TopCompaniesBubbleChartProps> = ({ marke
           <XAxis type="number" dataKey="sum_download_count" scale={scaleLog().base(10)} domain={['dataMin', 'dataMax']} name="Downloads" tickFormatter={(value) => formatNumber(value)}>
             <Label value="Downloads (log10)" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
           </XAxis>
-          <YAxis type="number" dataKey="count_plugin" scale={scaleLog().base(2)} domain={[1, 'dataMax']} name="Plugin Count">
+          {/*  We do domain=0.5, so the line for value 1 isn't at the bottom */}
+          <YAxis type="number" dataKey="count_plugin" scale={scaleLog().base(2)} domain={[0.5, 32]} name="Plugin Count">
               <Label value="Plugin Count (log2)" offset={11} position="insideTopLeft" style={{ color: 'black', fontWeight: 'bold'}} />
           </YAxis>
             <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: "3 3" }} />
