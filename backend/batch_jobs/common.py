@@ -50,12 +50,14 @@ def extract_number_best_effort(number_str: Optional[str]) -> float:
 
 # Pretty handy for GPT outputs, or weird scraping outputs.
 # https://chat.openai.com/share/ade62ab0-d1d7-4d17-bc60-89e42b67bfb3
+# TODO(P2, devx, ux): This seems to have too many ' and " and in it
+# ["'AWS'", "'IAM'", "'Switch Roles'", "'SSO'", "'SAML'"]
 def extract_list_best_effort(input_str: Optional[Any]) -> Optional[List[str]]:
     if input_str is None:
         return None
 
     if isinstance(input_str, list):
-        return [repr(item) for item in input_str]
+        return [str(item) for item in input_str]
 
     items = []
 
@@ -80,7 +82,7 @@ def extract_list_best_effort(input_str: Optional[Any]) -> Optional[List[str]]:
         if cleaned_item:
             cleaned_items.append(item)
 
-    return [repr(item) for item in cleaned_items]
+    return [str(item) for item in cleaned_items]
 
 
 def listing_updated_str_to_date(listing_updated_str: str) -> datetime.date:

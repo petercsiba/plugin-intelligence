@@ -16,6 +16,7 @@ def extract_list_from_str_best_effort(list_str: str) -> list:
     return structured_items
 
 
+# This is mostly for historical reasons, as we have a lot of data in different list-like formats.
 def parse_fuzzy_list(
     list_str: Optional[str], max_elements: int = None
 ) -> Optional[list]:
@@ -34,6 +35,9 @@ def parse_fuzzy_list(
 
     if max_elements:
         parsed_list = parsed_list[:max_elements]
+
+    # For stuff like ["'AWS'", "'IAM'", "'Switch Roles'", "'SSO'", "'SAML'"]
+    parsed_list = [item.strip("'\"") for item in parsed_list]
 
     parsed_list = [item.capitalize() for item in parsed_list if item]
 

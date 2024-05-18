@@ -6,6 +6,8 @@ interface ListBoxOneLineProps {
 }
 
 const ListBoxOneLine: React.FC<ListBoxOneLineProps> = ({ listOfStrings }) => {
+    // TODO(P2, ux): This sometimes renders as one element without the separators
+    console.log("listOfStrings", listOfStrings)
     return (
         <Box display="flex" alignItems="center" flexWrap="wrap">
             {listOfStrings?.map((value, index, array) => (
