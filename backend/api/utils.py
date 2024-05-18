@@ -1,8 +1,19 @@
+import ast
 import re
 from typing import Optional
 
 import latex2mathml.converter
 import markdown
+
+
+def extract_list_from_str_best_effort(list_str: str) -> list:
+    list_str = list_str.replace("'", "").replace('"', "")
+
+    # Split the string by commas and handle special cases
+    items = re.split(r",\s*(?![^[]*\])", list_str)  # noqa
+    # Further refine each item description
+    structured_items = [re.sub(r"[\*]\s*", "", item.strip()) for item in items]  # noqa
+    return structured_items
 
 
 def parse_fuzzy_list(
@@ -11,19 +22,22 @@ def parse_fuzzy_list(
     if list_str is None:
         return None
 
-    list_str = list_str.replace("'", "").replace('"', "")
+    parsed_list = None
+    # Maybe it is just a str(list_object)
+    try:
+        parsed_list = ast.literal_eval(list_str)
+    except (ValueError, SyntaxError) as e:
+        pass
 
-    # Split the string by commas and handle special cases
-    items = re.split(r",\s*(?![^[]*\])", list_str)  # noqa
-    # Further refine each item description
-    structured_items = [re.sub(r"[\*]\s*", "", item.strip()) for item in items]  # noqa
+    if parsed_list is None:
+        parsed_list = extract_list_from_str_best_effort(str(list_str))
 
     if max_elements:
-        structured_items = structured_items[:max_elements]
+        parsed_list = parsed_list[:max_elements]
 
-    structured_items = [item.capitalize() for item in structured_items if item]
+    parsed_list = [item.capitalize() for item in parsed_list if item]
 
-    return structured_items
+    return parsed_list
 
 
 def convert_latex_to_mathml(latex_str: str) -> str:
