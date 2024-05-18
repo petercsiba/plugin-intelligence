@@ -79,7 +79,7 @@ const NavigationBar = () => {
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
         >
-        <StyledLink href="/pricing" passHref>
+        <StyledLink href="/services" passHref>
           <MenuItem onClick={handleMenuClose}>
               <Box
                 component="img"
@@ -90,7 +90,7 @@ const NavigationBar = () => {
               Wordpress Plugins
           </MenuItem>
        </StyledLink>
-        <StyledLink href="/pricing" passHref>
+        <StyledLink href="/services" passHref>
           <MenuItem onClick={handleMenuClose}>
               <Box
                 component="img"
@@ -101,7 +101,7 @@ const NavigationBar = () => {
               Shopify App Store
           </MenuItem>
        </StyledLink>
-        <StyledLink href="/pricing" passHref>
+        <StyledLink href="/services" passHref>
           <MenuItem onClick={handleMenuClose}>
               <Box
                 component="img"
@@ -112,7 +112,7 @@ const NavigationBar = () => {
             Salesforce App Exchange
           </MenuItem>
        </StyledLink>
-        <StyledLink href="/pricing" passHref>
+        <StyledLink href="/services" passHref>
           {/*  https://monday.com/marketplace*/}
            <MenuItem onClick={handleMenuClose}>
               <Box
@@ -125,30 +125,12 @@ const NavigationBar = () => {
             </MenuItem>
           </StyledLink>
         </Menu>
-        <StyledLink href="/pricing" passHref>
-          <Button color="inherit">Pricing</Button>
+        <StyledLink href="/services" passHref>
+          <Button color="inherit">Services</Button>
         </StyledLink>
-        <Link href="/pricing" passHref>
+        <Link href="/services" passHref>
             <Button variant="contained" sx={{ backgroundColor: 'yellowgreen', color: 'black' }}>
-                Connect Data
-              <Box
-                component="img"
-                src="/icons/microsoft-excel-logo.svg"
-                alt="Microsoft Excel Logo"
-                sx={{ ml: 0.5, width: 16, height: 16 }}
-              />
-              <Box
-                component="img"
-                src="/icons/snowflake-logo.svg"
-                alt="Snowflake Logo"
-                sx={{ ml: 0.5, height: 16 }}
-              />
-              <Box
-                component="img"
-                src="/icons/sigma-logo.jpg"
-                alt="Sigma Logo"
-                sx={{ ml: 0.5, width: 16, height: 16 }}
-              />
+                Download Full Report
             </Button>
         </Link>
       </Toolbar>

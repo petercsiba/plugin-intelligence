@@ -5,6 +5,7 @@ import NextLink from "next/link";
 import Button from '@mui/material/Button';
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import {CompaniesTopResponse} from "./models";
+import { useState } from "react";
 
 
 interface CompaniesTableProps {
@@ -12,6 +13,12 @@ interface CompaniesTableProps {
 }
 
 const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
+    const [visibleRows, setVisibleRows] = useState(6);
+
+    const handleLoadMore = () => {
+        setVisibleRows(companies.length);
+    };
+
     return (
         <TableContainer component={Paper}>
             <Table size="small"> {/* Smaller cell padding */}
@@ -31,7 +38,7 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {companies.map((company) => (
+                    {companies.slice(0, visibleRows).map((company) => (
                         <TableRow key={company.slug}>
                             <TableCell>
                                 {company.img_logo_link ? (
@@ -68,6 +75,11 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
                     ))}
                 </TableBody>
             </Table>
+            {visibleRows < companies.length && (
+                <Button variant="contained" color="primary" onClick={handleLoadMore}>
+                    Load More
+                </Button>
+            )}
         </TableContainer>
     )
 }
