@@ -16,7 +16,7 @@ export interface CompanyDetailsResponse {
     display_name: string;
     legal_name: string;
     website_url?: string;
-    type?: string;  // SINGLE_PERSON, SMALL_TEAM, LARGE_TEAM, ENTERPRISE
+    type?: string;  // ONE_TRICK_PONY, SMALL_TEAM, LARGE_TEAM, ENTERPRISE
 
     //
     email_exists: boolean;  // Premium feature, only display if we have it

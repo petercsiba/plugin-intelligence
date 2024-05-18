@@ -99,7 +99,7 @@ class CompanyDetailsResponse(BaseModel):
     display_name: str
     legal_name: str
     website_url: Optional[str] = None
-    type: Optional[str] = None  # SINGLE_PERSON, SMALL_TEAM, LARGE_TEAM, ENTERPRISE
+    type: Optional[str] = None  # ONE_TRICK_PONY, SMALL_TEAM, LARGE_TEAM, ENTERPRISE
 
     email_exists: Optional[bool] = None  # Premium feature, only display if we have it
     address_exists: Optional[bool] = None  # Premium feature, only display if we have it
@@ -140,7 +140,7 @@ async def get_company_details(company_slug: str):
 
     # TODO(P1, ux): Actually know if this is an Enterprise just trying to reigh more users through plugin integration
     if len(plugins) == 1:
-        response.type = "SINGLE_PERSON"
+        response.type = "ONE_TRICK_PONY"
     if 2 <= len(plugins) < 5:
         response.type = "SMALL COMPANY"
     if 5 <= len(plugins) < 10:
