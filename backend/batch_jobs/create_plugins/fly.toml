@@ -1,0 +1,29 @@
+# fly.toml app configuration file generated for extension-scraper-daily on 2024-05-04T21:31:38-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'plugin-intelligence-create-plugins'
+primary_region = 'sjc'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  ENV = 'prod'
+  PORT = '8080'
+
+[[services]]
+  protocol = ''
+  internal_port = 0
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+
+[scale]
+  count = 1
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'

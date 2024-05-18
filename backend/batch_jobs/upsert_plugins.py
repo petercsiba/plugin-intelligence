@@ -190,18 +190,19 @@ args = parser.parse_args()
 # TODO(P1, cost): This is somewhat expensive operation.
 #   We should separate out the field updates and the OpenAI API calls.
 if __name__ == "__main__":
-    # with connect_to_postgres(POSTGRES_DATABASE_URL):
-    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+    with connect_to_postgres(POSTGRES_DATABASE_URL):
+    # with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         # google_workspace_p_date = get_p_date(BaseGoogleWorkspace)
         # upsert_google_workspace_add_ons(google_workspace_p_date)
         # print(openai_client.sum_up_prompt_stats().pretty_print())
 
-        chrome_extension_p_date = get_p_date(ChromeExtension)
+        chrome_extension_p_date = "2024-05-16"  # get_p_date(ChromeExtension)
         upsert_chrome_extensions(chrome_extension_p_date)
         print(openai_client.sum_up_prompt_stats().pretty_print())
 
-        # TODO(P0, ux): We should differentiate between Marketplaces
-        for popular_plugin in Plugin.select().where(Plugin.user_count > 1000000):
-            gpt_generate_revenue_estimate_for_plugin(popular_plugin)
+        # # TODO(P0, ux): We should differentiate between Marketplaces
+        # TODO: Maybe wait with this until we have more data
+        # for popular_plugin in Plugin.select().where(Plugin.user_count > 1000000):
+        #     gpt_generate_revenue_estimate_for_plugin(popular_plugin)
 
 
