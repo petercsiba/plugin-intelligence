@@ -20,6 +20,7 @@ import PluginTimeseriesChart from "../../PluginTimeseriesChart";
 import {fetchPluginTimeseries} from "../../driver";
 import NextLink from "next/link";
 import {marketplaceNameToHref} from "../../../marketplaces/models";
+import RatingStarsWithText from "@/components/RatingStarsWithNumber";
 
 const BoxWithInnerHtml = dynamic(
     () => import('@/components/BoxWithInnerHtml'),
@@ -69,12 +70,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                     <Typography variant="body1">
                         {plugin.user_count ? `${formatNumber(plugin.user_count)} Users` : "N/A"}
                     </Typography>
-                    <Rating
-                        name="plugin-avg-rating"
-                        value={plugin.avg_rating ? plugin.avg_rating : 0}
-                        precision={0.25}
-                        readOnly
-                    />
+                    <RatingStarsWithText rating={plugin.avg_rating} />
                     <Typography variant="body2">
                         {plugin.rating_count ? `${plugin.rating_count.toLocaleString()} Ratings` : "N/A"}
                     </Typography>

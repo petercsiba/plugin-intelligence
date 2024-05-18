@@ -16,6 +16,7 @@ import NoResultsFound from "@/components/NoResultsFound";
 import {formatNumberShort } from "@/utils";
 import PluginTable from "../../../plugins/PluginTable";
 import {fetchCompanyPlugins} from "../../../plugins/driver";
+import RatingStarsWithText from "@/components/RatingStarsWithNumber";
 
 const BoxWithInnerHtml = dynamic(
     () => import('@/components/BoxWithInnerHtml'),
@@ -62,14 +63,10 @@ export default async function CompanyDetailsPage({ params }: { params: { company
                         <ListItemText primary="Total Downloads" secondary={formatNumberShort(company.sum_download_count)} />
                     </ListItem>
                     <ListItem>
-                        <ListItemText primary="Weighted Average Rating" secondary={
-                            <Rating
-                                name="company-weighted-avg-rating"
-                                value={company.weighted_avg_avg_rating ? company.weighted_avg_avg_rating : 0}
-                                precision={0.25}
-                                readOnly
-                            />
-                        } />
+                        <ListItemText
+                            primary="Weighted Average Rating"
+                            secondary={<RatingStarsWithText rating={company.weighted_avg_avg_rating} />}
+                        />
                         <ListItemText primary="Total Ratings" secondary={formatNumberShort(company.sum_rating_count)} />
                     </ListItem>
                     <ListItem>
