@@ -5,6 +5,7 @@ import {MarketplaceName} from "../models";
 import MarketplacePlugins from "../MarketplacePlugins";
 import PageTitle from "@/components/PageTitle";
 import SubPageTitle from "@/components/SubPageTitle";
+import { Box } from '@mui/material';
 
 export default function ChromeExtensions() {
     return (
@@ -25,6 +26,15 @@ export default function ChromeExtensions() {
                 </ul>
 
                 For example, Adblock Plus, one of the most popular Chrome extensions, has been installed over 100 million times, showcasing the significant reach and impact of high-quality extensions.
+
+
+                <SubPageTitle title={"Distribution of Extensions by User Count"} />
+              <Box
+                component="img"
+                src="/charts/chrome-extension-histogram-user-count.png"
+                alt="Histogram of User Count Ranges for Chrome Extensions"
+                sx={{ height: 300 }}
+              />
             </Container>
             <MarketplaceCompanies marketplaceName={MarketplaceName.CHROME_EXTENSION} />
             <MarketplacePlugins marketplaceName={MarketplaceName.CHROME_EXTENSION} />
