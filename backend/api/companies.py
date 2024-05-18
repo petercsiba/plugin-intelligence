@@ -47,6 +47,8 @@ def get_companies_top(limit: int = 20, min_count: int = 1, max_count: int = 1000
              .having(fn.COUNT(Plugin.id) >= min_count, fn.COUNT(Plugin.id) <= max_count)
              .order_by(fn.SUM(fn.COALESCE(Plugin.user_count, 0)).desc())
              .limit(limit))
+    if marketplace_name:
+        ranking_query = ranking_query.where(Plugin.marketplace_name == marketplace_name)
     print("Ranking query", get_formatted_sql(ranking_query))
 
     ranking_results = list(ranking_query)
