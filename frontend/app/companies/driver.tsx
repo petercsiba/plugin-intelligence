@@ -5,7 +5,7 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
 export const fetchTopCompanies = async (marketplaceName: MarketplaceName): Promise<CompaniesTopResponse[]> => {
     const url = `${baseUrl}/companies/top?limit=30&marketplace_name=${marketplaceName}`
-    console.log("Attempting to fetch companies from", url);
+    console.log("Attempting to fetch developers from", url);
     const response = await fetch(url);
     return await response.json();
 };
@@ -17,7 +17,7 @@ export const fetchCompanyDetails = async(companySlug: string): Promise<CompanyDe
     });
 
     if (!response.ok) {
-        console.error(`Error fetching company details: ${response.statusText}`);
+        console.error(`Error fetching developer details: ${response.statusText}`);
         return null;
     }
 

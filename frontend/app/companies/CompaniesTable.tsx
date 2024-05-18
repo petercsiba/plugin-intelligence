@@ -24,7 +24,7 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
                             overflow: 'hidden',
                             textOverflow: 'ellipsis'
                         }}>Name</TableCell>
-                        <TableCell>Total Downloads</TableCell>
+                        <TableCell>Cumulative Downloads</TableCell>
                         <TableCell>Plugin Count</TableCell>
                         <TableCell>Average Rating</TableCell>
                         <TableCell>Details</TableCell>

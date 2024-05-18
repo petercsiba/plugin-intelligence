@@ -28,13 +28,13 @@ export default async function CompanyDetailsPage({ params }: { params: { company
     const plugins = await fetchCompanyPlugins(params.company_slug);
     // console.log("plugins", plugins)
 
-    if (!company) return <NoResultsFound model_name={`Company named "${params.company_slug}"`} />;
+    if (!company) return <NoResultsFound model_name={`Developer named "${params.company_slug}"`} />;
 
     return (
         <Container maxWidth="md">
             <Paper elevation={3} style={{ padding: "2em", marginTop: "2em" }}>
                 <Typography variant="h4" gutterBottom>
-                    {company.display_name} ({company.legal_name})
+                    {company.display_name}
                 </Typography>
                 <Box display="flex" alignItems="center" gap={2} mt={2}>
                     <Typography variant="body1">
@@ -44,7 +44,7 @@ export default async function CompanyDetailsPage({ params }: { params: { company
                 <List>
                     <ListItem>
                         <ListItemText
-                            primary="Website"
+                            primary="Developer Website"
                             secondary={
                                 <ExternalLink
                                     href={company.website_url || "#"}
@@ -60,7 +60,7 @@ export default async function CompanyDetailsPage({ params }: { params: { company
                     </ListItem>
                     <ListItem>
                         <ListItemText primary="Plugins Count" secondary={company.count_plugin || "N/A"} />
-                        <ListItemText primary="Total Downloads" secondary={formatNumberShort(company.sum_download_count)} />
+                        <ListItemText primary="Cumulative Downloads" secondary={formatNumberShort(company.sum_download_count)} />
                     </ListItem>
                     <ListItem>
                         <ListItemText

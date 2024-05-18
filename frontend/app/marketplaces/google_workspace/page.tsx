@@ -17,10 +17,11 @@ export default function GoogleWorkspace() {
 
                 These applications seamlessly integrate with Gmail, Google Docs, Sheets and other Google Apps using open protocols.
                 <SubPageTitle title={"Key Facts and Figures"} />
+                {/*TODO: Get this from the DB*/}
                 <ul>
                     <li><strong>Number of Public Apps</strong>: Over 5,300</li>
-                    <li><strong>Total App Installations:</strong> Over 4.8 billion</li>
-                    <li><strong>Google Workspace Users</strong>: More than 3 billion</li>
+                    <li><strong>Total Downloads:</strong> Over 4.8 billion</li>
+                    <li><strong>Google Workspace Unique Users</strong>: More than 3 billion</li>
                 </ul>
 
                 For instance, since 2017, Atlassian&apos;s Trello integration with Gmail has garnered over 7 million installs,

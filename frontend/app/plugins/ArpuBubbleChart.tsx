@@ -108,7 +108,7 @@ const ArpuBubbleChartComponent: React.FC<ArpuBubbleChartComponentProps> = ({ mar
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
           <CartesianGrid />
           <XAxis type="number" scale={scaleLog().base(10)} domain={[1000, 100000000]} dataKey="user_count" name="Users" ticks={logTicks} tickFormatter={(value) => formatNumber(value)}>
-            <Label value="Users" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
+            <Label value="Downloads" offset={-10} position="insideBottomRight" style={{ color: 'black', fontWeight: 'bold' }} />
           </XAxis>
           <YAxis type="number" dataKey="arpu_dollars" name="ARPU" tickFormatter={(value) => formatCurrency(value)}>
               <Label value="ARPU" offset={11} position="insideTopLeft" style={{ color: 'black', fontWeight: 'bold'}} />

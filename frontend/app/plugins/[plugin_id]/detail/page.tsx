@@ -68,7 +68,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                 </Typography>
                 <Box display="flex" alignItems="center" gap={2} mt={2}>
                     <Typography variant="body1">
-                        {plugin.user_count ? `${formatNumber(plugin.user_count)} Users` : "N/A"}
+                        {plugin.user_count ? `${formatNumber(plugin.user_count)} Downloads` : "N/A"}
                     </Typography>
                     <RatingStarsWithText rating={plugin.avg_rating} />
                     <Typography variant="body2">

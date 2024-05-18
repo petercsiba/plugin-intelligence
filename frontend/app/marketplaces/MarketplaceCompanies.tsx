@@ -43,7 +43,7 @@ const MarketplaceCompanies: React.FC<MarketplaceCompaniesProps> = ({ marketplace
 
     return (
         <Container maxWidth="lg">
-            <SubPageTitle title={`Top ${marketplaceName} Companies by Downloads`} />
+            <SubPageTitle title={`Top ${marketplaceName} Developers by Cumulative Downloads`} />
             <TopCompaniesBubbleChart marketplaceName={marketplaceName}  />
             <CompaniesTable companies={companies} />
         </Container>

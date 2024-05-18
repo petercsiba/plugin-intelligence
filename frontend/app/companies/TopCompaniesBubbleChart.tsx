@@ -34,7 +34,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
             <strong>{data.display_name}</strong>
             <ul>
                 <li>{`Plugin Count: ${data.count_plugin}`}</li>
-                <li className="label">{`Total Downloads: ${formatNumberShort(data.sum_download_count)}`}</li>
+                <li className="label">{`Cumulative Downloads: ${formatNumberShort(data.sum_download_count)}`}</li>
                 <li>{`Average Rating: ${data.avg_avg_rating}`}</li>
             </ul>
         </div>
