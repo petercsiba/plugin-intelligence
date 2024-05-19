@@ -28,4 +28,11 @@ if __name__ == "__main__":
         # chrome_extension_scrape_jobs = get_all_chrome_extensions_from_marketplace(p_date)
         chrome_extension_scrape_jobs = get_all_chrome_extensions_from_database(p_date)
         print(f"Found {len(chrome_extension_scrape_jobs)} Chrome Extensions to scrape from the database")
-        asyncio.run(scrape_chrome_extensions_in_parallel(chrome_extension_scrape_jobs, p_date))
+
+        total_jobs = len(chrome_extension_scrape_jobs)
+        batch_size = 1000
+        # Loop through the jobs in batches of 1000 (might help with memory management)
+        for i in range(0, total_jobs, batch_size):
+            batch = chrome_extension_scrape_jobs[i:i + batch_size]
+            print(f"Processing batch {i // batch_size + 1} with {len(batch)} jobs")
+            asyncio.run(scrape_chrome_extensions_in_parallel(batch, p_date))
