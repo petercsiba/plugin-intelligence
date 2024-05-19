@@ -153,6 +153,10 @@ For batch jobs you might want to set restart policy to `no` so you can detect er
 ```shell
 fly m update 9080ee4a653d08 --restart no
 ```
+and make it only run in one instance:
+```shell
+fly scale count 1 --app extension-scraper-daily
+```
 
 ## Adding New Marketplaces
 TODO: Extend this section with more details.
