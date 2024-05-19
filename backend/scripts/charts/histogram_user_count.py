@@ -3,7 +3,18 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Data
-data = {
+google_workspace_data = {
+    "range": [
+        "0-10", "11-100", "101-1000", "1001-10000",
+        "10001-100000", "100001-1000000",
+        "1000001-10000000", "10000001-100000000",
+        "100000001-1000000000"
+    ],
+    "count": [
+        84, 445, 1200, 889, 1078, 892, 157, 117, 1
+    ]
+}
+chrome_extension_data = {
     "range": [
         "0-10", "11-100", "101-1000", "1001-10000",
         "10001-100000", "100001-1000000",
@@ -16,7 +27,7 @@ data = {
 }
 
 # Create a DataFrame
-df = pd.DataFrame(data)
+df = pd.DataFrame(chrome_extension_data)
 
 # Modify the range labels for better readability
 readable_ranges = [
@@ -30,8 +41,11 @@ bars = plt.bar(df['readable_range'], df['count'], color='skyblue')
 plt.yscale('log')
 
 # Customize the y-axis to have human-readable labels, capped at 100K
-plt.yticks([1, 10, 100, 1000, 10000, 100000],
-           ['1', '10', '100', '1K', '10K', '100K'])
+# plt.yticks([1, 10, 100, 1000, 10000, 100000],
+#            ['1', '10', '100', '1K', '10K', '100K'])
+# Customize the y-axis to have human-readable labels, capped at 100K
+plt.yticks([1, 10, 100, 1000, 10000],
+           ['1', '10', '100', '1K', '10K'])
 
 # Add horizontal lines for better readability, with fewer lines
 plt.grid(axis='y', which='major', linestyle='--', linewidth=0.7)
@@ -41,12 +55,12 @@ for bar in bars:
     height = bar.get_height()
     plt.text(bar.get_x() + bar.get_width() / 2.0, height, f'{int(height)}', ha='center', va='bottom', fontsize=10)
 
-plt.xlabel('User Count Range')
-plt.ylabel('Count (Log Scale)')
-plt.title('Histogram of User Count Ranges (Log Scale, Capped at 100K)')
+plt.xlabel('Downloads Count Range')
+plt.ylabel('Plugin Count (Log Scale)')
+plt.title('Histogram of Downloads Count Ranges (Log Scale)')
 plt.xticks(rotation=45)
 
 # Save and display the histogram
 plt.tight_layout()
-plt.savefig('user_count_histogram_log_scale_fewer_lines.png')
+plt.savefig('downloads_count_histogram_log_scale_fewer_lines.png')
 plt.show()
