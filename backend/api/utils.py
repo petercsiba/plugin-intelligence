@@ -29,6 +29,9 @@ def parse_fuzzy_list(
     # Maybe it is just a str(list_object)
     try:
         parsed_list = ast.literal_eval(list_str)
+        if not isinstance(parsed_list, list):
+            # e.g. for strings which are NOT lists, it will just return the original string
+            parsed_list = None
     except (ValueError, SyntaxError) as e:
         pass
 

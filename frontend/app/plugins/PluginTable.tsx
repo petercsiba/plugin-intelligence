@@ -48,7 +48,9 @@ const PluginTable: React.FC<PluginTableProps> = ({ plugins }) => {
                         ''
                     )}
                   </TableCell>
-                  <TableCell style={{ fontWeight: 'bold' }}>{plugin.name}</TableCell>
+                  <TableCell style={{ fontWeight: 'bold' }}>
+                      {plugin.name}
+                  </TableCell>
                   <TableCell>
                     <ListBoxOneLine listOfStrings={plugin.main_tags} />
                   </TableCell>
