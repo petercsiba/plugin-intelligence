@@ -59,17 +59,27 @@ def google_workspace_previous_domains() -> List[str]:
 # * 15,000-30,000 requests with 5-15 requests per minute
 # * 1,000-6,000 minutes = 16-100 hours runtime
 def backfill_google_workspace():
+    # Subquery to find google_id with MIN(p_date) - so we skip those already scraped from Wayback
+    subquery = (
+        BaseGoogleWorkspace
+        .select(BaseGoogleWorkspace.google_id)
+        .group_by(BaseGoogleWorkspace.google_id)
+        .having(fn.MIN(BaseGoogleWorkspace.p_date) > '2024-04-01')
+    )
+
+    # Main query selecting distinct links with user_count and applying the subquery
     distinct_links = (
-        BaseGoogleWorkspace.select(
-            BaseGoogleWorkspace.link, BaseGoogleWorkspace.user_count
-        )
+        BaseGoogleWorkspace
+        .select(BaseGoogleWorkspace.link, BaseGoogleWorkspace.user_count)
         .distinct()
         .where(
-            BaseGoogleWorkspace.link.is_null(False)
-            & BaseGoogleWorkspace.user_count.is_null(False)
+            BaseGoogleWorkspace.link.is_null(False) &
+            BaseGoogleWorkspace.user_count.is_null(False) &
+            (BaseGoogleWorkspace.google_id.in_(subquery))
         )
         .order_by(BaseGoogleWorkspace.user_count.desc())
     )
+
     print("Distinct links count:", distinct_links.count())
 
     total_scraped = 0
@@ -199,5 +209,6 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
 
 
 if __name__ == "__main__":
-    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+    with connect_to_postgres(POSTGRES_DATABASE_URL):
         backfill_google_workspace()
+        backfill_chrome_extension_with_wayback("")

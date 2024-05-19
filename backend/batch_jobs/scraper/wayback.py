@@ -34,6 +34,8 @@ def requests_get_with_retry(
     while retry_count < retry_limit:
         try:
             retry_count += 1
+            # TODO(P1, devx): Since Wayback queries are so expensive (cause the rate limit),
+            #   we store log the html content. Especially if we would to decide to re-parse it..
             return requests.get(url, params=params)
         # NOTE: requests.ConnectionError and NOT os.ConnectionError (or built-in ConnectionError)
         except requests.ConnectionError as e:
