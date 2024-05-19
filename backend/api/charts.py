@@ -1,14 +1,55 @@
 from typing import List, Optional
 
 from fastapi import HTTPException
+from peewee import fn
 from pydantic import BaseModel
 
 from api.config import MAX_LIMIT
 from api.utils import rating_in_bounds, get_formatted_sql
+from supabase.models.base import BasePlugin
 from supabase.models.data import Plugin, MarketplaceName
 
 from fastapi import APIRouter
 charts_router = APIRouter()
+
+
+# Define the response model
+class PluginStatsResponse(BaseModel):
+    marketplace_name: str
+    total_plugins: int
+    total_downloads: int
+    total_ratings: int
+    avg_downloads: float
+    avg_rating: Optional[float]
+    avg_lowest_paid_tier: Optional[float]
+    downloads_to_rating_ratio: Optional[float]
+
+
+# Define the endpoint
+@charts_router.get("/charts/marketplace-stats", response_model=PluginStatsResponse)
+def get_marketplace_stats(marketplace_name: MarketplaceName):
+    try:
+        # Basic statistics query
+        query = BasePlugin.select(
+            BasePlugin.marketplace_name,
+            fn.COUNT(BasePlugin.id).alias('total_plugins'),
+            fn.SUM(BasePlugin.user_count).alias('total_downloads'),
+            fn.SUM(BasePlugin.rating_count).alias('total_ratings'),
+            fn.AVG(BasePlugin.user_count).alias('avg_downloads'),
+            fn.AVG(BasePlugin.avg_rating).alias('avg_rating'),
+            fn.AVG(BasePlugin.lowest_paid_tier).alias('avg_lowest_paid_tier'),
+            (fn.SUM(BasePlugin.user_count) / fn.SUM(BasePlugin.rating_count)).alias('downloads_to_rating_ratio')
+        ).where(BasePlugin.marketplace_name == marketplace_name).group_by(BasePlugin.marketplace_name)
+
+        result = query.dicts().first()
+
+        if not result:
+            raise HTTPException(status_code=404, detail="Marketplace not found")
+
+        return PluginStatsResponse(**result)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class ChartsMainResponse(BaseModel):

@@ -6,6 +6,7 @@ import MarketplacePlugins from "../MarketplacePlugins";
 import PageTitle from "@/components/PageTitle";
 import SubPageTitle from "@/components/SubPageTitle";
 import { Box } from '@mui/material';
+import MarketplaceStats from "../MarketplaceStats";
 
 export default function ChromeExtensions() {
     return (
@@ -19,13 +20,9 @@ export default function ChromeExtensions() {
                 with various web services and providing additional features.
 
                 <SubPageTitle title={"Key Facts and Figures"} />
-                <ul>
-                    <li><strong>Number of Public Extensions</strong>: Over 190,000</li>
-                    <li><strong>Total Extension Installations:</strong> Over 1 billion</li>
-                    <li><strong>Active Chrome Users</strong>: More than 2.65 billion</li>
-                </ul>
+                <MarketplaceStats marketplaceName={MarketplaceName.CHROME_EXTENSION} />
 
-                For example, Adblock Plus, one of the most popular Chrome extensions, has been installed over 100 million times, showcasing the significant reach and impact of high-quality extensions.
+                {/*For example, Adblock Plus, one of the most popular Chrome extensions, has been installed over 100 million times, showcasing the significant reach and impact of high-quality extensions.*/}
 
 
                 <SubPageTitle title={"Distribution of Extensions by User Count"} />

@@ -27,7 +27,7 @@ export function fixThatArrayWithNullShit<T>(input: T | null | undefined | Array<
  * @param value - The monetary value to format
  * @returns Formatted string representing the value with the appropriate suffix
  */
-export function formatCurrency(value: number | null): string {
+export function formatCurrency(value: number | null | undefined): string {
   if (value == null) {
     return 'N/A';
   }
