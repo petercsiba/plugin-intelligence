@@ -16,7 +16,7 @@ primary_region = 'sjc'
     port = 80
     handlers = ['http']
 
-# TODO: Figure out how to set restart policy
+# TODO: Figure out how to set restart policy in fly.toml (there is a command line option)
 #  [[services.processes]]
 #    restart = "no"  # most likely it failed because of a bug in the code
 
