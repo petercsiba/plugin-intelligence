@@ -48,7 +48,12 @@ def upsert_chrome_extensions(p_date: str, force_update_gpt: bool = False):
     # TODO(P0): Only update those plugins which are NOT already in the Plugin table
     query = (
         ChromeExtension.select()
-        .where(ChromeExtension.p_date == p_date)
+        .where(
+            (ChromeExtension.p_date == p_date) &
+            (~ChromeExtension.google_id.in_(
+                Plugin.select(Plugin.marketplace_id)
+            ))
+        )
         .order_by(fn.COALESCE(ChromeExtension.user_count, -1).desc())
     )
 
@@ -116,10 +121,15 @@ The plugin name is {row.name} {pricing}
 
 def upsert_google_workspace_add_ons(p_date: str, force_update_gpt: bool = False):
     print("Upserting Google Workspace Addons for p_date:", p_date, "force_update_gpt:", force_update_gpt)
-    # TODO(P0): Only update those plugins which are NOT already in the Plugin table
     query = (
         BaseGoogleWorkspace.select()
-        .where(BaseGoogleWorkspace.p_date == p_date)
+        .where(
+            (BaseGoogleWorkspace.p_date == p_date) &
+            # Exclude plugins that are already created in the Plugin table
+            (~BaseGoogleWorkspace.google_id.in_(
+                Plugin.select(Plugin.marketplace_id)
+            ))
+        )
         .order_by(fn.COALESCE(BaseGoogleWorkspace.user_count, -1).desc())
     )
 
