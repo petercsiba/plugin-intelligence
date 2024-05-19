@@ -15,7 +15,7 @@ class CompaniesTopResponse(BaseModel):
     slug: str
     # Identity fields
     display_name: str
-    website_url: str
+    website_url: Optional[str] = None
     # TODO: Get it somehow
     img_logo_link: Optional[str] = None
 
