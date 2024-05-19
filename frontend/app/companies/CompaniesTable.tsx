@@ -3,7 +3,7 @@ import {formatNumber, formatNumberShort} from "@/utils";
 import Image from 'next/image';
 import NextLink from "next/link";
 import Button from '@mui/material/Button';
-import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import {Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import {CompaniesTopResponse} from "./models";
 import { useState } from "react";
 
@@ -66,7 +66,7 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
                             <TableCell>{formatNumber(company.avg_avg_rating)}</TableCell>
                             <TableCell>
                                 <NextLink href={`/companies/${company.slug}/detail`} passHref>
-                                    <Button variant="contained" color="primary" fullWidth> {/* Full width on mobile */}
+                                    <Button color="primary" fullWidth> {/* Full width on mobile */}
                                         Details
                                     </Button>
                                 </NextLink>
@@ -76,9 +76,11 @@ const CompaniesTable: React.FC<CompaniesTableProps> = ({ companies }) => {
                 </TableBody>
             </Table>
             {visibleRows < companies.length && (
-                <Button variant="contained" color="primary" onClick={handleLoadMore}>
-                    Load More
-                </Button>
+                <Box display="flex" justifyContent="center" width="100%" my={2}>
+                    <Button variant="contained" color="primary" onClick={handleLoadMore}>
+                        Load More
+                    </Button>
+                </Box>
             )}
         </TableContainer>
     )

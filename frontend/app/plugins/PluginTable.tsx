@@ -1,7 +1,7 @@
 // PluginTable.tsx
 import Image from 'next/image';
-import React from 'react';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button } from '@mui/material';
+import React, { useState } from 'react';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box } from '@mui/material';
 import NextLink from 'next/link';
 import ListBoxOneLine from "@/components/ListBoxOneLine";
 import {formatCurrency, formatNumberShort} from "@/utils";
@@ -12,7 +12,14 @@ interface PluginTableProps {
 }
 
 const PluginTable: React.FC<PluginTableProps> = ({ plugins }) => {
+    const [visibleRows, setVisibleRows] = useState(6);
+
+    const handleLoadMore = () => {
+        setVisibleRows(plugins.length);
+    };
+
   return (
+
       <TableContainer component={Paper}>
         <Table size="small"> {/* Smaller cell padding */}
           <TableHead>
@@ -27,7 +34,7 @@ const PluginTable: React.FC<PluginTableProps> = ({ plugins }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {plugins.map((plugin) => (
+            {plugins.slice(0, visibleRows).map((plugin) => (
                 <TableRow key={plugin.id}>
                   <TableCell>
                     {plugin.img_logo_link ? (
@@ -54,9 +61,9 @@ const PluginTable: React.FC<PluginTableProps> = ({ plugins }) => {
                   <TableCell>{formatCurrency(plugin.lowest_paid_tier)}</TableCell>
                   <TableCell>
                     <NextLink href={`/plugins/${plugin.id}/detail`} passHref>
-                      <Button variant="contained" color="primary" fullWidth>
+                      <Button color="primary" fullWidth>
                         {/* Full width on mobile */}
-                        View
+                        Details
                       </Button>
                     </NextLink>
                   </TableCell>
@@ -64,6 +71,14 @@ const PluginTable: React.FC<PluginTableProps> = ({ plugins }) => {
             ))}
           </TableBody>
         </Table>
+
+        {visibleRows < plugins.length && (
+            <Box display="flex" justifyContent="center" width="100%" my={2}>
+                <Button variant="contained" color="primary" onClick={handleLoadMore}>
+                    Load More
+                </Button>
+            </Box>
+        )}
       </TableContainer>
   );
 };
