@@ -52,7 +52,7 @@ export interface PluginDetailsResponse {
 
 export interface PluginTimeseriesData {
     marketplace_id: string
-    p_date: string
+    p_date: Date
     user_count: number
     avg_rating?: number
     rating_count?: number

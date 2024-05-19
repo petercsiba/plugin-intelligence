@@ -1,4 +1,4 @@
-// PluginTable.tsx
+"use client";
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Box } from '@mui/material';

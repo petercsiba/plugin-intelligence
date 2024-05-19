@@ -6,7 +6,8 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import {PluginTimeseriesData} from "./models";
-import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
+import {formatNumber, formatNumberShort} from "@/utils";
+import { format, differenceInDays, differenceInYears } from 'date-fns';
 
 interface Props {
     data: PluginTimeseriesData[];
@@ -40,6 +41,26 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
     return null;
 };
 
+const formatDateTick = (tick: string, data: PluginTimeseriesData[]) => {
+    const firstDate = new Date(data[0].p_date);
+    const lastDate = new Date(data[data.length - 1].p_date);
+
+    const daysDiff = differenceInDays(lastDate, firstDate);
+    const yearsDiff = differenceInYears(lastDate, firstDate);
+
+    if (yearsDiff > 2) {
+        // More than a year
+        return format(new Date(tick), 'yyyy');
+    } else if (daysDiff > 30) {
+        // More than a month but less than a year
+        return format(new Date(tick), 'yyyy/MM');
+    } else {
+        // Less than a month
+        return format(new Date(tick), 'yyyy-MM-dd');
+    }
+};
+
+
 const PluginTimeseriesChart: React.FC<Props> = ({data}) => {
     const formattedData = data.map(item => ({
         ...item,
@@ -57,13 +78,20 @@ const PluginTimeseriesChart: React.FC<Props> = ({data}) => {
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="p_date" />
+                <XAxis dataKey="p_date" tickFormatter={(tick) => formatDateTick(tick, data)} />
                 <YAxis yAxisId="user_count_axis" domain={[0, 'dataMax']} stroke="#8884d8" tickFormatter={(value) => formatNumberShort(value)} />
                 <YAxis yAxisId="rating_count_axis" orientation="right" domain={[0, 'dataMax']} stroke="#82ca9d" />
                 <YAxis yAxisId="avg_rating_axis" orientation="right" domain={[0, 5]} stroke="#ffc658" ticks={ratingTicks} />
 
                 <Tooltip content={<CustomTooltip />} />
-                <Legend />
+                <Legend formatter={(value) => {
+                    const labels: Record<string, string> = {
+                        user_count: 'Downloads',
+                        rating_count: 'Rating Count',
+                        avg_rating: 'Average Rating',
+                    };
+                    return labels[value] || value;
+                }} />
 
                 {/*TODO(P1, ux): Add nicer labels */}
                 <Line type="monotone" dataKey="user_count" stroke="#8884d8" yAxisId="user_count_axis" />

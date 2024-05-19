@@ -64,34 +64,33 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
         <Container maxWidth="md">
             <Paper elevation={3} style={{ padding: "2em", marginTop: "2em" }}>
                 <Typography variant="h4" gutterBottom>
-                    {plugin.name} ({plugin.marketplace_name})
+                    {plugin.name}
                 </Typography>
-                <Box display="flex" alignItems="center" gap={2} mt={2}>
-                    <Typography variant="body1">
-                        {plugin.user_count ? `${formatNumber(plugin.user_count)} Downloads` : "N/A"}
-                    </Typography>
-                    <RatingStarsWithText rating={plugin.avg_rating} />
-                    <Typography variant="body2">
-                        {plugin.rating_count ? `${formatNumberShort(plugin.rating_count)} Ratings` : "N/A"}
-                    </Typography>
-                </Box>
                 <List>
                     <ListItem>
-                        <ListItemText
-                            primary="Marketplace"
-                            secondary={
-                            <NextLink href={marketplaceNameToHref(plugin.marketplace_name)} passHref>
-                                <Button color="primary">
-                                    {plugin.marketplace_name}
-                                </Button>
-                            </NextLink>
-                            }
-                        />
-                                <ExternalLink
-                                    href={plugin.marketplace_link || "#"}
-                                >
-                                    {`See on ${plugin.marketplace_name} Marketplace`}
-                                </ExternalLink>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+                            <Typography variant="body1">
+                                <NextLink href={marketplaceNameToHref(plugin.marketplace_name)} passHref>
+                                    <Button color="primary">
+                                        {plugin.marketplace_name} Plugin
+                                    </Button>
+                                </NextLink>
+                            </Typography>
+                            <ExternalLink
+                                href={plugin.marketplace_link || "#"}
+                            >
+                                {`See on ${plugin.marketplace_name} Marketplace`}
+                            </ExternalLink>
+                        </Box>
+                    </ListItem>
+                    <ListItem>
+                        <Typography variant="body1">
+                            {plugin.user_count ? `${formatNumber(plugin.user_count)} Downloads` : "N/A"}
+                        </Typography>
+                        <RatingStarsWithText rating={plugin.avg_rating} />
+                        <Typography variant="body2">
+                            {plugin.rating_count ? `${formatNumberShort(plugin.rating_count)} Ratings` : "N/A"}
+                        </Typography>
                     </ListItem>
                     <ListItem>
                         <ListItemText primary="Revenue Estimate" secondary={revenueRange} />
@@ -123,7 +122,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
 
                 {/* Timeseries Chart */}
                 <Box mt={4}>
-                    <Typography variant="h5">Historical Downloads & Ratings</Typography>
+                    <Typography variant="h5" mb={2}>Historical Downloads & Ratings</Typography>
                     <PluginTimeseriesChart data={timeseriesData} />
                 </Box>
 
@@ -131,7 +130,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
 
                 {plugin.elevator_pitch ? (
                     <Box mt={4}>
-                        <Typography variant="h5">Elevator Pitch</Typography>
+                        <Typography variant="h5" mb={2}>Elevator Pitch</Typography>
                         <Typography paragraph>{plugin.elevator_pitch}</Typography>
                     </Box>
                 ) : null}
