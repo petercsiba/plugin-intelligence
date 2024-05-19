@@ -12,7 +12,7 @@ import {
 import Box from "@mui/material/Box";
 import {PluginDetailsResponse} from "../../models";
 import ExternalLink from "@/components/ExternalLink";
-import {fixThatArrayWithNullShit, formatCurrency, formatNumber} from "@/utils";
+import {fixThatArrayWithNullShit, formatCurrency, formatNumber, formatNumberShort} from "@/utils";
 import dynamic from "next/dynamic";
 import ListBoxOneLine from "@/components/ListBoxOneLine";
 import NoResultsFound from "@/components/NoResultsFound";
@@ -72,7 +72,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                     </Typography>
                     <RatingStarsWithText rating={plugin.avg_rating} />
                     <Typography variant="body2">
-                        {plugin.rating_count ? `${plugin.rating_count.toLocaleString()} Ratings` : "N/A"}
+                        {plugin.rating_count ? `${formatNumberShort(plugin.rating_count)} Ratings` : "N/A"}
                     </Typography>
                 </Box>
                 <List>

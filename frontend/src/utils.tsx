@@ -44,6 +44,7 @@ function debugError(error: unknown): void {
   }
 }
 
+// Mostly for INT values over 1000
 export function formatNumberShort(value: number | null | undefined): string {
   if (value == null) {
     return 'N/A';
@@ -91,6 +92,9 @@ export function formatNumber(value: number | null | undefined): string {
   if (value == null) {
     return 'N/A';
   }
-  // Use Intl.NumberFormat to format the number with thousands separators
-  return new Intl.NumberFormat('en-US').format(value);
+  // Use Intl.NumberFormat to format the number with thousands separators and a maximum of two decimal places
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
 }

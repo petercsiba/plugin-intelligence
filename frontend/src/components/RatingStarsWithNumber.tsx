@@ -1,6 +1,7 @@
 import React from 'react';
 import Rating from '@mui/material/Rating';
 import Box from '@mui/material/Box';
+import {formatNumber} from "@/utils";
 
 interface RatingStarsWithTextProps {
   rating?: number | null;
@@ -16,7 +17,7 @@ const RatingStarsWithText: React.FC<RatingStarsWithTextProps> = ({ rating }) => 
         readOnly
       />
       <Box ml={2}>
-        {rating !== null && rating !== undefined ? rating : "No Ratings"}
+        {rating !== null && rating !== undefined ? formatNumber(rating) : "No Ratings"}
       </Box>
     </Box>
   );

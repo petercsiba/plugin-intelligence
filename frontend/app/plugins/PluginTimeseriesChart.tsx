@@ -30,7 +30,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
                 <strong>{`${data.p_date}`}</strong>
                 <ul>
                     <li>{`Downloads: ${formatNumber(data.user_count)}`}</li>
-                    <li>{`Average Rating: ${data.avg_rating}`}</li>
+                    <li>{`Average Rating: ${formatNumber(data.avg_rating)}`}</li>
                     <li>{`Rating Count: ${formatNumber(data.rating_count)}`}</li>
                 </ul>
             </div>
@@ -48,6 +48,8 @@ const PluginTimeseriesChart: React.FC<Props> = ({data}) => {
     }));
     console.log("formattedData", formattedData)
 
+    const ratingTicks = [0, 1, 2, 3, 4, 5];
+
     return (
         <ResponsiveContainer width="100%" height={400}>
             <LineChart
@@ -58,7 +60,7 @@ const PluginTimeseriesChart: React.FC<Props> = ({data}) => {
                 <XAxis dataKey="p_date" />
                 <YAxis yAxisId="user_count_axis" domain={[0, 'dataMax']} stroke="#8884d8" tickFormatter={(value) => formatNumberShort(value)} />
                 <YAxis yAxisId="rating_count_axis" orientation="right" domain={[0, 'dataMax']} stroke="#82ca9d" />
-                <YAxis yAxisId="avg_rating_axis" orientation="right" domain={[0, 5]} stroke="#ffc658" />
+                <YAxis yAxisId="avg_rating_axis" orientation="right" domain={[0, 5]} stroke="#ffc658" ticks={ratingTicks} />
 
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />

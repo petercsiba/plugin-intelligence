@@ -45,7 +45,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
             <ul>
                 <li className="label">{`Downloads: ${formatNumberShort(data.user_count)}`}</li>
                 <li>{`ARPU: ${formatCurrency(data.arpu_dollars)}`}</li>
-                <li>{`Average Rating: ${data.avg_rating}`}</li>
+                <li>{`Average Rating: ${formatNumber(data.avg_rating)}`}</li>
                 <li>{`Revenue*: ${formatCurrency(data.revenue_estimate)}`}</li>
             </ul>
         </div>
