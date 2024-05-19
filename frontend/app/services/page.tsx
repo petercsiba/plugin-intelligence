@@ -1,6 +1,7 @@
 "use client"
 import React, {useState} from 'react';
 import {
+    Alert,
     Box,
     Button,
     Card,
@@ -13,8 +14,8 @@ import {
     DialogTitle,
     FormControl,
     Grid,
-    InputLabel,
     Select,
+    Snackbar,
     TextField,
     Typography
 } from '@mui/material';
@@ -24,30 +25,41 @@ import ExternalLink from "@/components/ExternalLink";
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
 const ServicesPage = () => {
-    const [action, setAction] = useState('unknown');
+    const [action, setAction] = useState('download_report');
 
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        jobPosition: '',
+        job_position: '',
         intent: '',
-        message: ''
+        message: '',
+        action: action,
     });
 
-    const [open, setOpen] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success');
+
     const handleClickOpen = (action: string) => {
-        setOpen(true);
+        setDialogOpen(true);
         setAction(action);
+        formData.action = action;
     };
 
     const handleClose = () => {
-        setOpen(false);
+        setDialogOpen(false);
     };
 
     const handleChange = (e: any) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
+
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
+    };
+
 
     const [isMessageFocused, setIsMessageFocused] = useState(false);
     const handleFocus = () => setIsMessageFocused(true);
@@ -58,20 +70,54 @@ const ServicesPage = () => {
     };
 
     const handleSubmit = async () => {
+        // Verify email is correct
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailPattern.test(formData.email)) {
+            setSnackbarMessage("Please enter a valid email address.");
+            setSnackbarSeverity('error');
+            setSnackbarOpen(true);
+            return;
+        }
+
         // Handle form submission logic
-        const response = await fetch(`${baseUrl}/submit_form`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
+        try {
+            const response = await fetch(`${baseUrl}/submit_form`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
 
-        const result = await response.json();
-        console.log(result);
+            if (response.ok) {
+                setDialogOpen(false);
+                const message = action === 'download_report' ? 'Thank you! We got your message. Your download will start shortly.' : 'Thank you! We got your message.';
+                setSnackbarMessage(message);
+                setSnackbarSeverity('success');
 
-        setOpen(false);
-        // Logic to download the PDF
+                if (action === 'download_report') {
+                    // Wait for 2 seconds before triggering the download
+                    setTimeout(() => {
+                        // Trigger file download
+                        const fileUrl = '/reports/plugin-intelligence-report-2024-q2.pdf';
+                        const link = document.createElement('a');
+                        link.href = fileUrl;
+                        link.setAttribute('download', 'plugin-intelligence-report-2024-q2.pdf');
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }, 1500); // 1500 milliseconds = 1.5 seconds
+                }
+            } else {
+                setSnackbarMessage("Oh this is embarrassing, contact us directly at peter@plugin-intelligence.com.");
+                setSnackbarSeverity('error');
+            }
+        } catch (error) {
+            setSnackbarMessage("Oh this is embarrassing, contact us directly at peter@plugin-intelligence.com.");
+            setSnackbarSeverity('error');
+        }
+
+        setSnackbarOpen(true);
     };
 
     return (
@@ -185,7 +231,7 @@ const ServicesPage = () => {
                     </Card>
                 </Grid>
             </Grid>
-            <Dialog open={open} onClose={handleClose}>
+            <Dialog open={dialogOpen} onClose={handleClose}>
                 <DialogTitle>Let us better understand you to provide you with the best insights</DialogTitle>
                 <DialogContent>
                     <Grid container spacing={2}>
@@ -222,7 +268,7 @@ const ServicesPage = () => {
                                 type="text"
                                 variant="outlined"
                                 fullWidth
-                                value={formData.jobPosition}
+                                value={formData.job_position}
                                 onChange={handleChange}
                             />
                         </Grid>
@@ -278,10 +324,20 @@ const ServicesPage = () => {
                         Cancel
                     </Button>
                     <Button variant="contained" onClick={handleSubmit} color="primary">
-                        Submit
+                        {action === 'download_report' ? 'Download Report' : 'Submit Inquiry'}
                     </Button>
                 </DialogActions>
             </Dialog>
+            <Snackbar
+                open={snackbarOpen}
+                autoHideDuration={5000}
+                onClose={handleSnackbarClose}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+                    {snackbarMessage}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 };

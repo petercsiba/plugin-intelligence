@@ -1,7 +1,9 @@
 import traceback
+from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, EmailStr, Field
 from supawee.client import (
     connect_to_postgres_i_will_call_disconnect_i_promise,
     disconnect_from_postgres_as_i_promised,
@@ -12,6 +14,7 @@ from api.charts import charts_router
 from api.companies import companies_router
 from api.plugins import plugins_router
 from common.config import ENV, ENV_LOCAL, ENV_PROD, POSTGRES_DATABASE_URL
+from supabase.models.base import BaseIntakeForm
 
 app = FastAPI()
 app.include_router(charts_router)
@@ -86,3 +89,25 @@ async def add_cors_headers(request: Request, call_next):
 @app.get("/")
 def read_root():
     return {"status": "ok", "version": "1.0.0"}
+
+
+class IntakeFormRequest(BaseModel):
+    name: Optional[str] = None
+    email: EmailStr
+    job_position: Optional[str] = Field(None, alias="jobPosition")
+    intent: Optional[str] = None
+    message: Optional[str] = None
+    action: str
+
+
+@app.post("/submit_form", status_code=201)
+async def submit_form(form: IntakeFormRequest):
+    print(f"Received form: {form}")
+    BaseIntakeForm.create(
+        name=form.name,
+        email=form.email,
+        job_position=form.job_position,
+        intent=form.intent,
+        message=form.message,
+        action=form.action,
+    )

@@ -104,6 +104,22 @@ class BaseGoogleWorkspace(BaseDatabaseModel):
         indexes = ((("google_id", "p_date"), True),)
 
 
+class BaseIntakeForm(BaseDatabaseModel):
+    action = TextField(null=True)
+    created_at = DateTimeField(
+        constraints=[SQL("DEFAULT timezone('utc'::text, now())")]
+    )
+    email = TextField(null=True)
+    intent = TextField(null=True)
+    job_position = TextField(null=True)
+    message = TextField(null=True)
+    name = TextField(null=True)
+
+    class Meta:
+        schema = "public"
+        table_name = "intake_form"
+
+
 class BasePlugin(BaseDatabaseModel):
     avg_rating = DecimalField(null=True)
     company_slug = TextField(null=True)
