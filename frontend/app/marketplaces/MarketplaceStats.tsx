@@ -36,10 +36,9 @@ const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({ marketplaceName }) 
                     <li>Total Ratings: <strong>{formatNumberShort(marketplaceStats.total_ratings)}</strong></li>
                     <li>Average Downloads per
                         Plugin: <strong>{formatNumberShort(marketplaceStats.avg_downloads)}</strong></li>
-                    <li>Average Rating: <strong>{formatNumber(marketplaceStats.avg_rating)}</strong></li>
-                    <li>Average Lowest Paid Tier: <strong>{formatCurrency(marketplaceStats.avg_lowest_paid_tier)}</strong> (excluding free)
-                    </li>
-                    <li>Downloads to Rating Ratio: <strong>{formatNumber(marketplaceStats.downloads_to_rating_ratio)}</strong></li>
+                    <li>Average Rating (Weighted): <strong>{formatNumber(marketplaceStats.weighted_avg_rating)}</strong></li>
+                    <li>Median Monthly Paid Tier: <strong>{formatCurrency(marketplaceStats.median_lowest_paid_tier)}</strong></li>
+                    <li>Propensity to rate: <strong>{formatNumber(marketplaceStats.propensity_to_rate)} ratings / 1000 downloads </strong></li>
                 </ul>
 
             ) : (

@@ -20,7 +20,7 @@ export interface MarketplaceStatsResponse {
     total_downloads?: number;
     total_ratings?: number;
     avg_downloads?: number;
-    avg_rating?: number;
-    avg_lowest_paid_tier?: number;
-    downloads_to_rating_ratio?: number;
+    weighted_avg_rating?: number;
+    median_lowest_paid_tier?: number;
+    propensity_to_rate?: number;
 }

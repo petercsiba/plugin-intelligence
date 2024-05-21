@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from fastapi import HTTPException
-from peewee import fn
+from peewee import fn, SQL
 from pydantic import BaseModel
 
 from api.config import MAX_LIMIT
@@ -20,36 +20,47 @@ class PluginStatsResponse(BaseModel):
     total_downloads: int
     total_ratings: int
     avg_downloads: float
-    avg_rating: Optional[float]
-    avg_lowest_paid_tier: Optional[float]
-    downloads_to_rating_ratio: Optional[float]
+    weighted_avg_rating: Optional[float] = None
+    # Some plugins have it crazy high like $2000/month
+    median_lowest_paid_tier: Optional[float] = None
+    # Deprecated
+    # downloads_to_rating_ratio: Optional[float]
+    propensity_to_rate: Optional[float] = None  # promille of users who rated
 
 
 # Define the endpoint
 @charts_router.get("/charts/marketplace-stats", response_model=PluginStatsResponse)
 def get_marketplace_stats(marketplace_name: MarketplaceName):
-    try:
-        # Basic statistics query
-        query = BasePlugin.select(
-            BasePlugin.marketplace_name,
-            fn.COUNT(BasePlugin.id).alias('total_plugins'),
-            fn.SUM(BasePlugin.user_count).alias('total_downloads'),
-            fn.SUM(BasePlugin.rating_count).alias('total_ratings'),
-            fn.AVG(BasePlugin.user_count).alias('avg_downloads'),
-            fn.AVG(BasePlugin.avg_rating).alias('avg_rating'),
-            fn.AVG(BasePlugin.lowest_paid_tier).alias('avg_lowest_paid_tier'),
-            (fn.SUM(BasePlugin.user_count) / fn.SUM(BasePlugin.rating_count)).alias('downloads_to_rating_ratio')
-        ).where(BasePlugin.marketplace_name == marketplace_name).group_by(BasePlugin.marketplace_name)
+    # Basic statistics query
+    query = BasePlugin.select(
+        BasePlugin.marketplace_name,
+        fn.COUNT(BasePlugin.id).alias('total_plugins'),
+        fn.SUM(BasePlugin.user_count).alias('total_downloads'),
+        fn.SUM(BasePlugin.rating_count).alias('total_ratings'),
+        fn.SUM(BasePlugin.avg_rating * BasePlugin.rating_count).alias('sum_weighted_rating'),
+        fn.AVG(BasePlugin.user_count).alias('avg_downloads'),
+        (1000 * fn.SUM(BasePlugin.rating_count) / fn.SUM(BasePlugin.user_count)).alias('propensity_to_rate')
+    ).where(BasePlugin.marketplace_name == marketplace_name).group_by(BasePlugin.marketplace_name)
 
-        result = query.dicts().first()
+    result = query.dicts().first()
 
-        if not result:
-            raise HTTPException(status_code=404, detail="Marketplace not found")
+    if not result:
+        raise HTTPException(status_code=404, detail="Marketplace not found")
 
-        return PluginStatsResponse(**result)
+    # Defining the median using raw SQL
+    median_sql = SQL("PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY lowest_paid_tier)")
+    median_lowest_paid_tier = BasePlugin.select(median_sql.alias('median_lowest_paid_tier')).scalar()
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return PluginStatsResponse(
+        marketplace_name=marketplace_name,
+        total_plugins=result['total_plugins'],
+        total_downloads=result['total_downloads'],
+        total_ratings=result['total_ratings'],
+        avg_downloads=result['avg_downloads'],
+        weighted_avg_rating=rating_in_bounds(result['sum_weighted_rating'] / result['total_ratings']),
+        median_lowest_paid_tier=median_lowest_paid_tier,
+        propensity_to_rate=result['propensity_to_rate']
+    )
 
 
 class ChartsMainResponse(BaseModel):
