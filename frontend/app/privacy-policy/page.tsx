@@ -21,7 +21,7 @@ const PrivacyPolicyPage: React.FC = () => {
                 Our products and services operate in a global context,
                 and we continuously monitor the dynamic global privacy landscape
                 to ensure complete compliance with privacy laws,
-                including the European Union's GDPR and California's CCPA.
+                including the European Union&apos;s GDPR and California&apos;s CCPA.
             </Typography>
             <Typography variant="body1" paragraph>
                 This Privacy Policy addresses both users who actively choose to use our
@@ -32,10 +32,10 @@ const PrivacyPolicyPage: React.FC = () => {
                 or contact us with any questions regarding our policy or data legislation compliance.
             </Typography>
             <Typography variant="body1" paragraph>
-                Plugin Intelligence ("<b>Plugin-Intelligence</b>", "<b>we</b>", or "<b>us</b>")
-                is the owner of the website plugin-intelligence.com ("<b>the Site</b>")
+                Plugin Intelligence (&quot;<b>Plugin-Intelligence</b>&quot;, &quot;<b>we</b>&quot;, or &quot;<b>us</b>&quot;)
+                is the owner of the website plugin-intelligence.com (&quot;<b>the Site</b>&quot;)
                 and any accompanying services, features, content, and applications offered by us
-                (collectively referred herein as "<b>the Services</b>").
+                (collectively referred herein as &quot;<b>the Services</b>&quot;).
                 We are concerned about your privacy and have designed this Privacy Policy
                 to help you decide whether to use the Services and to provide
                 all required information about our privacy practices.
@@ -51,7 +51,7 @@ const PrivacyPolicyPage: React.FC = () => {
 
             <Typography variant="h4" id="info-types" gutterBottom>What types of information do we collect?</Typography>
             <Typography variant="body1" paragraph>
-                We collect the following types of data from you when you use the Services ("<b>User Data</b>"):
+                We collect the following types of data from you when you use the Services (&quot;<b>User Data</b>&quot;):
             </Typography>
             <List>
                 <ListItem>
@@ -62,7 +62,9 @@ const PrivacyPolicyPage: React.FC = () => {
                 </ListItem>
             </List>
             <Typography variant="body1" paragraph>
-                We may also collect publicly posted personal data from various online sources. Such information will include, in most cases, basic contact information, such as name, email, and job title ("<b>Public Data</b>").
+                We may also collect publicly posted personal data from various online sources.
+                Such information will include, in most cases, basic contact information,
+                such as name, email, and job title (&quot;<b>Public Data</b>&quot;).
             </Typography>
 
             <Typography variant="h4" id="info-processing" gutterBottom>Legal basis for processing</Typography>
@@ -148,7 +150,10 @@ const PrivacyPolicyPage: React.FC = () => {
 
             <Typography variant="h4" id="privacy-change" gutterBottom>Changes to this Privacy Policy</Typography>
             <Typography variant="body1" paragraph>
-                This Policy may be revised from time to time at our sole discretion, so check it regularly. The last revision will be reflected in the "Last Updated" heading. Any change to this policy will be posted on the Site. Your continued use of the Services following any such changes will be considered as your consent to the amended Privacy Policy.
+                This Policy may be revised from time to time at our sole discretion, so check it regularly.
+                The last revision will be reflected in the &quot;Last Updated&quot; heading.
+                Any change to this policy will be posted on the Site.
+                Your continued use of the Services following any such changes will be considered as your consent to the amended Privacy Policy.
             </Typography>
 
             <Typography variant="h4" id="contact-us" gutterBottom>Contact Us</Typography>

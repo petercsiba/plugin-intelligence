@@ -25,7 +25,7 @@ const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({ marketplaceName }) 
         }
 
         fetchData();
-    }, [marketplaceName, baseUrl]);
+    }, [marketplaceName]);
 
     return (
         <>

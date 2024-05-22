@@ -14,13 +14,23 @@ const TermsOfService: React.FC = () => {
             <Typography variant="body1" gutterBottom><em>Last Updated May 22, 2024</em></Typography>
 
             <Typography variant="body1" paragraph>
-                This Master Service Agreement (the “<strong>Agreement</strong>”) is an agreement between Plugin Intelligence, (“<strong>Plugin Intelligence</strong>”) with address at 28A Woodland Ave 94117 San Francisco, and you or the entity you represent (“<strong>Client</strong>”). This Agreement takes effect when you sign up to Plugin Intelligence or, if earlier, when you access or use the Plugin Intelligence services, as defined below (the “<strong>Effective Date</strong>”). If you are using the Plugin Intelligence services on behalf of an entity, you represent to us that you are lawfully able to enter into this Agreement on behalf of the Client.
+                This Master Service Agreement (the “<strong>Agreement</strong>”) is an agreement between Plugin Intelligence ,
+                (“<strong>Plugin Intelligence</strong>”), a sole proprietorship with EIN: 99-3162250, and you or the entity you represent (“<strong>Client</strong>”). This Agreement takes effect when you sign up to Plugin Intelligence or, if earlier, when you access or use the Plugin Intelligence services, as defined below (the “<strong>Effective Date</strong>”). If you are using the Plugin Intelligence services on behalf of an entity, you represent to us that you are lawfully able to enter into this Agreement on behalf of the Client.
             </Typography>
 
             <Typography variant="h4" id="responsibilities" gutterBottom>1. Plugin Intelligence Responsibilities</Typography>
             <List>
                 <ListItem>
-                    <ListItemText primary="Plugin Intelligence will make any of the services detailed in this Agreement or otherwise offered on the Plugin Intelligence platforms (“the Services”) available to Client in accordance with the provisions of this Agreement, including Plugin Intelligence’s Service Level Agreement, if applicable. Plugin Intelligence shall have the right, but not the obligation, to monitor Client’s use of the Service for billing purposes and to verify no misuse or network abuse. Plugin Intelligence may share the Client’s relevant information with any authority in case of a complaint, investigation or a lawsuit, if Plugin Intelligence determines that it is necessary to comply with any subpoena, judicial or governmental requirement, or order." />
+                    <ListItemText primary="
+                    Plugin Intelligence will make any of the services detailed in this Agreement or otherwise
+                    offered on the Plugin Intelligence platforms (“the Services”) available to Client
+                    in accordance with the provisions of this Agreement,
+                    including Plugin Intelligence’s Service Level Agreement, if applicable.
+                     Plugin Intelligence shall have the right, but not the obligation,
+                     to monitor Client’s use of the Service for billing purposes and to verify no misuse or network abuse.
+                     Plugin Intelligence may share the Client’s relevant information with any authority in case of a complaint,
+                     investigation or a lawsuit, if Plugin Intelligence determines that it is necessary to comply with any subpoena,
+                     judicial or governmental requirement, or order." />
                 </ListItem>
                 <ListItem>
                     <ListItemText primary="Certain Services will be made available subject to Plugin Intelligence’s completion of a successful compliance review process of the Client. Such review may include a Know Your Client process, video calls with the Client and any other measures that Plugin Intelligence decides, at its sole discretion, are necessary to approve Client’s use of the Service. Client will cooperate with Plugin Intelligence and provide it with any information reasonably required as part of the compliance review process." />

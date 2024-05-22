@@ -51,17 +51,17 @@ interface TopCompaniesBubbleChartProps {
 const TopCompaniesBubbleChart: React.FC<TopCompaniesBubbleChartProps> = ({ marketplaceName }) => {
   const [data, setBubbleData] = useState<CompaniesTopResponse[]>([]);
 
-  const fetchBubbleData = async () => {
-    try {
-      setBubbleData(await fetchTopCompanies(marketplaceName));
-    } catch (error) {
-      console.error('Error fetching bubble data:', error);
-    }
-  };
-
   useEffect(() => {
-    fetchBubbleData();
-  }, [marketplaceName]); // Add fetchBubbleData and marketplaceName as dependencies
+    const fetchData = async () => {
+      try {
+        const data = await fetchTopCompanies(marketplaceName);
+        setBubbleData(data);
+      } catch (error) {
+        console.error('Error fetching top companies:', error);
+      }
+    };
+    fetchData().then(() => console.log("TopCompaniesBubbleChart fetched data"));
+  }, [marketplaceName]);
 
   // Color scale function using d3-scale
   const ratingColorScale = d3.scaleLinear()

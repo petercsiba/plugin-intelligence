@@ -1,11 +1,21 @@
 // pages/BubbleChart.js
-import React, {useEffect, useState } from 'react';
-import { ScatterChart, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Scatter, ResponsiveContainer, Label } from 'recharts';
+import React, {useEffect, useState} from 'react';
+import {
+    CartesianGrid,
+    Label,
+    Legend,
+    ResponsiveContainer,
+    Scatter,
+    ScatterChart,
+    Tooltip,
+    XAxis,
+    YAxis
+} from 'recharts';
 import NextLink from 'next/link';
 import Box from '@mui/material/Box';
 import * as d3 from 'd3-scale';
+import {scaleLog} from 'd3-scale';
 import {formatCurrency, formatNumber, formatNumberShort} from "@/utils";
-import { scaleLog } from 'd3-scale';
 import {MarketplaceName} from "../marketplaces/models";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
@@ -60,25 +70,30 @@ interface ArpuBubbleChartComponentProps {
     marketplaceName: MarketplaceName;
 }
 
+// Function to fetch bubble data from an API
+const fetchBubbleData = async (marketplaceName: string): Promise<BubbleData[]> => {
+  try {
+    const response = await fetch(`${baseUrl}/charts/plugins-arpu-bubble?marketplace_name=${marketplaceName}`);
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching bubble data:', error);
+    return [];
+  }
+};
+
 const ArpuBubbleChartComponent: React.FC<ArpuBubbleChartComponentProps> = ({ marketplaceName }) => {
     // State to store the fetched data with BubbleData type
     const [data, setBubbleData] = useState<BubbleData[]>([]);
 
-    // Function to fetch bubble data from an API
-    const fetchBubbleData = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/charts/plugins-arpu-bubble?marketplace_name=${marketplaceName}`);
-        const data: BubbleData[] = await response.json(); // Type the response explicitly
-        setBubbleData(data);
-      } catch (error) {
-        console.error('Error fetching bubble data:', error);
-      }
-    };
 
     // Fetch data when the component mounts
     useEffect(() => {
-      fetchBubbleData();
-    }, []);
+        const fetchData = async () => {
+            const data = await fetchBubbleData(marketplaceName);
+            setBubbleData(data);
+        };
+        fetchData().then(() => console.log("Fetched bubble data"));
+    }, [marketplaceName]);
 
 
   // Color scale function using d3-scale

@@ -8,7 +8,6 @@ import {TopPluginResponse} from "../plugins/models";
 import ArpuBubbleChartComponent from "../plugins/ArpuBubbleChart";
 import PageLoading from "@/components/PageLoading";
 import NoResultsFound from "@/components/NoResultsFound";
-import PageTitle from "@/components/PageTitle";
 import PluginTable from "../plugins/PluginTable";
 import {fetchTopPlugins} from "../plugins/driver";
 import {MarketplaceName} from "./models";
@@ -34,7 +33,7 @@ const MarketplacePlugins: React.FC<MarketplacePluginsProps> = ({ marketplaceName
                 setLoading(false);
             }
         })();
-    }, []);
+    }, [marketplaceName]);
 
     if (loading) return <PageLoading />;
 

@@ -35,7 +35,7 @@ const MarketplaceCompanies: React.FC<MarketplaceCompaniesProps> = ({ marketplace
                 setLoading(false);
             }
         })();
-    }, []);
+    }, [marketplaceName]);
 
     if (loading) return <PageLoading />;
 
