@@ -5,6 +5,7 @@ import theme from '@/theme/theme';  // Ensure this theme path is correct
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import NavigationBar from "./NavigationBar";
+import Footer from "./Footer";
 
 
 export default function RootLayout(props: { children: React.ReactNode }) {
@@ -16,6 +17,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <CssBaseline />
         <NavigationBar />
         {props.children}
+        <Footer />
         <Analytics />
         <SpeedInsights />
       </ThemeProvider>
