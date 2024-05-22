@@ -29,7 +29,7 @@ const NavigationBar = () => {
   });
 
   return (
-    <AppBar position="static" sx={{ backgroundColor: 'black' }}>
+    <AppBar position="sticky" sx={{ backgroundColor: 'black' }}>
       <Toolbar>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             <Link href="/" passHref>
