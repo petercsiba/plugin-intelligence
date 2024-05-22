@@ -1,13 +1,14 @@
 import React from 'react';
 import Rating from '@mui/material/Rating';
 import Box from '@mui/material/Box';
-import {formatNumber} from "@/utils";
+import {formatNumber, formatNumberShort} from "@/utils";
 
 interface RatingStarsWithTextProps {
   rating?: number | null;
+  ratingCount?: number | null;
 }
 
-const RatingStarsWithText: React.FC<RatingStarsWithTextProps> = ({ rating }) => {
+const RatingStarsWithText: React.FC<RatingStarsWithTextProps> = ({ rating, ratingCount }) => {
   return (
     <Box display="flex" alignItems="center">
       <Rating
@@ -17,7 +18,8 @@ const RatingStarsWithText: React.FC<RatingStarsWithTextProps> = ({ rating }) => 
         readOnly
       />
       <Box ml={2}>
-        {rating !== null && rating !== undefined ? formatNumber(rating) : "No Ratings"}
+        {rating ? <strong>{formatNumber(rating)}</strong> : "No Ratings"}
+        {ratingCount ? ` (out of ${formatNumberShort(ratingCount)} ratings)` : ""}
       </Box>
     </Box>
   );

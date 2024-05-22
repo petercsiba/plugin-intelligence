@@ -28,6 +28,8 @@ export interface PluginDetailsResponse {
     user_count: number;
     avg_rating?: number;
     rating_count?: number;
+    propensity_to_rate?: number;
+    listing_updated?: string;
 
     company_slug?: string;
     developer_name?: string;

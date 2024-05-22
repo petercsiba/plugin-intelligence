@@ -2,7 +2,6 @@ import React from "react";
 import {
     Container,
     Paper,
-    Rating,
     Typography,
     List,
     ListItem,
@@ -12,7 +11,7 @@ import {
 import Box from "@mui/material/Box";
 import {PluginDetailsResponse} from "../../models";
 import ExternalLink from "@/components/ExternalLink";
-import {fixThatArrayWithNullShit, formatCurrency, formatNumber, formatNumberShort} from "@/utils";
+import {fixThatArrayWithNullShit, formatCurrency, formatNumber} from "@/utils";
 import dynamic from "next/dynamic";
 import ListBoxOneLine from "@/components/ListBoxOneLine";
 import NoResultsFound from "@/components/NoResultsFound";
@@ -60,6 +59,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
         ? `${formatCurrency(lower_bound)} - ${formatCurrency(upper_bound)}`
         : "N/A";
 
+
     return (
         <Container maxWidth="md">
             <Paper elevation={3} style={{ padding: "2em", marginTop: "2em" }}>
@@ -84,13 +84,17 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                         </Box>
                     </ListItem>
                     <ListItem>
-                        <Typography variant="body1">
-                            {plugin.user_count ? `${formatNumber(plugin.user_count)} Downloads` : "N/A"}
-                        </Typography>
-                        <RatingStarsWithText rating={plugin.avg_rating} />
-                        <Typography variant="body2">
-                            {plugin.rating_count ? `${formatNumberShort(plugin.rating_count)} Ratings` : "N/A"}
-                        </Typography>
+                        <ListItemText primary="Downloads" secondary={plugin.user_count ? `${formatNumber(plugin.user_count)}` : "N/A"} />
+                        <ListItemText
+                            primary="Ratings"
+                            secondary={<RatingStarsWithText
+                                rating={plugin.avg_rating}
+                                ratingCount={plugin.rating_count}
+                            />} />
+                        {plugin.propensity_to_rate ? <ListItemText
+                            primary="Propensity to Rate"
+                            secondary={`${formatNumber(plugin.propensity_to_rate)} ratings / 1000 downloads`}
+                        /> : null}
                     </ListItem>
                     <ListItem>
                         <ListItemText primary="Revenue Estimate" secondary={revenueRange} />
@@ -117,6 +121,10 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                                 <Button color="primary">{plugin.developer_name}</Button>
                             </NextLink>
                         } />
+                        <ListItemText
+                            primary="Listing Updated"
+                            secondary={plugin.listing_updated ? new Date(plugin.listing_updated).toLocaleDateString() : "N/A"}
+                        />
                     </ListItem>
                 </List>
 

@@ -6,7 +6,6 @@ import {
     List,
     ListItem,
     ListItemText,
-    Rating,
 } from "@mui/material";
 import Box from "@mui/material/Box";
 import ExternalLink from "@/components/ExternalLink";
@@ -65,9 +64,8 @@ export default async function CompanyDetailsPage({ params }: { params: { company
                     <ListItem>
                         <ListItemText
                             primary="Weighted Average Rating"
-                            secondary={<RatingStarsWithText rating={company.weighted_avg_avg_rating} />}
+                            secondary={<RatingStarsWithText rating={company.weighted_avg_avg_rating} ratingCount={company.sum_rating_count}/>}
                         />
-                        <ListItemText primary="Total Ratings" secondary={formatNumberShort(company.sum_rating_count)} />
                     </ListItem>
                     <ListItem>
                         <ListItemText

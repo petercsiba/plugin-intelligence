@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
@@ -93,6 +93,8 @@ class PluginDetailsResponse(BaseModel):
     user_count: Optional[int] = None
     avg_rating: Optional[float] = None
     rating_count: Optional[int] = None
+    propensity_to_rate: Optional[float] = None
+    listing_updated: Optional[date] = None
 
     # Developer stuff
     # developer_link = Optional[str] = None
@@ -142,6 +144,9 @@ async def get_plugin_details(plugin_id: int):
         response.user_count = plugin.user_count
         response.avg_rating = rating_in_bounds(plugin.avg_rating, f"plugin_id={plugin_id}")
         response.rating_count = plugin.rating_count
+        if plugin.user_count and plugin.rating_count:
+            response.propensity_to_rate = 1000 * float(plugin.rating_count) / plugin.user_count
+        response.listing_updated = plugin.listing_updated
 
         # developer stuff
         response.company_slug = plugin.company_slug
