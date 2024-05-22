@@ -49,8 +49,8 @@ const formatDateTick = (tick: string, data: PluginTimeseriesData[]) => {
     const yearsDiff = differenceInYears(lastDate, firstDate);
 
     if (yearsDiff > 2) {
-        // More than a year
-        return format(new Date(tick), 'yyyy');
+        // More than a year; TODO(P3): Ideally quarters but ain't got time for that
+        return format(new Date(tick), 'yyyy/MM');
     } else if (daysDiff > 30) {
         // More than a month but less than a year
         return format(new Date(tick), 'yyyy/MM');
