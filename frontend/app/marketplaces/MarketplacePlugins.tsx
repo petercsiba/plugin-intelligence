@@ -42,7 +42,7 @@ const MarketplacePlugins: React.FC<MarketplacePluginsProps> = ({ marketplaceName
 
     return (
         <Container maxWidth="lg">
-            <SubPageTitle title={`Top ${marketplaceName} Plugins by Estimated Revenue`} />
+            <SubPageTitle title={`Top ${plugins.length} ${marketplaceName} Plugins by Estimated Revenue`} />
             <ArpuBubbleChartComponent marketplaceName={marketplaceName} />
             <PluginTable plugins={plugins} />
 
