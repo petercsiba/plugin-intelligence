@@ -1,0 +1,38 @@
+---
+name: technikkram.net
+version: '1.0'
+category_slug: lifestyle/social
+rating: null
+rating_count: null
+user_count: 4
+release_date: '2013-05-24T08:34:04.000Z'
+size: 18.36KiB
+languages:
+  - Deutsch
+description: >-
+  Mit dieser praktischen App kommt man direkt auf technikkram.net und hier dreht
+  sich alles rund um das Thema Technik.
+publisher_account: technikkram.net
+extension_website: www.technikkram.net
+---
+
+{
+"update_url": "https://clients2.google.com/service/update2/crx",
+
+"manifest_version": 2,
+"name": "technikkram.net",
+"version": "1.0",
+//Empfohlen
+"description": "technikkram.net - alles rund um das thema technik",
+"icons": {
+"128": "technikkram.png"
+},
+"app": {
+"urls": [
+"http://www.technikkram.net/"
+],
+"launch": {
+"web_url": "http://www.technikkram.net/"
+}
+}
+}

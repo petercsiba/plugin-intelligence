@@ -1,0 +1,34 @@
+---
+name: Contextual Search for YouTube
+version: 1.0.0.14
+category_slug: productivity/tools
+rating: 4.769230769230769
+rating_count: 13
+user_count: 908
+release_date: '2022-07-31T10:26:25.000Z'
+size: 13.0KiB
+languages:
+  - English
+description: >-
+  Allows the user search YouTube for a term by highlighting text and selecting
+  'Search YouTube for...' from the right click menu.
+publisher_account: Gryff
+---
+
+{
+  "update_url": "https://clients2.google.com/service/update2/crx",
+  "manifest_version": 3,
+  "name": "Contextual Search for YouTube",
+  "background": {
+    "service_worker": "searchyoutube.js"
+  },
+  "description": "Allows the user search YouTube for a term by highlighting text and selecting 'Search YouTube for...' from the right click menu.",
+  "icons": {
+    "16": "SmallIcon.png",
+    "48": "MediumIcon.png"
+  },
+  "version": "1.0.0.14",
+  "permissions": [
+    "contextMenus"
+  ]
+}

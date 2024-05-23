@@ -19,6 +19,7 @@ class BaseDatabaseModel(Model):
 
 class BaseChromeExtension(BaseDatabaseModel):
     categories = TextField(null=True)
+    category_slug = TextField(null=True)
     created_at = DateTimeField(constraints=[SQL("DEFAULT now()")], null=True)
     description = TextField(null=True)
     developer_address = TextField(null=True)

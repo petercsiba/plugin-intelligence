@@ -1,0 +1,88 @@
+---
+slug: usetiful-digital-adoption
+name: Usetiful - Digital Adoption Platform
+description: 'Interactive product tours, smart tips and checklists for digital products.'
+version: '1.37'
+release_date: 'April 24, 2023'
+publisher: dev
+category: Productivity
+category_slug: ext/7-productivity
+rating: 5
+rating_count: 10
+user_count: '4,000+'
+publisher_site: usetiful.com
+extension_website: 'https://www.usetiful.com/'
+support_website: 'https://blog.usetiful.com/'
+---
+
+{
+"update_url": "https://clients2.google.com/service/update2/crx",
+
+  "manifest_version": 3,
+  "name": "Usetiful - Digital Adoption Platform",
+  "version": "1.37",
+  "description": "Interactive product tours, smart tips and checklists for digital products.",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon-disabled.png"
+  },
+  "web_accessible_resources": [{
+    "resources": [
+      "panel.css",
+      "element.png",
+      "logo-mini.png",
+      "check.png",
+      "warning.png",
+      "edit.png",
+      "hide.png",
+      "show.png",
+      "close.png",
+      "play.png",
+      "stop.png",
+      "restart.png",
+      "select-element.png",
+      "unselect-element.png",
+      "navigation-mode.svg",
+      "manual-action.svg",
+      "info.svg",
+      "waiting-on-element.svg",
+      "alert.svg",
+      "modal.svg",
+      "pointer.svg",
+      "slideout.svg",
+      "redirect.svg",
+      "triggerEvent.svg",
+      "pageAction.svg",
+      "delay.svg",
+      "fonts/*.woff2",
+      "usetiful.js",
+      "usetiful-plugin.js",
+      "scripts/*.js"
+  ],
+      "matches": ["<all_urls>"]
+  }],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*", "<all_urls>"],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_start",
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
