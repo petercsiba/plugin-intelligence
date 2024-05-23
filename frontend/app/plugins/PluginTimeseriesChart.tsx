@@ -78,7 +78,13 @@ const PluginTimeseriesChart: React.FC<Props> = ({data}) => {
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="p_date" tickFormatter={(tick) => formatDateTick(tick, data)} />
+                <XAxis
+                    dataKey="p_date"
+                    scale="time"
+                    type="number"
+                    domain={['dataMin', 'dataMax']}
+                    tickFormatter={(tick) => formatDateTick(tick, data)}
+                />
                 <YAxis yAxisId="user_count_axis" domain={[0, 'dataMax']} stroke="#8884d8" tickFormatter={(value) => formatNumberShort(value)} />
                 <YAxis yAxisId="rating_count_axis" orientation="right" domain={[0, 'dataMax']} stroke="#82ca9d" />
                 <YAxis yAxisId="avg_rating_axis" orientation="right" domain={[0, 5]} stroke="#ffc658" ticks={ratingTicks} />

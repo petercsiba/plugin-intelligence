@@ -52,7 +52,6 @@ def get_companies_top(limit: int = 20, min_count: int = 1, max_count: int = 1000
     print("Ranking query", get_formatted_sql(ranking_query))
 
     ranking_results = list(ranking_query)
-    print("Ranking results", ranking_results)
 
     # Doing in-memory join as the SQL syntax for join with group by in PeeWee is a bit too much to parse.
     slugs_needed = [result.company_slug for result in ranking_results]

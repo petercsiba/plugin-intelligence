@@ -80,7 +80,7 @@ def backfil_chrome_extension_manifests_dataset(base_path: str = "/Users/petercsi
 
         filepaths = glob(os.path.join(dir_path, '*.json'))
         for i, file_path in enumerate(filepaths):
-            if p_date == "2024-04-13" and i < 8199:
+            if p_date == "2024-04-13" and i < 17799:
                 continue
             if (i + 1) % 100 == 0:
                 print(f"Processing file {i}/{len(filepaths)}")
