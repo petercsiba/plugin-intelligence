@@ -2,6 +2,15 @@ import datetime
 import time
 
 import pytz as pytz
+from peewee import Model
+
+
+def print_peewee_model(model: Model):
+    print(model.__name__)
+
+    for field_name, field in model._meta.fields.items():
+        value = getattr(model, field_name)
+        print(f"{field_name}: {value}")
 
 
 def now_in_utc():

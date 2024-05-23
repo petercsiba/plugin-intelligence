@@ -38,6 +38,7 @@ class GoogleWorkspace(BaseGoogleWorkspace):
     # Takes in subset of
     # ['Google Drive', 'Google Docs', 'Google Sheets', 'Google Slides', 'Google Forms', 'Google Calendar',
     #  'Gmail', 'Google Meet', 'Google Classroom', 'Google Chat']
+    # TODO(P2, completeness): Some plugins miss this like Calamari.html, we can get it from the permissions too
     def fill_in_works_with(self, works_with: list):
         self.with_drive = "Google Drive" in works_with
         self.with_docs = "Google Docs" in works_with

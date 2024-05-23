@@ -18,10 +18,11 @@ from batch_jobs.common import (
     find_tag_and_get_text,
     listing_updated_str_to_date,
     extract_number_best_effort,
-    is_html_in_english,
+    is_html_in_english, standardize_url,
 )
 from batch_jobs.scraper.search_terms import GOOGLE_WORKSPACE_SEARCH_TERMS
 from batch_jobs.scraper.settings import should_save_large_fields
+from common.company import standardize_company_name
 from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import GoogleWorkspace
 
@@ -193,7 +194,7 @@ def parse_rating_info(soup: BeautifulSoup) -> Tuple[Optional[float], Optional[in
     return rating, rating_count
 
 
-def parse_downloads_count(soup: BeautifulSoup, url: str) -> Optional[int]:
+def parse_downloads_count(soup: BeautifulSoup, debug_url: str) -> Optional[int]:
     # <div aria-label="457,795 users have installed this app.">457,795</div>
     user_div = soup.find(
         "div", {"aria-label": lambda x: x and "users have installed this app" in x}
@@ -207,7 +208,7 @@ def parse_downloads_count(soup: BeautifulSoup, url: str) -> Optional[int]:
     user_count = extract_number_best_effort(user_count_str)
     if user_count == 0:
         print(
-            f"WARNING: cannot find downloads_count_div LCopac NOR aria-label for url {url}"
+            f"WARNING: cannot find downloads_count_div LCopac NOR aria-label for url {debug_url}"
         )
     return int(user_count)
 
@@ -240,9 +241,20 @@ def process_add_on_page_response(
             f"INFO: will UPDATE existing GoogleWorkspace entry {add_on.p_date} {add_on.google_id}"
         )
 
-    add_on: GoogleWorkspace
     # For especially historical data, we want to keep the source URL for debugging / re-runs purposes.
     add_on.source_url = scrape_job.url
+
+    save_large_fields = should_save_large_fields(scrape_job.p_date)
+    _parse_add_on_page_response(add_on, soup, save_large_fields=save_large_fields, debug_url=scrape_job.url)
+
+    # NOTE: yes this blocks the event loop and could benefit from asyncio,
+    # but DB calls are usually way faster (3-10ms) than the HTTP GET (100-1000ms) above so it is fine.
+    add_on.save()
+
+
+# TODO(P1, reliability): Maybe it's possible to parse the data from this Javascript stuff, unsure about Wayback though.
+# <script nonce="">AF_initDataCallback({key: 'ds:1', hash: '6', data:[[428704666266,null,null,["Calamari","Modern leave and attendance management. Remote work, time off management and clock-in with iBeacons.","Calamari helps businesses and organizations boost the productivity of their employees by simplifying attendance and leave management. It's simple to use, allows tracking of vacation accrual and provides easy request and approval system for time off. It offers both attendance and leave tracking. Calamari automates time off approval and gives employees the easiest access to their leave records, useful PTO reports and team calendars overview.\n\nTry it for FREE! No credit card or commitment required.\nLeave Management:\n  • access control for different types of users (regular employees/managers/admins)\n  • PTO tracking, absence and vacation management, remote work tracking\n  • configuration of policies from different countries, custom leave types\n  • multilevel approval process, approval automation\n  • time off reports in Excel, PDF export\n  • team calendars, team capacity, absence calendar\n  • email notifications, slack notifications\n  • multi-country organizations\n  • requests on behalf of other employees (for managers)\n  • mobile app for employees and managers\n  • “who is off” weekly and daily notifications\n  • employee profiles \u0026 directory\n  • public API\n\nAttendance Management (clockin):\n  • attendance clock in methods: web browser, mobile application, QR codes, iBeacon, API\n  • mobile app with iBeacon technology\n  • abnormalities reporting\n  • working time reports, late arrivals and early departures reports\n  • reports export to payroll\n  • mobile application for employees\n  • real time attendance tracking\n  • clock in, clock out reminders\n  • time clock mobile terminals\n  • time tracking with GPS location\n  • clock in from email\n  • full history of changes made\n  • email notifications\n\n\nG Suite integration:\n  • synchronize employees from G Suite directory\n  • import employees for the onboarding\n  • import public holidays from Google calendar\n  • single sign on for G Suite users\n  • synchronize time off and remote work requests into Google Calendar\n  • available for multi-domain G Suite Accounts\n\nOther integrations:\n  • Slack (clock in / clock out / slack notifications)\n  • Atlassian JIRA (time off requests sync)\n  • Office 365/Outlook (time off calendar sync)\n\nQuality:\n  • dedicated subdomain, separate database\n  • support for all browsers and mobile devices\n  • 99.9% uptime and 24/7 monitoring\n  • hosting provider security: ISO 27001 CERT\n  • data backup in different availability zones\n  • English, Spanish, French, German, Polish language supported\n\nSee www.calamari.io for more details.","https://lh5.googleusercontent.com/-oLWY9PD6b5w/U_MVhYVsSCI/AAAAAAAAADQ/a33ioS_UCVY/s0/calamari_128x128_kolor.png","https://lh3.googleusercontent.com/9MReo6ZoloGfmb28DdImDYl_rubN6I1uukjUrjnN1ftlFYGe8H5qFskKi4qpXoReOFl33sXRNg\u003ds220-w220-h140-nd","calamari",[["https://lh3.googleusercontent.com/-pJaZMFzwk9g/ZC57WpfBGiI/AAAAAAAAAB0/nA2wLtxx-vIw24Y8nle1AHZfpowUgl60wCNcBGAsYHQ/s640-w640-h400/Ewidencja.png",1],["https://lh3.googleusercontent.com/-gOWhkaPJyqI/ZC57f1mpofI/AAAAAAAAAB8/DOiuaRHsQfILUfnWATbU4YMgFrvUEYw7gCNcBGAsYHQ/s640-w640-h400/Zegar.png",1],["https://lh3.googleusercontent.com/-HSPLNgQL4UM/ZC57jQ1jO1I/AAAAAAAAACE/xwFXiGPOEc8EB6Rx0YZ42-xU5Ld18J_ogCNcBGAsYHQ/s640-w640-h400/Manager.png",1],["https://lh3.googleusercontent.com/-UA9akNy7Etk/ZC57ltfKkQI/AAAAAAAAACM/y1N0sVa8brsEGDkb3C5ZdUmbNIsDlI17QCNcBGAsYHQ/s640-w640-h400/People%2Bdirectory.png",1],["https://lh3.googleusercontent.com/-aXmxFsrve2U/ZC57n19CsGI/AAAAAAAAACY/7_YEkviasxQQ2A3fskm4g-MwKA9xePhDwCNcBGAsYHQ/s640-w640-h400/Integracje.png",1]]],["calamari.io","",0,""],[10,5,"103K+",103974],null,null,["","https://calamari.io/terms-of-use","https://calamari.io/privacy-policy","https://help.calamari.io/","https://calamari.io/"],null,null,true,null,null,false,[[4,""]],null,false,false,null,2,[1680767910,147079000],2,false,null,false,null,[],false,false,false,""]], sideChannel: {}});</script>  #noqa
+def _parse_add_on_page_response(add_on: GoogleWorkspace, soup: BeautifulSoup, save_large_fields: bool, debug_url=None):
 
     # They have changed styles and classes a few times, so we need to be careful here.
     # Observations:
@@ -251,25 +263,36 @@ def process_add_on_page_response(
     # Sometimes things got changed and then changed back - or maybe WebArchive has a bug.
     # TLDR; For historical data most important is to have the user_count, rating, rating_count tags.
 
-    add_on.user_count = parse_downloads_count(soup=soup, url=scrape_job.url)
+    add_on.user_count = parse_downloads_count(soup=soup, debug_url=debug_url)
 
-    developer_a = soup.find("a", class_="DmgOFc Sm1toc")
-    if developer_a:
+    # There are multiple of these, but the first one is the one we want
+    developer_additional_info_span = soup.find("span", class_="nWIEC")
+    if developer_additional_info_span:
+        add_on.developer_name = developer_additional_info_span.text.strip()
+    else:
+        developer_by = soup.find("div", class_="L6OhWc")
+        if developer_by:
+            add_on.developer_name = developer_by.text.replace('By:', '').strip()
+
+    for developer_a in soup.find_all("a", class_="DmgOFc Sm1toc"):
+        if "plus.google.com" in developer_a["href"] or "support.google.com" in developer_a["href"]:
+            continue
+
         # Remove all subtags within the found <a> tag, this for .text to work correctly for subtags like:
         # <i class="google-material-icons bmrmhd" aria-hidden="true">open_in_new</i>
         for child_tag in developer_a.find_all(True):
             child_tag.decompose()
-        add_on.developer_name = developer_a.text.strip()
-        add_on.developer_link = developer_a["href"]
-    else:
-        add_on.developer_name = find_tag_and_get_text(
-            soup, tag_name="div", class_name="kmwdk"
-        )
-        add_on.developer_link = None
+        add_on.developer_link = standardize_url(developer_a["href"])
+
+        if add_on.developer_name is None:
+            add_on.developer_name = developer_a.text.strip()
+
+    if add_on.developer_name:
+        add_on.developer_name = standardize_company_name(add_on.developer_name)
 
     add_on.rating, add_on.rating_count = parse_rating_info(soup=soup)
     if add_on.rating is None or add_on.rating_count is None:
-        print(f"WARNING: cannot parse rating or rating count for url {scrape_job.url}")
+        print(f"WARNING: cannot parse rating or rating count for url {debug_url}")
 
     listing_updated_str = find_tag_and_get_text(soup, "div", "bVxKXd").replace(
         "Listing updated:", ""
@@ -278,7 +301,7 @@ def process_add_on_page_response(
     add_on.description = find_tag_and_get_text(soup, "div", "kmwdk")
     add_on.pricing = find_tag_and_get_text(soup, "span", "P0vMD")
     add_on.fill_in_works_with(get_works_with_list(soup=soup))
-    if should_save_large_fields(scrape_job.p_date):
+    if save_large_fields:
         add_on.overview = find_tag_and_get_text(soup, "pre", "nGA4ed")
 
     img_logo_tag = soup.find("img", class_="TS9dEf")
@@ -286,14 +309,9 @@ def process_add_on_page_response(
     featured_img_tag = soup.find("img", class_="ec1OGc")
     add_on.featured_img_link = featured_img_tag.get("src") if featured_img_tag else None
 
-    add_on.developer_link = get_developer_link(soup=soup)
-    if should_save_large_fields(scrape_job.p_date):
+    if save_large_fields:
         add_on.permissions = parse_permissions(soup=soup)
     add_on.reviews = parse_reviews(soup=soup)
-
-    # NOTE: yes this blocks the event loop and could benefit from asyncio,
-    # but DB calls are usually way faster (3-10ms) than the HTTP GET (100-1000ms) above so it is fine.
-    add_on.save()
 
 
 async def async_scrape_add_on_details(
