@@ -1,8 +1,6 @@
-import asyncio
 import json
 import os
 import random
-import re
 import string
 from datetime import datetime
 from glob import glob
@@ -19,66 +17,11 @@ from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import ChromeExtension
 
 
-# TODO(P0, data): For historical Chrome Extension user/rating data use this repo as Wayback Machine will take forever:
-#   100,000 Chrome Extensions, up to once a month, 4 years back, say 10 historical datapoints on average
-#   1,000,000 Wayback Machine requests, with 5-15 requests per minute, 1,000 to 3,000 hours runtime (50-150 days).
-# TODO: Also add released_date and other stuff while doing it
-# https://github.com/palant/chrome-extension-manifests-dataset?tab=readme-ov-file
-# They have 8 historical datapoints, which is nice:
-# manifests-2021-10-30/ manifests-2022-09-08/ manifests-2023-05-08/ manifests-2023-06-05/ manifests-2023-11-17/ manifests-2024-01-12/  # noqa
-# manifests-2022-08-08/ manifests-2023-03-15/ manifests-2023-06-01/ manifests-2023-09-21/ manifests-2023-11-29/ manifests-2024-04-13/  # noqa
-# cat manifests-2024-04-13/aaaaahnmcjcoomdncaekjkjedgagpnln.json
-# ---
-# name: Contextual Search for YouTube
-# version: 1.0.0.14
-# category_slug: productivity/tools
-# rating: 4.769230769230769
-# rating_count: 13
-# user_count: 908
-# release_date: '2022-07-31T10:26:25.000Z'
-# size: 13.0KiB
-# languages:
-#   - English
-# description: >-
-#   Allows the user search YouTube for a term by highlighting text and selecting
-#   'Search YouTube for...' from the right click menu.
-# publisher_account: Gryff
-# ---
-#
-# {
-#   "update_url": "https://clients2.google.com/service/update2/crx",
-#   "manifest_version": 3,
-#   "name": "Contextual Search for YouTube",
-#   "background": {
-#     "service_worker": "searchyoutube.js"
-#   },
-#   "description": "Allows the user search YouTube for a term by highlighting text and selecting 'Search YouTube for...' from the right click menu.",
-#   "icons": {
-#     "16": "SmallIcon.png",
-#     "48": "MediumIcon.png"
-#   },
-#   "version": "1.0.0.14",
-#   "permissions": [
-#     "contextMenus"
-#   ]
-# }
-
-
-def remove_single_line_comments(json_str):
-    # Regex to remove single-line comments that start with // but are not inside quotes
-    pattern = r'(^|\s)//.*?$'
-    in_string = False
+def remove_single_line_comments(json_str: str):
     clean_lines = []
-
     for line in json_str.splitlines():
-        # Toggle the in_string flag when encountering unescaped quotes
-        for i, char in enumerate(line):
-            if char == '"' and (i == 0 or line[i - 1] != '\\'):
-                in_string = not in_string
-
-        # If not inside a string, remove the comment
-        if not in_string:
-            line = re.sub(pattern, '', line, flags=re.MULTILINE)
+        if line.startswith("//"):
+            continue
 
         clean_lines.append(line)
 
@@ -134,6 +77,8 @@ def backfil_chrome_extension_manifests_dataset(base_path: str = "/Users/petercsi
 
         filepaths = glob(os.path.join(dir_path, '*.json'))
         for i, file_path in enumerate(filepaths):
+            if p_date == "2024-04-13" and i < 8199:
+                continue
             if (i + 1) % 100 == 0:
                 print(f"Processing file {i}/{len(filepaths)}")
 
@@ -176,7 +121,10 @@ def backfil_chrome_extension_manifests_dataset(base_path: str = "/Users/petercsi
                 permissions = content.get('permissions')
                 if isinstance(permissions, dict):
                     permissions = permissions.values()
-                extension.permissions = ','.join(permissions)
+                try:
+                    extension.permissions = ','.join([str(p) for p in permissions])
+                except Exception as e:
+                    print(f"Error while processing permissions for {file_path}: {e}")
             extension.source_url = "https://github.com/palant/chrome-extension-manifests-dataset" + file_path
 
             extension.save()
