@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from gpt_form_filler.form import FormDefinition, FieldDefinition
 from gpt_form_filler.openai_client import CHEAPEST_MODEL, OpenAiClient
@@ -96,7 +96,12 @@ def fill_in_plugin_with_form_data(plugin: BasePlugin, form_data: Dict[str, str])
     plugin.tags = extract_list_best_effort(form_data.get("tags"))
 
 
-def gpt_summarize_reviews(openai_client: OpenAiClient, reviews: str) -> str:
+def gpt_summarize_reviews(openai_client: OpenAiClient, reviews: str) -> Optional[str]:
+    # We do check for enough ReviewsData, but empty reviews leads "this vacuum is nice but quite noisy"
+    if reviews is None or len(reviews) < 100:
+        print(f"Reviews are too short: {reviews}")
+        return None
+
     # add_on_row.reviews is formatted as (for historical reasons):
     # [ReviewData(name='John Doe', rating=5, date='2022-01-01', review='Great app!'), ...]
     cleaned_reviews = _remove_excessive_repetitions(reviews, chunk_size=12, max_repetitions=2)
