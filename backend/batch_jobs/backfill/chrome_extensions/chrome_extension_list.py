@@ -34,7 +34,10 @@ def parse_manifest_file(file_path: str, encoding: str='utf-8') -> Dict[str, Any]
         content = file.read()
 
     # Split the content into YAML and JSON parts
-    parts = content.split('---\n')
+    content = "\n" + content + "\n"
+    parts = content.split('\n---\n')
+    if len(parts) != 3:
+        raise ValueError(f"Invalid manifest file format for {file_path}, too many parts found ({len(parts)}).")
 
     # Parse YAML and JSON sections
     yaml_part = str(parts[1]).strip()

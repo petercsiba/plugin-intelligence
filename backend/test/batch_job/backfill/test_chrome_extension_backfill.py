@@ -113,3 +113,13 @@ def json_parsing_problem_manifest_path():
 
 def test_json_parsing_problem_manifest_path(json_parsing_problem_manifest_path):
     parse_manifest_file(json_parsing_problem_manifest_path)
+
+
+@pytest.fixture
+def json_parsing_problem_too_many_dashes_manifest_path():
+    # Path to the sample manifest file relative to the test file's location
+    return os.path.join(os.path.dirname(__file__), 'testdata/efafbmknkaeomlcamfjihkonnbcmgefe.json')
+
+
+def test_json_parsing_problem_too_many_dashes_manifest_path(json_parsing_problem_too_many_dashes_manifest_path):
+    parse_manifest_file(json_parsing_problem_too_many_dashes_manifest_path)

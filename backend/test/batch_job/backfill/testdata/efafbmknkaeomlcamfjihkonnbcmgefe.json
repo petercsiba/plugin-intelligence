@@ -1,0 +1,51 @@
+---
+name: Country Info New Tab
+version: 1.0.0
+category_slug: productivity/education
+rating: null
+rating_count: null
+user_count: 0
+release_date: '2024-03-17T13:11:16.000Z'
+size: 388KiB
+languages:
+  - English
+description: >-
+  --- Country Info New Tab ---
+
+
+  By clicking "Add to Chrome," I accept and agree to installing the Extension
+  and setting chrome new…
+publisher: Direwolf LLC
+publisher_address: >-
+  Christiana Corporate Business Center, 200 Continental Dr Suite 401, Newark, DE
+  19713, United States
+
+  Christiana, DE 19713
+
+  US
+privacy_policy: https://countryinfo-newtab.com/privacy
+---
+
+{
+"update_url": "https://clients2.google.com/service/update2/crx",
+
+  "manifest_version": 3,
+  "name": "Country Info New Tab",
+  "version": "1.0.0",
+  "icons": {
+    "16": "images/icons/16-16.png",
+    "48": "images/icons/48-48.png",
+    "128": "images/icons/128-128.png"
+  },
+  "action": {},
+  "background": {
+    "service_worker": "service-worker-loader.js",
+    "type": "module"
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage"
+  ]
+}
