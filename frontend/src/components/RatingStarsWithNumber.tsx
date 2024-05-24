@@ -8,6 +8,8 @@ interface RatingStarsWithTextProps {
   ratingCount?: number | null;
 }
 
+// NOTE: This component uses Box so when used with ListItemText, you need to add
+// <ListItemText secondaryTypographyProps={{ component: 'div' }}
 const RatingStarsWithText: React.FC<RatingStarsWithTextProps> = ({ rating, ratingCount }) => {
   return (
     <Box display="flex" alignItems="center">

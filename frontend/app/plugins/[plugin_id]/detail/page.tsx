@@ -90,7 +90,9 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                             secondary={<RatingStarsWithText
                                 rating={plugin.avg_rating}
                                 ratingCount={plugin.rating_count}
-                            />} />
+                            />}
+                            secondaryTypographyProps={{ component: 'div' }}
+                        />
                         {plugin.propensity_to_rate ? <ListItemText
                             primary="Propensity to Rate"
                             secondary={`${formatNumber(plugin.propensity_to_rate)} ratings / 1000 downloads`}
@@ -101,18 +103,21 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
                         <ListItemText
                             primary="Pricing Tiers"
                             secondary={<ListBoxOneLine listOfStrings={plugin.pricing_tiers} />}
+                            secondaryTypographyProps={{ component: 'div' }}
                         />
                     </ListItem>
                     <ListItem>
                         <ListItemText
                             primary="Main Integrations"
                             secondary={<ListBoxOneLine listOfStrings={plugin.main_integrations} />}
+                            secondaryTypographyProps={{ component: 'div' }}
                         />
                     </ListItem>
                     <ListItem>
                         <ListItemText
                             primary="Tags"
                             secondary={<ListBoxOneLine listOfStrings={plugin.tags} />}
+                            secondaryTypographyProps={{ component: 'div' }}
                         />
                     </ListItem>
                     <ListItem>

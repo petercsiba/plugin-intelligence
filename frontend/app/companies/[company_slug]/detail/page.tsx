@@ -65,6 +65,7 @@ export default async function CompanyDetailsPage({ params }: { params: { company
                         <ListItemText
                             primary="Weighted Average Rating"
                             secondary={<RatingStarsWithText rating={company.weighted_avg_avg_rating} ratingCount={company.sum_rating_count}/>}
+                            secondaryTypographyProps={{ component: 'div' }}
                         />
                     </ListItem>
                     <ListItem>
