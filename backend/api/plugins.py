@@ -18,7 +18,7 @@ class PluginsTopResponse(BaseModel):
     # Identity fields
     name: str
     marketplace_name: str
-    marketplace_link: str
+    marketplace_link: Optional[str] = None  # Can be missing for historical Chrome Extensions
     img_logo_link: Optional[str] = None
 
     # Objective data
@@ -86,7 +86,7 @@ class PluginDetailsResponse(BaseModel):
     name: str
     marketplace_name: str
     marketplace_id: str
-    marketplace_link: str
+    marketplace_link: Optional[str] = None  # Can be missing for historical Chrome Extensions
     img_logo_link: Optional[str] = None
 
     # Objective Data

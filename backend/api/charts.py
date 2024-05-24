@@ -1,3 +1,5 @@
+from collections import defaultdict
+from datetime import datetime
 from typing import List, Optional
 
 from fastapi import HTTPException
@@ -148,16 +150,53 @@ def get_charts_plugin_arpu_bubble(limit: int = 50, max_arpu_cents: int = 200, ma
 
 class TimeseriesData(BaseModel):
     marketplace_id: str
-    p_date: str
+    p_date: datetime.date
     user_count: int
     avg_rating: Optional[float] = None
     rating_count: Optional[int] = None
+
+    # for p_date
+    class Config:
+        arbitrary_types_allowed = True  # Allows arbitrary types
 
 
 def maybe_decimal_to_float(value):
     if value is None:
         return None
     return float(value)
+
+
+def post_process_timeseries_data(data: List[TimeseriesData]) -> List[TimeseriesData]:
+    if not data:
+        return []
+
+    # Ensure data is sorted by date
+    data.sort(key=lambda x: x.p_date)
+
+    # Calculate the date range
+    min_date = data[0].p_date
+    max_date = data[-1].p_date
+    months_diff = (max_date.year - min_date.year) * 12 + max_date.month - min_date.month
+
+    if months_diff <= 3:
+        return data
+
+    # Group data by month and year, picking the last entry for each month
+    monthly_data = defaultdict(list)
+    for item in data:
+        month_year = item.p_date.strftime("%Y-%m")
+        monthly_data[month_year].append(item)
+
+    # Select the last entry for each month
+    response = [TimeseriesData(
+        marketplace_id=items[-1].marketplace_id,
+        p_date=items[-1].p_date,
+        user_count=items[-1].user_count,
+        avg_rating=items[-1].avg_rating,
+        rating_count=items[-1].rating_count
+    ) for _, items in monthly_data.items()]
+
+    return response
 
 
 # TODO(P0, ux): Also support multiple plugins for a company
@@ -187,13 +226,12 @@ def get_charts_plugins_timeseries(plugin_id: str):
 
         response.append(TimeseriesData(
             marketplace_id=item.google_id,
-            # TODO: We should return date object
-            p_date=item.p_date.strftime("%Y-%m-%d"),
+            p_date=item.p_date,
             user_count=item.user_count,
             avg_rating=maybe_decimal_to_float(item.rating),
             rating_count=item.rating_count,
         ))
-    return response
+    return post_process_timeseries_data(response)
 
 
 # @charts_router.get("/charts/plugins-biggest-jumpers", response_model=List[PluginsTopResponse]):

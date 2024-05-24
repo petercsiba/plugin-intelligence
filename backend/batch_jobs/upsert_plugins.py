@@ -45,7 +45,7 @@ and provided description is {chrome_extension.description}
 
 def upsert_chrome_extensions(p_date: str, force_update_gpt: bool = False):
     print("Upserting Chrome Extensions for p_date:", p_date, "force_update_gpt:", force_update_gpt)
-    # TODO(P0): Only update those plugins which are NOT already in the Plugin table
+    # TODO(P1, cost): Seems like this is a slow query taking ~50% of all DB cpu. Good for now.
     query = (
         ChromeExtension.select()
         .where(
@@ -206,7 +206,7 @@ if __name__ == "__main__":
         # upsert_google_workspace_add_ons(google_workspace_p_date)
         # print(openai_client.sum_up_prompt_stats().pretty_print())
 
-        chrome_extension_p_date = "2024-05-16"  # get_p_date(ChromeExtension)
+        chrome_extension_p_date = "2021-10-30"  # get_p_date(ChromeExtension)
         upsert_chrome_extensions(chrome_extension_p_date)
         print(openai_client.sum_up_prompt_stats().pretty_print())
 

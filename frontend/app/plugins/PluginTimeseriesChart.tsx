@@ -26,9 +26,13 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
     if (active && payload && payload.length) {
         const data: PluginTimeseriesData = payload[0].payload;
 
+        // Convert the Unix timestamp back to a date string
+        const date = new Date(data.p_date);
+        const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+
         return (
             <div className="custom-tooltip">
-                <strong>{`${data.p_date}`}</strong>
+                <strong>{formattedDate}</strong>
                 <ul>
                     <li>{`Downloads: ${formatNumber(data.user_count)}`}</li>
                     <li>{`Average Rating: ${formatNumber(data.avg_rating)}`}</li>
@@ -48,8 +52,9 @@ const formatDateTick = (tick: string, data: PluginTimeseriesData[]) => {
     const daysDiff = differenceInDays(lastDate, firstDate);
     const yearsDiff = differenceInYears(lastDate, firstDate);
 
+    // TODO(P2, ux): The chart overflows a bit on the right side, maybe we should add some padding to the right
     if (yearsDiff > 2) {
-        // More than a year; TODO(P3): Ideally quarters but ain't got time for that
+        // More than a year;
         return format(new Date(tick), 'yyyy/MM');
     } else if (daysDiff > 30) {
         // More than a month but less than a year
@@ -66,6 +71,7 @@ const PluginTimeseriesChart: React.FC<Props> = ({data}) => {
         ...item,
         avg_rating: item.avg_rating ?? null,
         rating_count: item.rating_count ?? null,
+        p_date: new Date(item.p_date).getTime(),
     }));
     console.log("formattedData", formattedData)
 
@@ -81,7 +87,6 @@ const PluginTimeseriesChart: React.FC<Props> = ({data}) => {
                 <XAxis
                     dataKey="p_date"
                     scale="time"
-                    type="number"
                     domain={['dataMin', 'dataMax']}
                     tickFormatter={(tick) => formatDateTick(tick, data)}
                 />
