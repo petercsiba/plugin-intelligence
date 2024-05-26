@@ -1,4 +1,6 @@
-# TODO(P0, quality): Get the full Chrome Extension list from Kaggle, and adjust daily scraper to use the DB too.
+# TODO(P0, quality): Get the full Chrome Extension from https://extpose.com/
+# These claim to have 312k extensions, that GitHub dataset has 100k, while through the API we can get like 10k :/
+#
 # TODO(P1, ops): At some point we will need to upscale the scraping beyond marketplaces, to the whole web.
 #   This is a project in itself, check out what this guy writes (also has a GPT web scraping article)
 #   https://medium.com/@macrodrigues/web-scraping-with-scrapy-and-splash-3d5666ba78ff
@@ -12,7 +14,6 @@ from urllib.parse import quote, urlparse
 import aiohttp
 import requests
 from bs4 import BeautifulSoup
-from peewee import fn
 from pydantic import BaseModel
 from supawee.client import connect_to_postgres
 
@@ -292,6 +293,7 @@ def parse_developer_info(soup: BeautifulSoup, chrome_extension: ChromeExtension)
 # TODO(P0, data): Make sure this works with historical versions of the plugin page
 # TODO(P1, reliability): Consume all exceptions and keep on running the job
 # TODO(P2, data completeness): There is also /reviews page (defaults to "newest :/" and /support page)
+#   -> Looks like these guys have all tof the reviews in the HTML, but we would need to scrape them all
 # NOTE: It might happen that `extension_html` is "This item is not available" page
 def process_extension_page_response(
     scrape_job: ScrapeChromeExtensionJob, extension_html: str,
@@ -393,7 +395,6 @@ def process_extension_page_response(
     # NOTE: yes this could benefit from asyncio,
     # but DB calls are usually way faster (3-10ms) than the HTTP GET (100-1000ms) to get here so it is fine.
     chrome_extension.save()
-    # TODO(P2, feature): Review text from chrome_extension.link + "/reviews (unfortunately it defaults to "newest" :/)
 
 
 # looks like bmnlcjabgnpnenekpadlanbbkooimhnj

@@ -1,86 +1,47 @@
-import csv
+import json
 import os
-import sys
+
+from dotenv import load_dotenv
+from peewee import fn
+from supawee.client import connect_to_postgres
 
 from batch_jobs.dataforseo_driver import (
-    ensure_slash_after_tld,
-    get_backlinks_bulk_backlinks_live,
+    get_backlinks_bulk_backlinks_count_live, get_result_items_safe,
+)
+from supabase.models.data import Plugin
+
+load_dotenv()
+YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
+    "YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL"
 )
 
-# TODO(P1, cloud migration): Migrate to using database tables
-# Check if two arguments are provided
-if len(sys.argv) != 3:
-    print("Usage: script.py input_csv_path output_csv_path")
-    sys.exit(1)
+# TODO(P1, cost): This is somewhat expensive operation.
+#   We should separate out the field updates and the OpenAI API calls.
+if __name__ == "__main__":
+    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+        plugins = list(Plugin.select(Plugin.marketplace_link).where(Plugin.user_count > 100).order_by(fn.COALESCE(Plugin.user_count, -1).desc()))
 
-# Assign the command line arguments to variables
-INPUT_CSV_PATH = sys.argv[1]
-OUTPUT_CSV_PATH = sys.argv[2]
-TEMP_FILE = "temp.csv"
+    links = [plugin.marketplace_link for plugin in plugins if plugin.marketplace_link]
+    print("Found links:", len(links))
 
-
-def get_backlinks_for(column_name: str, input_csv_path: str, output_csv_path: str):
-    # Read the CSV file
-    with open(input_csv_path, "r") as infile:
-        reader = csv.DictReader(infile)
-        rows = [row for row in reader]
-        links = [ensure_slash_after_tld(row[column_name]) for row in rows]
-
-    # Up to 1000 I believe, pricing is $0.02 + items * $0.00003 (so 1,000 items is $0.05)
     BATCH_SIZE = 1000
     # Batch links into groups of BATCH_SIZE and retrieve backlinks
     batched_links = [
-        links[i : i + BATCH_SIZE] for i in range(0, len(links), BATCH_SIZE)
+        links[i: i + BATCH_SIZE] for i in range(0, len(links), BATCH_SIZE)
     ]
     all_backlinks = {}
-    for batch in batched_links:
-        api_response = get_backlinks_bulk_backlinks_live(target_urls=batch)
-        # TODO(P2, devx): extraction of result items - make into a helper function
-        assert (
-            api_response.status_code == 20000
-        ), f"un-expected api response status code: {api_response.status_code}: {api_response.status_message}"
-        assert (
-            api_response.tasks_error == 0
-        ), f"tasks_error occurred: {api_response.tasks_error}"
-        assert (
-            api_response.tasks_count == 1
-        ), f"tasks_count should be 1 it is: {api_response.tasks_count}"
-        task = api_response.tasks[0]
-        assert task.status_code, (
-            20000
-            == f"un-expected task status code: {task.status_code}: {task.status_message}"
-        )
-        # here I am unsure why result_count seems to be 1 :/
-        result = task.result[0]
-        items_count = result.items_count
-        if items_count != len(batch):
-            print(f"un-expected task.result.items_count {items_count} vs {len(batch)}")
-            # print(batch_jobs)
-
-        backlinks = {item["target"]: item["backlinks"] for item in result.items}
+    filepath_prefix = f"batch_jobs/backlinks_data/backlinks-count-"
+    for i, batch in enumerate(batched_links):
+        # Up to 1000 I believe, pricing is $0.02 + items * $0.00003 (so 1,000 items is $0.05)
+        api_response = get_backlinks_bulk_backlinks_count_live(target_urls=batch)
+        items = get_result_items_safe(api_response, expected_items_count=len(batch))
+        backlinks = {item["target"]: item["backlinks"] for item in items}
         all_backlinks.update(backlinks)
 
-    # Write to the new CSV file with the 'backlinks' column added
-    with open(output_csv_path, "w", newline="") as outfile:
-        original_fieldnames = reader.fieldnames
-        link_index = original_fieldnames.index(column_name)
-        new_column_name = f"{column_name}_backlinks"
-        new_fieldnames = (
-            original_fieldnames[:link_index]
-            + [new_column_name]
-            + original_fieldnames[link_index:]
-        )
+        filepath_batch = filepath_prefix + f"batch-{i}.json"
+        with open(filepath_batch, "w") as f:
+            json.dump(items, f)
 
-        writer = csv.DictWriter(outfile, fieldnames=new_fieldnames)
-        writer.writeheader()
-        for row in rows:
-            link = ensure_slash_after_tld(row[column_name])
-            row[new_column_name] = all_backlinks.get(link, "0")
-            writer.writerow(row)
-
-
-if __name__ == "__main__":
-    get_backlinks_for("link", INPUT_CSV_PATH, TEMP_FILE)
-    get_backlinks_for("developer_link", TEMP_FILE, OUTPUT_CSV_PATH)
-    if os.path.exists(TEMP_FILE):
-        os.remove(TEMP_FILE)
+    with open(filepath_prefix + "all.json", "w") as f:
+        json.dump(all_backlinks, f)
+        # TODO(P0): Add it to our database

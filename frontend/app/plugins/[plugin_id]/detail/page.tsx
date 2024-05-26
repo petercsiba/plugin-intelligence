@@ -59,7 +59,7 @@ export default async function PluginDetailsPage({ params }: { params: { plugin_i
         ? `${formatCurrency(lower_bound)} - ${formatCurrency(upper_bound)}`
         : "N/A";
 
-
+    // TODO(P1, ux): For chrome extensions, link it to extpose.com; for WP link it to plugin-rank ,. ...
     return (
         <Container maxWidth="md">
             <Paper elevation={3} style={{ padding: "2em", marginTop: "2em" }}>

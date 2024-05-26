@@ -3,12 +3,17 @@
 
 import json
 import os
+import time
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urlparse, urlunparse
 
 import requests
 from dotenv import load_dotenv
+from peewee import fn
 from pydantic import BaseModel
+from supawee.client import connect_to_postgres
+
+from supabase.models.data import Plugin
 
 load_dotenv()
 TOKEN = os.environ.get("DATAFORSEO_API_TOKEN")  # base64 encoded "login:password"
@@ -109,6 +114,7 @@ def get_backlinks_summary_live(target_url: str) -> ApiResponse:
     return post_request("backlinks/summary/live", json_payload)
 
 
+# This feels superior to labs_competitors_domain
 def get_backlinks_competitors_live(
     target_url: str, min_rank: int = 10, limit: int = 25
 ) -> ApiResponse:
@@ -128,8 +134,8 @@ def get_backlinks_backlinks_live(target_url: str) -> ApiResponse:
     json_payload = [
         {
             "target": ensure_slash_after_tld(target_url),
-            "limit": 100,
-            "internal_list_limit": 10,
+            "limit": 1000,
+            # "internal_list_limit": 10,
             "offset": 0,
             "backlinks_status_type": "live",
             "include_subdomains": True,
@@ -139,7 +145,7 @@ def get_backlinks_backlinks_live(target_url: str) -> ApiResponse:
     return post_request("backlinks/backlinks/live", json_payload)
 
 
-def get_backlinks_bulk_backlinks_live(target_urls: list[str]) -> ApiResponse:
+def get_backlinks_bulk_backlinks_count_live(target_urls: list[str]) -> ApiResponse:
     print(f"get_backlinks_bulk_backlinks_live for {len(target_urls)} urls")
     json_payload = [{"targets": [ensure_slash_after_tld(url) for url in target_urls]}]
     return post_request("backlinks/bulk_backlinks/live", json_payload)
@@ -189,7 +195,85 @@ def labs_competitors_domain(target_url: str) -> ApiResponse:
     return post_request("dataforseo_labs/google/competitors_domain/live", json_payload)
 
 
+def get_result_items_safe(api_response: ApiResponse, expected_items_count: Optional[int] = None) -> list[dict]:
+    # TODO(P2, devx): extraction of result items - make into a helper function
+    assert (
+            api_response.status_code == 20000
+    ), f"un-expected api response status code: {api_response.status_code}: {api_response.status_message}"
+    assert (
+            api_response.tasks_error == 0
+    ), f"tasks_error occurred: {api_response.tasks_error}"
+    assert (
+            api_response.tasks_count == 1
+    ), f"tasks_count should be 1 it is: {api_response.tasks_count}"
+    task = api_response.tasks[0]
+    assert task.status_code, (
+            20000
+            == f"un-expected task status code: {task.status_code}: {task.status_message}"
+    )
+    # here I am unsure why result_count seems to always be 1 :/
+    result = task.result[0]
+    items_count = result.items_count
+    if expected_items_count and items_count != expected_items_count:
+        print(f"un-expected task.result.items_count {items_count} vs expected_items_count")
+        # print(batch_jobs)
+
+    return result.items
+
+
+load_dotenv()
+YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
+    "YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL"
+)
+
+
+# TODO(P1, cost): This is somewhat expensive operation.
+#   We should separate out the field updates and the OpenAI API calls.
 if __name__ == "__main__":
+    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+        plugins = list(Plugin.select().where(Plugin.user_count > 1000).order_by(fn.COALESCE(Plugin.user_count, -1).desc()))
+        print("Found plugins:", len(plugins))
+
+    all_backlinks_count = json.load(open("batch_jobs/backlinks_data/backlinks-count-all.json"))
+    assert isinstance(all_backlinks_count, dict) and len(all_backlinks_count.keys()) > 1000
+
+    for i, plugin in enumerate(plugins):
+        print(int(time.time()), i+1, plugin.name, plugin.marketplace_id, plugin.marketplace_link, plugin.developer_link, plugin.user_count)
+        filepath_prefix = f"batch_jobs/backlinks_data/{plugin.marketplace_id}--"
+        filepath_backlinks = filepath_prefix + "backlinks.json"
+        filepath_competitors = filepath_prefix + "competitors.json"
+
+        popular_enough = all_backlinks_count.get(plugin.marketplace_link, 0) > 20
+        backlinks_items = None
+        if popular_enough and plugin.marketplace_link:
+            if not os.path.exists(filepath_backlinks):
+                print("get_backlinks_backlinks_live for ", plugin.marketplace_link)
+                backlinks_response = get_backlinks_backlinks_live(plugin.marketplace_link)
+                backlinks_items = get_result_items_safe(backlinks_response)
+                with open(filepath_backlinks, "w") as f:
+                    json.dump(backlinks_items, f)
+            # print(backlinks_items)
+            else:
+                backlinks_items = json.load(open(filepath_backlinks))
+
+        enough_backlinks = backlinks_items and len(backlinks_items) > 50
+        # About 20% of total* would get 0 competitors so sparing money here. *(not counting missing)
+        # Therefore we only get competitors if there are enough backlinks
+        if enough_backlinks and plugin.developer_link and not os.path.exists(filepath_competitors):
+            developer_domain = urlparse(plugin.developer_link).netloc
+            print("get_backlinks_competitors_live for ", developer_domain)
+            # NOTE: For lower ranks (below like 20ish) the competitors are not very useful
+            # BUT since most of the cost comes from the API call we just do it anyway lol
+            competitors_response = get_backlinks_competitors_live(developer_domain, min_rank=5, limit=100)
+            competitors_items = get_result_items_safe(competitors_response)
+            with open(filepath_competitors, "w") as f:
+                json.dump(competitors_items, f)
+            print("Competitors count:", len(competitors_items) if competitors_items else "NO RESULTS")
+
+        # TODO(P1, ux): Actually add it to the site / dataset (GPT summarize?)
+
+
+# if __name__ == "__main__":
     # The backlinks API seems to work better than the labs one
-    print(get_backlinks_competitors_live("https://mailmeteor.com/"))
+    # print(get_backlinks_competitors_live("https://mailmeteor.com/"))
     # print(labs_competitors_domain("mailmeteor.com") or "No results")
