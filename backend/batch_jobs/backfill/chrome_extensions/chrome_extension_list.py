@@ -1,7 +1,9 @@
 import json
 import os
 import random
+import re
 import string
+import time
 from datetime import datetime
 from glob import glob
 from typing import Any, Dict
@@ -22,6 +24,10 @@ def remove_single_line_comments(json_str: str):
     for line in json_str.splitlines():
         # '  // "background_page": "background.html",
         if line.strip().startswith("//"):
+            continue
+        # We need to be careful with /* */ "comments", cause the file contains stuff like
+        #  "matches": [ "http://*/*", "https://*/*"]
+        if line.strip().startswith("/*"):
             continue
 
         clean_lines.append(line)
@@ -80,11 +86,18 @@ def backfil_chrome_extension_manifests_dataset(base_path: str = "/Users/petercsi
             continue
 
         filepaths = glob(os.path.join(dir_path, '*.json'))
+        start_time = time.time()
+        start_i = 9099
+        comparison_date = datetime.strptime("2022-08-08", "%Y-%m-%d").date()
+        p_date_date = datetime.strptime(p_date, "%Y-%m-%d").date()
         for i, file_path in enumerate(filepaths):
-            if p_date == "2024-04-13" and i < 46799:
+            if p_date_date > comparison_date:
+                continue
+            if p_date_date == comparison_date and i < start_i:
                 continue
             if (i + 1) % 100 == 0:
-                print(f"Processing file {i}/{len(filepaths)}")
+                print(f"Processing file {i}/{len(filepaths)}, time elapsed: {time.time() - start_time:.2f}s,")
+                print(f"  time per file: {(time.time() - start_time) / (i + 1 - start_i):.2f}s")
 
             google_id = os.path.basename(file_path).split('.')[0]
 
