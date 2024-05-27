@@ -152,7 +152,7 @@ const ArpuBubbleChartComponent: React.FC<ArpuBubbleChartComponentProps> = ({ mar
 
               return (
                   // @ts-ignore - payload is possibly undefined
-                    <NextLink href={`/plugins/${payload.id}`} passHref>
+                    <NextLink href={`/plugins/${payload.id}/detail`} passHref>
                     <circle
                       cx={props.cx}
                       cy={props.cy}

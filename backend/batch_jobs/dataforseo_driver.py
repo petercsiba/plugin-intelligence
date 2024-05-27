@@ -243,7 +243,7 @@ if __name__ == "__main__":
         filepath_backlinks = filepath_prefix + "backlinks.json"
         filepath_competitors = filepath_prefix + "competitors.json"
 
-        popular_enough = all_backlinks_count.get(plugin.marketplace_link, 0) > 20
+        popular_enough = all_backlinks_count.get(plugin.marketplace_link, 0) > 10
         backlinks_items = None
         if popular_enough and plugin.marketplace_link:
             if not os.path.exists(filepath_backlinks):
@@ -256,7 +256,7 @@ if __name__ == "__main__":
             else:
                 backlinks_items = json.load(open(filepath_backlinks))
 
-        enough_backlinks = backlinks_items and len(backlinks_items) > 50
+        enough_backlinks = backlinks_items and len(backlinks_items) > 30
         # About 20% of total* would get 0 competitors so sparing money here. *(not counting missing)
         # Therefore we only get competitors if there are enough backlinks
         if enough_backlinks and plugin.developer_link and not os.path.exists(filepath_competitors):
