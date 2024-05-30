@@ -1,14 +1,18 @@
+import argparse
+import os
 import re
 from typing import List, Optional, Tuple
 
+from dotenv import load_dotenv
 from openai import OpenAI
 from openai.types.beta.threads import Message, TextContentBlock
 from openai.types.beta.threads.run import Usage
+from peewee import fn
+from supawee.client import connect_to_postgres
 
 from common.config import OPEN_AI_API_KEY
 from common.utils import Timer
-from supabase.models.data import Plugin
-
+from supabase.models.data import Plugin, MarketplaceName
 
 # TODO(P1, devx): Add assistant support OR migrate to ChatCompletion API
 direct_openai_client = OpenAI(api_key=OPEN_AI_API_KEY)
@@ -63,8 +67,10 @@ def plugin_to_prompt(plugin: Plugin) -> str:
     return f"""
     Plugin name {plugin.name} by {plugin.developer_name}
     has an average rating of {plugin.avg_rating} with {plugin.rating_count} total ratings.
-    It has {plugin.user_count} downloads over time, this can be much higher than actual active users.
-    You can find it by searching {plugin.tags} on the Google Workspace Marketplace.
+    It has {plugin.user_count} downloads over time by individuals, which can be much higher than actual active individual users.
+    Plugin operates withing {plugin.tags} spaces on the Google Workspace Marketplace
+    and integrates with {plugin.main_integrations}.
+
     It has these pricing tiers {plugin.pricing_tiers}.
     The overview summary is {plugin.overview_summary}.
     """
@@ -122,8 +128,8 @@ def extract_bounds(text: Optional[str]) -> Tuple[int, int]:
         return int(int_str.replace(",", ""))
 
     # Initialize variables to hold the bounds
-    lower_bound = 0
-    upper_bound = 0
+    lower_bound = -1
+    upper_bound = -1
 
     # Process the matches and assign to appropriate variables
     for role, amount in matches:
@@ -134,8 +140,15 @@ def extract_bounds(text: Optional[str]) -> Tuple[int, int]:
         elif role.lower() == "upper":
             upper_bound = max(lower_bound, clean_amount(amount))
 
-    if lower_bound == 0 or upper_bound == 0:
-        print("ERROR: Could not find both lower and upper bounds.")
+    if lower_bound < 0:
+        print("ERROR: Could not find lower bound")
+        lower_bound = 0
+    if upper_bound < 0:
+        print("ERROR: Could not find upper bound")
+        upper_bound = 0
+    if upper_bound < lower_bound or upper_bound == 0:
+        print("WARNING: Upper bound is less than lower bound.")
+        upper_bound = lower_bound
 
     return lower_bound, upper_bound
 
@@ -165,3 +178,34 @@ def gpt_generate_revenue_estimate_for_plugin(plugin: Plugin, force_update=False)
     plugin.save()
 
     print(f"Saved revenue analysis for plugin {plugin.id} with bounds {lower_bound} - {upper_bound}")
+
+
+load_dotenv()
+YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
+    "YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL"
+)
+
+
+def main():
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Process plugins based on shard and optionally overwrite p_date.')
+    parser.add_argument('--shard_id', type=int, required=True, help='ID of the shard to process')
+    parser.add_argument('--shard_count', type=int, required=True, help='Total number of shards')
+    args = parser.parse_args()
+
+    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+        query = (Plugin
+                 .select()
+                 .where(
+            (Plugin.revenue_analysis.is_null()) &
+            (Plugin.marketplace_name == MarketplaceName.CHROME_EXTENSION) &
+            (fn.MOD(Plugin.id, args.shard_count) == args.shard_id)
+        )
+                 .order_by(fn.COALESCE(Plugin.user_count, 0).desc()))
+        for p in query:
+            print(f"Shard {args.shard_id} / {args.shard_count} is processing plugin {p.name} ...")
+            gpt_generate_revenue_estimate_for_plugin(p)
+
+
+if __name__ == "__main__":
+    main()

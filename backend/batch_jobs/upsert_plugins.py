@@ -2,7 +2,7 @@ import argparse
 import os
 
 from dotenv import load_dotenv
-from gpt_form_filler.openai_client import OpenAiClient
+from gpt_form_filler.openai_client import OpenAiClient, BETTER_MODEL
 from peewee import fn
 from supawee.client import connect_to_postgres
 
@@ -90,7 +90,11 @@ def upsert_chrome_extensions(p_date: str, force_update_gpt: bool = False):
         if plugin.user_count > 1000:
             if plugin.overview_summary is None or force_update_gpt:
                 extra_prompt_header = chrome_extension_to_prompt_header(chrome_extension)
-                form_data = gpt_fill_in_plugin_intel_form(openai_client=openai_client, overview=chrome_extension.overview, extra_prompt_header=extra_prompt_header)
+                form_data = gpt_fill_in_plugin_intel_form(
+                    openai_client=openai_client,
+                    overview=chrome_extension.overview,
+                    extra_prompt_header=extra_prompt_header
+                )
                 fill_in_plugin_with_form_data(plugin, form_data)
         else:
             print(f"Plugin id: {plugin.id} skipped Plugin Intel Form (has {chrome_extension.user_count} users)")
@@ -200,19 +204,15 @@ args = parser.parse_args()
 # TODO(P1, cost): This is somewhat expensive operation.
 #   We should separate out the field updates and the OpenAI API calls.
 if __name__ == "__main__":
-    with connect_to_postgres(POSTGRES_DATABASE_URL):
-    # with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
+    #with connect_to_postgres(POSTGRES_DATABASE_URL):
+    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
         # google_workspace_p_date = get_p_date(BaseGoogleWorkspace)
         # upsert_google_workspace_add_ons(google_workspace_p_date)
         # print(openai_client.sum_up_prompt_stats().pretty_print())
 
-        chrome_extension_p_date = "2021-10-30"  # get_p_date(ChromeExtension)
+        chrome_extension_p_date = "2024-05-29"  # get_p_date(ChromeExtension)
         upsert_chrome_extensions(chrome_extension_p_date)
         print(openai_client.sum_up_prompt_stats().pretty_print())
 
-        # # TODO(P0, ux): We should differentiate between Marketplaces
-        # TODO: Maybe wait with this until we have more data
-        # for popular_plugin in Plugin.select().where(Plugin.user_count > 1000000):
-        #     gpt_generate_revenue_estimate_for_plugin(popular_plugin)
 
 

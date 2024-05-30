@@ -149,7 +149,8 @@ def backfil_chrome_extension_manifests_dataset(base_path: str = "/Users/petercsi
     print("All keys:", all_keys)
 
 
-# For Chrome Extensions
+# This list is generated from https://github.com/palant/chrome-extension-manifests-dataset
+#
 async def backfill_chrome_extensions_list():
     batch_job_p_date = datetime.today().strftime("%Y-%m-%d")
 
