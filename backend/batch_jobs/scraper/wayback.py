@@ -1,3 +1,4 @@
+import re
 import time
 from datetime import datetime, timedelta
 from typing import List, Optional
@@ -48,10 +49,17 @@ def requests_get_with_retry(
 
 
 # This can take quite some time to fetch all snapshots
-def _fetch_all_snapshots(target_url) -> List[WaybackSnapshot]:
+# Wildcards: If url is ends in '/*', eg url=archive.org/* the query is equivalent to url=archive.org/&matchType=prefix
+def _fetch_all_snapshots(target_url, url_filter: Optional[str] = None) -> List[WaybackSnapshot]:
     # The base URL for the CDX Server API
     cdx_url = "https://web.archive.org/cdx/search/cdx"
-    params = {"url": target_url, "output": "json", "fl": "timestamp,original"}
+    # collapse=digest is used to group together all the snapshots of a URL where the hash digest is the same
+    params = {"url": target_url, "output": "json", "fl": "timestamp,original", "collapse": "digest"}
+    # TODO(P1, devx): This filter doesn't seem to fully work?!
+    #   I couldn't figure out how to omit stuff after ? in the URL:
+    #   https://workspace.google.com/marketplace/app/%C2%B5funds/274036499952?pann=cwsdp&hl=en-US
+    if url_filter:
+        params["filter"] = f"original:{url_filter}"
 
     print(f"Wayback: Fetching all snapshots for params {params}")
     with Timer("Wayback: Fetching all snapshots"):
@@ -68,9 +76,39 @@ def _fetch_all_snapshots(target_url) -> List[WaybackSnapshot]:
             return []
 
 
+def wayback_get_all_distinct_wildcard_urls(target_wildcard_url: str, url_filter: str) -> List[WaybackSnapshot]:
+    all_snapshots = _fetch_all_snapshots(target_wildcard_url, url_filter=url_filter)
+    latest_snapshots = {}
+
+    pattern = re.compile(url_filter)  # Compile the regex pattern from url_filter
+
+    for snapshot in all_snapshots:
+        # # Filter URLs based on the regex pattern
+        # if not pattern.match(snapshot.url):
+        #     filtered_out += 1
+        #     continue
+
+        # If the URL is new or the found timestamp is more recent, update the dictionary
+        if snapshot.url not in latest_snapshots or snapshot.timestamp > latest_snapshots[snapshot.url].timestamp:
+            latest_snapshots[snapshot.url] = snapshot
+
+    distinct_snapshots = list(latest_snapshots.values())
+    print(
+        f"Wayback: Returning {len(distinct_snapshots)} distinct snapshots (out of {len(all_snapshots)}) "
+        f"for {target_wildcard_url}."
+    )
+    return distinct_snapshots
+
+
+# TODO(P0, devx): We can use it to quickly get list of all sub-pages to scrape using the wildcard parameter
+#  (potential limit of 10,000)
+#  ?url=*.g.akamai.net/*&fl=original,length,timestamp&collapse=digest&filter=original:.*\.hqx
+#  https://www.reddit.com/r/WaybackMachine/comments/10wjate/subdomain_wildcard_search/
 def wayback_get_all_snapshot_urls(
     target_url: str, day_step: int = 1
 ) -> List[WaybackSnapshot]:
+    # NOTE: day_step might be achieved easier by collapse:timestamp, e.g.:
+    # http://web.archive.org/cdx/search/cdx?url=google.com&collapse=timestamp:10
     if day_step < 1:
         raise ValueError(f"day_step must be at least 1, {day_step} given.")
 
@@ -144,10 +182,15 @@ def main():
     # )
     # print(f"Closest snapshot url {closest_snapshot.wayback_url()}")
 
-    test_url_all = (
-        "https://apps.google.com/marketplace/app/pipdgoflicmpcfocpejndfeegjmeokfh"
+    # test_url_all = (
+    #     "https://apps.google.com/marketplace/app/pipdgoflicmpcfocpejndfeegjmeokfh"
+    # )
+    # snapshots = wayback_get_all_snapshot_urls(test_url_all, day_step=30)
+
+    snapshots = wayback_get_all_distinct_wildcard_urls(
+        "https://chromewebstore.google.com/detail/*",
+        url_filter=r"https://chromewebstore.google.com/detail/[^?#]+$",
     )
-    snapshots = wayback_get_all_snapshot_urls(test_url_all, day_step=30)
     for snapshot in snapshots:
         print(f"Snapshot URL: {snapshot.wayback_url()}")
 

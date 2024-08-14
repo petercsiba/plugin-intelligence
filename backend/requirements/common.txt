@@ -4,3 +4,4 @@ python-dotenv
 python-slugify
 pytz
 git+https://github.com/petercsiba/supawee
+pyyaml

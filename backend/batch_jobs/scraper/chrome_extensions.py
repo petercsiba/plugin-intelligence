@@ -209,7 +209,12 @@ async def async_research_extension_more(
             print(f"marketplace_link updated to {response_url}")
             scrape_job.marketplace_link = response_url
 
-        process_extension_page_response(scrape_job, response_text)
+        try:
+            process_extension_page_response(scrape_job, response_text)
+        # Usually happens for "NoneType" object has no attribute 'something-something'
+        except AttributeError as e:
+            print(f"ERROR: cannot process data from url {scrape_job.url} due to {e}")
+        # TODO(P2, sre): We might want to also catch other exceptions and log them, add them to test cases
 
 
 def parse_listing_updated(soup: BeautifulSoup, chrome_extension: ChromeExtension):

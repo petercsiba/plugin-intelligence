@@ -6,7 +6,7 @@ from peewee import DoesNotExist, Query, fn
 from pydantic import BaseModel
 
 from api.config import MAX_LIMIT
-from api.utils import prompt_output_to_html, parse_fuzzy_list, rating_in_bounds
+from api.utils import prompt_output_to_html, parse_fuzzy_list, rating_in_bounds, get_formatted_sql
 from supabase.models.base import BasePlugin
 from supabase.models.data import Plugin, MarketplaceName
 
@@ -126,8 +126,10 @@ class PluginDetailsResponse(BaseModel):
 @plugins_router.get("/plugins/{plugin_id}/details", response_model=PluginDetailsResponse)
 async def get_plugin_details(plugin_id: int):
     try:
-        # Step 1: Retrieve revenue estimates
-        plugin: BasePlugin = BasePlugin.get_by_id(plugin_id)
+        print("GET /plugins/{plugin_id}/details, plugin_id:", plugin_id)
+        query = BasePlugin.select().where(BasePlugin.id == plugin_id)
+        get_formatted_sql(query)
+        plugin = query.get()
 
         # Step 2: Fill in the common fields from the revenue estimate model
         response = PluginDetailsResponse(
@@ -173,3 +175,6 @@ async def get_plugin_details(plugin_id: int):
 
     except DoesNotExist:
         raise HTTPException(status_code=404, detail=f"Plugin with ID {plugin_id} not found.")
+    except Exception as e:
+        print("Error while fetching plugin details:", e)
+        raise HTTPException(status_code=500, detail=str(e))

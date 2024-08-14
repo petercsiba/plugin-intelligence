@@ -27,7 +27,7 @@ from supabase.models.data import GoogleWorkspace, ChromeExtension
 MIN_BATCH = 100
 # TODO(P1, completenesse): Did first run with day_steps=1, BUT unsure if there is too much value in that
 #   this really only affects the most popular ones
-WAYBACK_DAY_STEPS = 30
+WAYBACK_DAY_STEPS = 90
 
 
 def google_workspace_previous_domains() -> List[str]:
@@ -126,13 +126,26 @@ def backfill_google_workspace():
         )
 
 
-def backfill_chrome_extension_with_wayback(shard_prefix: str):
+def backfill_chrome_extension_with_wayback():
+    print("Getting distinct chrome extension links which we didn't scrape with Wayback yet ...")
+
+    # Subquery to filter out google_ids with any source_url containing 'wayback'
+    exclusion_subquery = (
+        BaseChromeExtension
+        .select(BaseChromeExtension.google_id)
+        .where(BaseChromeExtension.source_url.contains('web.archive.org'))
+        .distinct()
+    )
+
     # Subquery to get the most recent link for each google_id
     subquery = (
         BaseChromeExtension
         .select(
             BaseChromeExtension.google_id,
             fn.MAX(BaseChromeExtension.p_date).alias('max_p_date')
+        )
+        .where(
+            BaseChromeExtension.google_id.not_in(exclusion_subquery)
         )
         .group_by(BaseChromeExtension.google_id)
     )
@@ -152,7 +165,7 @@ def backfill_chrome_extension_with_wayback(shard_prefix: str):
                     (BaseChromeExtension.p_date == subquery.c.max_p_date)
             )
         )
-        .where(BaseChromeExtension.link.is_null(False) & BaseChromeExtension.google_id.startswith(shard_prefix))
+        .where(BaseChromeExtension.link.is_null(False))
         .order_by(fn.COALESCE(BaseChromeExtension.user_count, 0).desc())
     )
 
@@ -197,9 +210,7 @@ def backfill_chrome_extension_with_wayback(shard_prefix: str):
                 print(f"WARNING: cannot get contents of {scrape_job.url}")
 
         avg_per_minute = 60 * total_scraped / (time.time() - scraping_start)
-        print(
-            f"Shard={shard_prefix}: Total scraped so far: {total_scraped}; on average {avg_per_minute} per minute"
-        )
+        print(f"Total scraped so far: {total_scraped}; on average {avg_per_minute} per minute")
 
 
 load_dotenv()
@@ -210,5 +221,5 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
 
 if __name__ == "__main__":
     with connect_to_postgres(POSTGRES_DATABASE_URL):
-        backfill_google_workspace()
-        backfill_chrome_extension_with_wayback("")
+        # backfill_google_workspace()
+        backfill_chrome_extension_with_wayback()

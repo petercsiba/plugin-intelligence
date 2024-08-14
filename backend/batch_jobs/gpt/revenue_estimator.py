@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+import time
 from typing import List, Optional, Tuple
 
 from dotenv import load_dotenv
@@ -47,13 +48,16 @@ def chatgpt_cost_estimate_millionth_dollar(model, input_tok, output_tok):
 
 
 # Function to concatenate messages from the assistant until a user message is found
-def concatenate_assistant_messages(messages: List[Message]) -> str:
+def concatenate_assistant_messages(messages: List[Message], created_at_lower_bound: int) -> str:
     concatenated_text = []
     for message in messages:
         if message.role == "assistant":
             for content_block in message.content:
                 if isinstance(content_block, TextContentBlock):
-                    concatenated_text.append(content_block.text.value)
+                    if message.created_at > created_at_lower_bound:
+                        concatenated_text.append(content_block.text.value)
+                    else:
+                        print(f"Skipping old message created_at {message.created_at}")
                 else:
                     print(
                         f"Skipping non-text content block of type {type(content_block)}"
@@ -63,51 +67,79 @@ def concatenate_assistant_messages(messages: List[Message]) -> str:
     return "\n\n".join(reversed(concatenated_text))
 
 
+#  ["'Translation'", "'Language'", "'Browser Extension'"]
+def clean_str_list(str_list: Optional[str]) -> Optional[str]:
+    if str_list is None:
+        return None
+    return str_list.replace("[", "").replace("]", "").replace("'", "").replace('"', "")
+
+
 def plugin_to_prompt(plugin: Plugin) -> str:
     return f"""
     Plugin name {plugin.name} by {plugin.developer_name}
     has an average rating of {plugin.avg_rating} with {plugin.rating_count} total ratings.
     It has {plugin.user_count} downloads over time by individuals, which can be much higher than actual active individual users.
-    Plugin operates withing {plugin.tags} spaces on the Google Workspace Marketplace
-    and integrates with {plugin.main_integrations}.
+    Plugin operates withing {clean_str_list(plugin.tags)} spaces in the plugin ecosystem
+    and integrates with {clean_str_list(plugin.main_integrations)}.
 
-    It has these pricing tiers {plugin.pricing_tiers}.
+    It has these pricing tiers {clean_str_list(plugin.pricing_tiers)}.
     The overview summary is {plugin.overview_summary}.
     """
     # TODO(P2, quality): We should add some timeline and backlinks data.
 
 
 def generate_revenue_estimate(plugin: Plugin,) -> Tuple[Optional[str], Optional[str]]:
+    # Subtracting 10 seconds to account for any clock skew
+    created_at_lower_bound = int(time.time()) - 10
     # https://platform.openai.com/assistants/asst_1wT0hJmnfnlm8f3kLfHJyVqx
     assistant = direct_openai_client.beta.assistants.retrieve("asst_1wT0hJmnfnlm8f3kLfHJyVqx")
 
     # Create a thread with messages:
-    thread = direct_openai_client.beta.threads.create(
+    # if plugin.openai_thread_id is None:
+    extra_prompt = ""
+    existing_lower_bound = plugin.revenue_lower_bound if plugin.revenue_lower_bound else 0
+    existing_upper_bound = plugin.revenue_upper_bound if plugin.revenue_upper_bound else 0
+    if max(existing_lower_bound, existing_upper_bound) > 2 * plugin.user_count:
+        extra_prompt = (
+            # "Lets redo the revenue estimate as it feels off or outdated."
+            f"An upper bound revenue estimate over ${2 * plugin.user_count} is very very unlikely. "
+            # "If you get such a high estimate, lower your active or "
+            # f"paid user assumptions based off the {plugin.user_count} "
+            # "installs which might have many abandoned installs or free users. "
+        )
+    prompt = plugin_to_prompt(plugin) + extra_prompt
+    print("Prompt:", prompt)
+
+    new_thread = direct_openai_client.beta.threads.create(
         messages=[
             {
                 "role": "user",
-                "content": plugin_to_prompt(plugin),
+                "content": prompt,
             }
         ]
     )
+    thread_id = new_thread.id
+    #    extra_prompt = ""
+    # else:
+    #    thread_id = plugin.openai_thread_id
 
     # Create a run
-    print(f"creating run for thread {thread.id} and assistant {assistant.id}")
+    print(f"creating run for thread {thread_id} and assistant {assistant.id}")
     with Timer("Assistant Run"):
         run = direct_openai_client.beta.threads.runs.create_and_poll(
-            thread_id=thread.id,
+            thread_id=thread_id,
             assistant_id=assistant.id,
         )
     chatgpt_usage_pretty_print(run.model, run.usage)
 
     # If the run is completed, print the messages
     if run.status == "completed":
-        messages = direct_openai_client.beta.threads.messages.list(thread_id=thread.id)
-        response_text = concatenate_assistant_messages(messages)
-        return response_text, thread.id
+        messages = direct_openai_client.beta.threads.messages.list(thread_id=thread_id)
+        response_text = concatenate_assistant_messages(messages, created_at_lower_bound)
+        return response_text, thread_id
 
     print(f"WARNING: status of run is NOT completed: {run.status}")
-    return None, thread.id
+    return None, thread_id
 
 
 # Fuzzy matching to extract lower and upper bounds from generate_revenue_estimate output
@@ -194,17 +226,24 @@ def main():
     args = parser.parse_args()
 
     with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
-        query = (Plugin
+        # query_set_unknown = (Plugin
+        #          .select()
+        #          .where(
+        #     (Plugin.revenue_analysis.is_null()) &
+        #     (Plugin.marketplace_name == MarketplaceName.CHROME_EXTENSION) &
+        #     (fn.MOD(Plugin.id, args.shard_count) == args.shard_id)
+        # ))
+        query_update_wrong = (Plugin
                  .select()
                  .where(
-            (Plugin.revenue_analysis.is_null()) &
-            (Plugin.marketplace_name == MarketplaceName.CHROME_EXTENSION) &
+            (Plugin.revenue_analysis.is_null(False)) &
+            ((Plugin.revenue_lower_bound > 2 * Plugin.user_count) | (Plugin.revenue_upper_bound > 2 * Plugin.user_count) | (Plugin.revenue_upper_bound == 0)) &
             (fn.MOD(Plugin.id, args.shard_count) == args.shard_id)
         )
                  .order_by(fn.COALESCE(Plugin.user_count, 0).desc()))
-        for p in query:
-            print(f"Shard {args.shard_id} / {args.shard_count} is processing plugin {p.name} ...")
-            gpt_generate_revenue_estimate_for_plugin(p)
+        for p in query_update_wrong:
+            print(f"Shard {args.shard_id} / {args.shard_count} is processing plugin id {p.id}: {p.name} ...")
+            gpt_generate_revenue_estimate_for_plugin(p, force_update=True)
 
 
 if __name__ == "__main__":

@@ -178,8 +178,8 @@ YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL = os.environ.get(
 
 
 if __name__ == "__main__":
-    with connect_to_postgres(YES_I_AM_CONNECTING_TO_PROD_DATABASE_URL):
-        backfil_chrome_extension_manifests_dataset()
+    with connect_to_postgres(POSTGRES_DATABASE_URL):
+        # backfil_chrome_extension_manifests_dataset()
         # asyncio.run(backfill_chrome_extensions_list())
         # shard_prefix = generate_random_shard_prefix()
-        # backfill_chrome_extension_with_wayback(shard_prefix=shard_prefix)
+        backfill_chrome_extension_with_wayback()

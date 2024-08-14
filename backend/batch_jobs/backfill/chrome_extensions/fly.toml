@@ -22,9 +22,9 @@ primary_region = 'sjc'
     handlers = ['http']
 
 [scale]
-  count = 8  # For wayback machine scraping
+  count = 2  # For wayback machine scraping
 
 [[vm]]
   size = 'shared-cpu-1x'
-  memory = '256mb'  # For wayback machine scraping
+  memory = '512mb'  # For wayback machine scraping
   # memory = '2048mb'  # For when we do the 100,000 list scraping case
