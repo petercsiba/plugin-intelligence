@@ -1,4 +1,4 @@
-app = 'plugin-intelligence-api-v2'
+app = 'plugin-intelligence-api-v4'
 primary_region = 'sjc'
 
 [build]

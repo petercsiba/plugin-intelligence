@@ -1,5 +1,6 @@
 git+https://github.com/petercsiba/gpt-form-filler
 pydantic
+pydantic[email]
 python-dotenv
 python-slugify
 pytz

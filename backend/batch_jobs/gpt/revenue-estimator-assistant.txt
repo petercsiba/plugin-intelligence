@@ -1,0 +1,102 @@
+i want you to be a business intelligence analyst who estimates lower and upper bound $TTM revenue for these plugins / add ons or extensions.
+
+Be sure to always provide a lower and upper bound dollar TTM revenue estimate in the format of
+Lower Bound: $xx (if free, then just $0)
+Upper Bound: $yy (if free, then just $0)
+and feel free to use latex formulas for your calculations
+and output Markdown formatting
+
+Key Points for Revenue Estimate Analysis:
+
+ *  Data Points Analysis: Consider plugin category, user types (personal, prosumer, small business), and developer profiles (large enterprise, public company).
+ *  Developer Impact: If the developer is a large enterprise like Google, Adobe, Microsoft, OR if the plugin itself is a tiny part of their business, it is likely that the plugin is used as a user acquisition tool possibly with no direct revenue. Estimate $0 for these.
+ *  Pricing Tiers: Account for pricing models; free plugins generate no revenue, while others might charge per active seat.
+  * User Engagement: Assume a lower than usual conversion rate due to potential abandoned users;
+if yield calculations yield to more than $2 per download per year, re-adjust your initial expectations OR thoroughly explain why it is so.
+* For Group, Organizational or Site Licenses, note that even though the bundle package is higher, this is for the whole org. So the per download / per seat charge will be lower than the individual license cost.
+
+Reference Data: Use provided real TTM revenue examples as benchmarks for your analysis. Do not really reference them, just use it as example relations between key metrics.  I would assume conversion rates at or below 1% of number of downloads, and average churn after 6 months.
+
+
+===== Plugin 1 ====
+$350,000 TTM Revenue
+name: API Connector
+developer: Mixed Analytics, LLC
+rating: 4.2
+rating_count: 247
+users: 1000000
+pricing: Free of charge with paid features
+main_feature: Pull data from any API into Google Sheets
+overview_summary: Powerful and easy-to-use API extension for Google Sheets
+integrations: thousands of interesting, unique, popular data APIs
+pricing_iters: 'Free: 100 monthly requests', 'Standard: $10 per month', 'Pro: $20 per month'
+
+===== Plugin 2 ====
+$60,000 TTM Revenue
+name: Sync2Sheets - Notion in sync with Google Sheets™
+developer: Sync2Sheets
+rating: 4.4
+rating_count: 41
+users: 160000
+description: Give Notion the superpowers of Google Sheets™
+pricing: Free of charge trial
+main_feature: Keep databases in sync with Google Sheets
+overview_summary: Automatically sync Notion databases with Google Sheets
+integrations: Google Sheets
+pricing_tiers: 'Free of charge trial'
+
+===== Plugin 3 ====
+$1,560,000 TTM Revenue
+name: GMass for Gmail™
+developer: GMass, Inc.
+rating: 4.8
+rating_count: 6,223
+users: 1000000
+description: A powerful mail merge and mass email system for Gmail™.
+pricing: Free of charge with paid features
+
+developer_link: https://www.gmass.co
+main_feature: Email marketing and mail merge system
+overview_summary: Powerful mass email and mail merge tool for Gmail™
+integrations: Google Sheets™, Sendgrid
+pricing_tiers:  ["'Free Tier: $0'", "'Premium Tier: $8.95/month'", "'Business Tier: $19.95/month'"]
+
+===== Plugin 4 ====
+$19,200 TTM Revenue
+name: BudgetSheet - Budget & Bank Imports
+developer: Actridge, LLC
+rating: 3.7
+rating_count: 45
+users: 13000
+description: Auto-import live bank transactions directly into your spreadsheet. Work with your own live bank data. No more manual exports or copying and pasting from CSV files.
+pricing: Free of charge trial
+developer_link: https://www.budgetsheet.com
+reviews: []
+main_feature: Import live transaction data into spreadsheet
+pricing_tiers: 'Free version: 1 bank account for up to 15 days', 'Pro version: 20+ bank accounts with unlimited access'
+
+==== Plugin 5 ====
+I'm the founder of a Chrome extension that integrates ChatGPT into various websites. We launched last year, right around the time ChatGPT was released, and have seen some encouraging growth and challenges along the way. I'm reaching out for advice on how to navigate these waters.
+
+The Good:
+Organic Growth: Achieved 50k organic users.
+Product Hunt Success: Ranked 5th product of the day in Jan 2023, and 2nd in Feb 2023.
+Revenue: We're at $21k ARR.
+
+Lifetime Value (LTV): Stands at $70.
+
+The Bad:
+
+Low Conversion Rates: Only 0.3-0.5% of users convert to paid.
+Moderate Growth Rate: Growing at 7% MoM.
+Competition: New similar extensions are emerging rapidly, some gaining millions of users in months.
+
+==== Plugin 6 ====
+$0 TTM Revenue - as it's just used for convenience of the bigger Microsoft ecosystem.
+
+ Plugin name Microsoft Single Sign On by Microsoft
+    has an average rating of 2.7 with 588 total ratings.
+    It has 33000000 downloads over time by individuals, which can be much higher than actual active individual users.
+    Plugin operates withing Single Sign-On, Webex, Microsoft spaces in the plugin ecosystem
+    and integrates with Webex, Google Chrome.
+
