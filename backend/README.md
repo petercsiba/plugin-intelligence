@@ -8,7 +8,7 @@ Organized into two main parts:
 ## Stack
 * Python
 * Supabase for PostgresSQL
-* Vercel for Python Flask Server Deployments
+* Fly.io for Python Flask Server Deployments
 
 ## Development
 
