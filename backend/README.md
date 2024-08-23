@@ -106,7 +106,7 @@ There are a few ways, the best feels like:
 supabase migration new your_migration_name
 # and copy paste the SQL migration to definition to the generated file
 
-# generate new python models
+# generate new python models (requires local supabase running)
 supawee supabase/models/base.py
 
 # apply migrations - weird name i know, this takes quite long :/
@@ -140,8 +140,9 @@ Then merge the generated `backend/fly.toml` into one of the existing ones scatte
 Move it next to your Dockerfile. (one per directory)
 
 If you gonna add secrets, or want to use a different database do sth like this:
+(alternative you can set it in the Fly.io UI)
 ```shell
-fly secrets set "POSTGRES_DATABASE_URL=postgres://postgres.ngtdkctpkhzyqvkzshxk:<your-password>@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
+fly secrets set "POSTGRES_DATABASE_URL=postgresql://postgres.htnzmjxayxdeqrtispvf:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
 ```
 
 To deploy it:
