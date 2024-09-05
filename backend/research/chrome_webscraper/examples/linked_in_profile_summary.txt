@@ -1,0 +1,90 @@
+{ 'Current Job': { 'Company': 'Parafin',
+                   'Description': "Parafin's mission is to democratize access "
+                                  'to growth capital. We aim to enable and '
+                                  'empower small businesses to reach their '
+                                  'greatest potential, and to create a world '
+                                  'in which their ability to acquire funding '
+                                  'isn’t limited to a credit check or an '
+                                  'arbitrary set of rules - which historically '
+                                  'has limited numerous people from chasing '
+                                  'their dream. We are located in San '
+                                  'Francisco and are backed by prominent '
+                                  'venture capitalists and the founders of '
+                                  'Robinhood, DoorDash, Carta, Chime, and '
+                                  'Plaid.',
+                   'Duration': '1 year 2 months',
+                   'Location': 'San Francisco, California, United States',
+                   'Title': 'Software Engineer'},
+  'Education': [ { 'Activities': 'Erasmus at University van Amsterdam with '
+                                 'studies in Artificial Intelligence.',
+                   'Degree': 'Master of Science (MS)',
+                   'Field': 'Computer Science',
+                   'University': 'Univerzita Komenského v Bratislave',
+                   'Years': '2012-2014'},
+                 { 'Activities': 'Organized high school competitions and '
+                                 'played ultimate frisbee.',
+                   'Degree': 'Bachelor of Science (BSc)',
+                   'Field': 'Computer Science',
+                   'University': 'Univerzita Komenského v Bratislave',
+                   'Years': '2009-2012'}],
+  'Past Jobs': [ { 'Company': 'Robinhood',
+                   'Description': 'Main responsibilities: Core contributor to '
+                                  "several critical services in Robinhood's "
+                                  'backend such as Trading Infrastructure, '
+                                  'Money Movement, Clearing Infrastructure, '
+                                  'and Brokerage Infrastructure. Proficient in '
+                                  'Golang, PostgreSQL, Python, Django and '
+                                  'experience with Kafka, AWS, Terraform, '
+                                  'Saltstack, Airflow, Consul and exactly once '
+                                  'in delivery order.',
+                   'Duration': '5 years 1 month',
+                   'Location': 'Menlo Park, California, United States',
+                   'Title': 'Senior Software Engineer'},
+                 { 'Company': 'Google',
+                   'Description': 'Worked as L4 engineer on web search serving '
+                                  'infrastructure, i.e. a lot of machines '
+                                  'between queries and the index. Focused on '
+                                  'lowering the systems burden in terms of '
+                                  'cost and maintainability achieved by better '
+                                  'encodings, optimizing statistical models, '
+                                  're-allocating resources, '
+                                  'performance/quality tradeoffs and '
+                                  'instrumenting hot loops. Used C++, bash and '
+                                  'a lot of internal tools.',
+                   'Duration': '2 years 8 months',
+                   'Location': 'Mountain View',
+                   'Title': 'Software Engineer'},
+                 { 'Company': 'Black Swan Rational',
+                   'Description': "Supported company's main models with Python "
+                                  'scripts for data processing, prediction and '
+                                  'product recommendations.',
+                   'Duration': '6 months',
+                   'Title': 'Junior Data Mining Analyst - Part Time'},
+                 { 'Company': 'Vacuumlabs',
+                   'Description': 'Developed custom Dart framework clean_dart '
+                                  'and implemented an interactive web app.',
+                   'Duration': '5 months',
+                   'Title': 'Dart WebDeveloper - Part Time'},
+                 { 'Company': 'EEA s.r.o.',
+                   'Description': 'Developed custom Atlassian JIRA plugins for '
+                                  'various companies in logistics, trucking, '
+                                  'telecoms, banking, government and our firm '
+                                  'while studying.',
+                   'Duration': '1 year 2 months',
+                   'Title': 'Java Developer - Part Time'}],
+  'Person': 'Peter Csiba',
+  'Publication': 'Computational Analysis of the Bidirectional Activation-based '
+                 'Learning in Autoencoder Task IJCNN - 2015',
+  'Volunteer Experience': { 'Description': "Trojsten NGO's mission is to "
+                                           'gather talented high school '
+                                           'students of math, physics, and '
+                                           'computer science in Slovakia. They '
+                                           'organized a competition during the '
+                                           'semester and the best participants '
+                                           'are invited for week-long camps. '
+                                           'In 2012, was one of the chief '
+                                           'organizers of competition Naboj '
+                                           'with over 1200 participants.',
+                            'Duration': '3 years 4 months',
+                            'Organization': 'Trojsten',
+                            'Role': 'Volunteer'}}

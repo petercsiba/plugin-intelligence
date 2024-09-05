@@ -1,3 +1,5 @@
+# TODO(P0, devx): We should move to something more robust like Scrapy with Playwright
+# https://python.plainenglish.io/combine-playwright-with-scrapy-for-web-scraping-c7c00168f567
 import asyncio
 from datetime import datetime
 

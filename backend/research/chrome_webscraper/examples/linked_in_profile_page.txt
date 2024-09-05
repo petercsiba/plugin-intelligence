@@ -1,0 +1,450 @@
+Skip to main content
+Skip to main content
+LinkedIn
+Articles
+People
+Learning
+Jobs
+Join now
+Sign in
+Peter Csiba
+Software Engineer at Parafin
+San Francisco, California, United States
+1K followers
+500+ connections
+Join to view profile
+Parafin
+Personal Website
+Report this profile
+About
+My destiny was given by my surname, csiba = computer scientist in bay area.
+Generally I tend to enjoy most:
+* tough problems to crack,
+* owning/improving systems of value,
+* backends over UI,
+* quality over debugging, and
+* doing over talking.
+* On the people side I enjoy onboarding new folks, maintaining an inclusive culture, organizing trips and interviewing new hires.
+Generally I do NOT like:
+* companies in ads, social, productivity, security or scams. You can also find me swearing (in a foreign language) over crappy code, jira, long corporate processes and python env setup.
+Activity
+Join my amazing team and help us to serve public sector customers globally. https://smrtr.io/fKTFW #diversityandinclusion #servicenow #publicsector…
+Join my amazing team and help us to serve public sector customers globally. https://smrtr.io/fKTFW #diversityandinclusion #servicenow #publicsector…
+Liked by
+Peter Csiba
+1.3 million kg of trash collected from rivers, sorted, and recycled 🌊
+1.3 million kg of trash collected from rivers, sorted, and recycled 🌊
+Liked by
+Peter Csiba
+🚀Do you know the Power of AI-Powered Electric Shoes?🚀
+
+
+#dsa #data #writings #motivation #softwareengineer #programming #innovation
+🚀Do you know the Power of AI-Powered Electric Shoes?🚀
+
+
+#dsa #data #writings #motivation #softwareengineer #programming #innovation
+Liked by
+Peter Csiba
+Join now to see all activity
+Experience
+Software Engineer
+Parafin
+Jun 2022
+- Present
+1 year 2 months
+San Francisco, California, United States
+Parafin's mission is to democratize access to growth capital. We aim to enable and empower small businesses to reach their greatest potential, and to create a world in which their ability to acquire funding isn’t limited to a credit check or an arbitrary set of rules - which historically has limited numerous people from chasing their dream. We are located in San Francisco and are backed by prominent venture capitalists and the founders of Robinhood, DoorDash, Carta, Chime, and Plaid.
+Senior Software Engineer
+Robinhood
+Jun 2017
+Jun 2022
+5 years 1 month
+Menlo Park, California, United States
+Core contributor to several critical services in Robinhood's backend:
+* Trading Infrastructure (2017-2019)
+* Money Movement (2019-2021)
+* Clearing Infrastructure (2021)
+* Brokerage Infrastructure (2021-2022)
+Solid in Golang, PostgreSQL, Python, Django and experience with Kafka, AWS, Terraform, Saltstack, Airflow, Consul and exactly once in delivery order.
+Software Engineer
+Google
+Oct 2014
+May 2017
+2 years 8 months
+Mountain View
+L4 engineer on web search serving infrastructure, i.e. a lot of machines between queries and the index.
+Mostly worked on lowering the systems burden in terms of cost and maintainability achieved by better encodings, optimizing statistical models, re-allocating resources, performance/quality tradeoffs and instrumenting hot loops.
+C++, bash and a lot of internal tools.
+Junior Data Mining Analyst - Part Time
+Black Swan Rational
+Nov 2013
+Apr 2014
+6 months
+Bratislava
+Supporting companies main models with Python scripts to data process, predict and recommend products.
+Dart WebDeveloper - Part Time
+Vacuumlabs
+Oct 2013
+Feb 2014
+5 months
+Bratislava
+Developing custom Dart framework clean_dart: https://github.com/cleandart
+Implementing an interactive webapp
+Java Developer - Part Time
+EEA s.r.o.
+Oct 2011
+Nov 2012
+1 year 2 months
+Bratislava, Slovakia
+While studying I was developing custom Atlassian JIRA plugins which supported companies in logistics, trucking, telecoms, bank, government and our firm.
+Education
+Univerzita Komenského v Bratislave
+Master of Science (MS)
+Computer Science
+2012
+2014
+Activities and Societies: Erasmus at University van Amsterdam with studies in Artificial Intelligence.
+Univerzita Komenského v Bratislave
+Bachelor of Science (BSc)
+Computer Science
+2009
+2012
+Activities and Societies: Organising high school competitions.
+Playing ultimate frisbee.
+Volunteer Experience
+Volunteer
+Trojsten
+Sep 2009
+Dec 2012
+3 years 4 months
+Education
+Trojsten NGO mission is to bring together talented high school students of math, physics and computer science in Slovakia. We organized a competition during the semester and the best participants are invited for week long camps. After high school people in the community help each other out. Most of my achievements can be tracked down to this community.
+In 2012 I was one of chief organizers of competition Naboj with over 1200 participants.
+Publications
+Computational Analysis of the Bidirectional Activation-based Learning in Autoencoder Task
+IJCNN 2015
+May 14, 2015
+We use computational simulations to analyse the
+behavior of the recently proposed Bidirectional Activation-based
+Learning algorithm (BAL) which was inspired by the Generalized
+Recirculation algorithm (GeneRec). Both algorithms avoid
+biologically implausible backpropagation of the error signal, and
+instead use propagation of neuron activations, which drive the
+weight updates, using only local variables. We take a closer look at
+the 4-2-4 autoencoder task for which, despite…
+Show more
+We use computational simulations to analyse the
+behavior of the recently proposed Bidirectional Activation-based
+Learning algorithm (BAL) which was inspired by the Generalized
+Recirculation algorithm (GeneRec). Both algorithms avoid
+biologically implausible backpropagation of the error signal, and
+instead use propagation of neuron activations, which drive the
+weight updates, using only local variables. We take a closer look at
+the 4-2-4 autoencoder task for which, despite the task simplicity,
+reliable convergence could not be achieved by either of the two
+models. We propose the learning mode with two, significantly
+different, learning rates (BAL2) that leads to considerably more
+successful task learning. We also analyze various factors, related
+to hidden activations, that contribute to further increase of the
+learning success. In addition, we test BAL2 also on the large scale
+database of handwritten digits, in which it yields relatively good
+performance.
+Show less
+Other authors
+See publication
+Courses
+Algebra (1)
+1-INF-115
+Algebra (2)
+1-INF-155
+Algebra (3)
+1-INF-610
+Algorithms and Data Structures
+1-INF-220
+Coding Theory
+2-INF-125
+Combinatorial Analysis (1)
+1-INF-420
+Computer Architecture
+1-INF-130
+Computer Networks
+1-INF-260
+Cryptology (1)
+1-INF-640
+Design of Effective Algorithms
+1-INF-310
+Distributed Systems
+2-INF-232
+Formal Languages and Automata (1)
+1-INF-225
+Formal Languages and Automata (2)
+1-INF-410
+Graph Theory
+1-INF-430
+Graphical Systems, Visualization, Multimedia
+1-MXX-232-2/3873
+Heuristic Methods
+1-AIN-655
+Introduction to Combinatorics and Graph Theory
+1-INF-160
+Introduction to Database Systems
+1-INF-230
+Introduction to Discrete Structures
+1-INF-120
+Introduction to Mathematical Logic
+1-INF-210
+Introduction to Theory of Programming
+1-INF-415
+Mathematical Analysis (1)
+1-INF-110
+Mathematical Analysis (2)
+1-INF-150
+Mathematical Analysis (3)
+1-INF-605
+Mathematical Logic
+2-INF-114
+Neural Networks
+1-AIN-480
+Number Theory
+1-MAT-470
+Number Theory (2)
+2-MAT-624
+Numerical Mathematics
+1-INF-440
+Operating Systems
+1-INF-171
+Probabilistic Methods
+2-INF-133
+Probability and Statistics
+1-INF-435
+Time-Restricted Programming
+1-INF-810
+Languages
+Hungarian
+English
+Slovak
+More activity by Peter
+We’ve made it easier to explore new ways to express your ideas in Tome.
+
+Now, when you enter a prompt into the command bar, Tome will generate 4…
+We’ve made it easier to explore new ways to express your ideas in Tome.
+
+Now, when you enter a prompt into the command bar, Tome will generate 4…
+Liked by
+Peter Csiba
+Now you can build trading strategies and manage your crypto with our new suite of features, all in one place. Track market trends, plan advanced…
+Now you can build trading strategies and manage your crypto with our new suite of features, all in one place. Track market trends, plan advanced…
+Liked by
+Peter Csiba
+From input to impact. Now, creators can have deeper customization and more predictability around their narrative builds with our outline editor. ⋆⁺₊⋆…
+From input to impact. Now, creators can have deeper customization and more predictability around their narrative builds with our outline editor. ⋆⁺₊⋆…
+Liked by
+Peter Csiba
+We did it, friends! Finally graduated from Stanford University 🎓
+
+What did I learn?
+
+1. Dare to TAKE RISKS: Nowhere in the world have I seen an…
+We did it, friends! Finally graduated from Stanford University 🎓
+
+What did I learn?
+
+1. Dare to TAKE RISKS: Nowhere in the world have I seen an…
+Liked by
+Peter Csiba
+Gave my first Slovak interview about kegg #femtech #womenshealth #hardware #slovak #startup #SiliconValley Forbes Slovensko.
+Gave my first Slovak interview about kegg #femtech #womenshealth #hardware #slovak #startup #SiliconValley Forbes Slovensko.
+Liked by
+Peter Csiba
+🚀 Hiring the Head of Operations at Better Stack
+
+This is a dream job for the right person. Please share 🙏
+
+https://lnkd.in/em3gSDet
+🚀 Hiring the Head of Operations at Better Stack
+
+This is a dream job for the right person. Please share 🙏
+
+https://lnkd.in/em3gSDet
+Liked by
+Peter Csiba
+Teamwork and Growth Mindset
+Follow Vedang R. Vatsa FRSA on threads: https://lnkd.in/da2RByUq
+
+Teamwork and growth mindset are two powerful forces…
+Teamwork and Growth Mindset
+Follow Vedang R. Vatsa FRSA on threads: https://lnkd.in/da2RByUq
+
+Teamwork and growth mindset are two powerful forces…
+Liked by
+Peter Csiba
+With Jurica Novak moving onto the new and exciting challenge of Global leadership of #McKinsey innovation and technology, including all assets, I am…
+With Jurica Novak moving onto the new and exciting challenge of Global leadership of #McKinsey innovation and technology, including all assets, I am…
+Liked by
+Peter Csiba
+While I am stepping into my new role (https://lnkd.in/ePAheASj ), I am excited to share that Viktor Hanzlik is taking over the leadership of the…
+While I am stepping into my new role (https://lnkd.in/ePAheASj ), I am excited to share that Viktor Hanzlik is taking over the leadership of the…
+Liked by
+Peter Csiba
+Art...
+
+Artificial intelligence is a brush that paints the canvas of endless possibilities.
+
+It is the catalyst that propels us toward a future of…
+Art...
+
+Artificial intelligence is a brush that paints the canvas of endless possibilities.
+
+It is the catalyst that propels us toward a future of…
+Liked by
+Peter Csiba
+View Peter’s full profile
+See who you know in common
+Get introduced
+Contact Peter directly
+Join to view full profile
+Sign in
+Stay updated on your professional world
+Sign in
+New to LinkedIn?
+Join now
+People also viewed
+Jinshan Jia
+Software Engineer @ Parafin
+Redwood City, CA
+Benjamin Chen
+Software Engineer at Parafin
+San Francisco, CA
+Reed H.
+Product Engineer at Parafin
+San Francisco Bay Area
+Ernel Murati
+Software Engineer at Parafin
+San Francisco, CA
+Maya Shah
+SWE @ Parafin
+San Francisco Bay Area
+Sanyam Satia
+Engineering at Parafin
+San Francisco Bay Area
+Lun-Kai Hsu
+builder
+San Francisco Bay Area
+Mack Reiferson
+Product Engineer @Parafin | CS @Dartmouth
+San Francisco, CA
+Nishan Rayamajhee
+Product Engineer at Parafin
+San Francisco, CA
+Vineet Goel
+Enabling small businesses - We're hiring!
+San Francisco Bay Area
+Meng Wu
+Data Science @ Parafin
+San Francisco Bay Area
+Ralph Furman
+Co-Founder at Parafin - helping small businesses - We're hiring!
+San Francisco, CA
+Andrew Hillis
+Entrepreneur and Data Scientist | Hiring
+San Francisco, CA
+Sahill Poddar
+Parafin.com
+San Francisco, CA
+Shaokun Zou
+Graduate Student at Carnegie Mellon University
+Sunnyvale, CA
+Jiuyang Z.
+Software Engineer at Databricks | My team is hiring software engineers from all levels !
+San Francisco Bay Area
+Jun Chen
+Software Engineer with experience in large scale distributed system and ML/AI systems
+Seattle, WA
+Chi Zhang
+爱彼迎食堂批评家及专业表情包制作，公众号：容嬷嬷的碎碎念
+Chaoyang District
+Ankit Kumar
+Software Engineer at Google, New York City.
+New York, NY
+Jinglin Li, PhD
+Sr. Software Engineer at CBRE | SDE Intern at Amazon
+United States
+Show more profiles
+Show fewer profiles
+Explore collaborative articles
+We’re unlocking community knowledge in a new way. Experts add insights directly into each article, started with the help of AI.
+Explore More
+Others named
+Peter Csiba
+Peter Csiba
+IT Infrastructure Engineer
+Weiden bei Rechnitz
+Péter Csiba
+Spirit Trade Marketing Specialist at Coca-Cola Hellenic Bottling Company
+Budapest
+Peter Csiba
+Páty
+Peter Csiba
+Analyst at Xellia Pharmaceuticals
+Budapest
+8 others named Peter Csiba are on LinkedIn
+See others named
+Peter Csiba
+Add new skills with these courses
+Algorithmic Thinking with Python: Developing Problem-Solving Skills
+Supervised Learning Essential Training
+gRPC in Python
+See all courses
+Peter’s public profile badge
+Include this LinkedIn profile on other websites
+Peter Csiba
+Software Engineer at Parafin
+Software Engineer at Parafin
+View profile
+View profile badges
+LinkedIn
+© 2023
+About
+Accessibility
+User Agreement
+Privacy Policy
+Your California Privacy Choices
+Cookie Policy
+Copyright Policy
+Brand Policy
+Guest Controls
+Community Guidelines
+العربية (Arabic)
+Čeština (Czech)
+Dansk (Danish)
+Deutsch (German)
+English (English)
+Español (Spanish)
+Français (French)
+हिंदी (Hindi)
+Bahasa Indonesia (Indonesian)
+Italiano (Italian)
+日本語 (Japanese)
+한국어 (Korean)
+Bahasa Malaysia (Malay)
+Nederlands (Dutch)
+Norsk (Norwegian)
+Polski (Polish)
+Português (Portuguese)
+Română (Romanian)
+Русский (Russian)
+Svenska (Swedish)
+ภาษาไทย (Thai)
+Tagalog (Tagalog)
+Türkçe (Turkish)
+Українська (Ukrainian)
+简体中文 (Chinese (Simplified))
+正體中文 (Chinese (Traditional))
+Language
+You’re signed out
+Sign in for the full experience.
+Sign in
+or
+Join now
+storing 212605B into output.html from url https://www.linkedin.com/in/peter-csiba-42445967?original_referer=https%3A%2F%2Fwww.google.com%2F
