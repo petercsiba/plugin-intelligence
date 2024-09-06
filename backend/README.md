@@ -48,6 +48,21 @@ supabase db remote commit
 supabase start
 ```
 
+### Setup Docker (Colima)
+I personally use `colima` over Docker Desktop (which kills battery)
+For `colima` you need to install Docker `buildx` manually:
+```shell
+ARCH=arm64 # change to 'amd64' for non M[12]
+VERSION=v0.10.4
+curl -LO https://github.com/docker/buildx/releases/download/${VERSION}/buildx-${VERSION}.darwin-${ARCH}
+mkdir -p ~/.docker/cli-plugins
+mv buildx-${VERSION}.darwin-${ARCH} ~/.docker/cli-plugins/docker-buildx
+chmod +x ~/.docker/cli-plugins/docker-buildx
+docker buildx version # verify installation
+```
+https://dev.to/maxtacu/cross-platform-container-images-with-buildx-and-colima-4ibj
+It somehow also worked better with x-platform local builds
+
 
 ## Development Workflow
 
@@ -147,7 +162,10 @@ fly secrets set "POSTGRES_DATABASE_URL=postgresql://postgres.htnzmjxayxdeqrtispv
 
 To deploy it:
 ```shell
-fly deploy --config batch_jobs/fly.toml
+# API
+fly deploy --config api/fly.toml
+# BATCH JOBS
+./deploy_batch_jobs.sh batch_jobs/scraper/fly.toml
 ```
 
 For batch jobs you might want to set restart policy to `no` so you can detect errors ASAP:

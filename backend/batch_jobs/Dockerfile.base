@@ -1,5 +1,7 @@
-# TODO(P1, devx): It would be nice to actually use this across the sub-docker files;
-#   BUT I have failed an hour long attempt for this
+# To use and build (registry.fly.io/<app-name>:<image-tag>):
+# docker build -f batch_jobs/Dockerfile.base -t registry.fly.io/web-scraping-batch-jobs-base-registry:latest .
+
+# Use an official lightweight Python base image
 FROM python:3.12-slim
 
 # Set the working directory in the container
@@ -16,17 +18,18 @@ RUN apt-get update && apt-get install -y \
 # Install Python dependencies
 COPY requirements/slow.txt /app/backend/slow.txt
 RUN pip install --no-cache-dir -r slow.txt
-COPY requirements/api.txt /app/backend/api.txt
-RUN pip install --no-cache-dir -r api.txt
 COPY requirements/common.txt /app/backend/common.txt
 RUN pip install --no-cache-dir -r common.txt
+COPY requirements/batch_jobs.txt /app/backend/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy only the necessary Python files and configurations
 # TODO(P2, devx): rather use .dockerignore
-COPY __init__.py /app/backend
+COPY ../__init__.py /app/backend
 COPY pyproject.toml /app/backend
 COPY setup.cfg /app/backend
-COPY api /app/backend/api
+# COPY backend/api backend/api
+COPY batch_jobs /app/backend/batch_jobs
 COPY common /app/backend/common
 # We omit supabase/config.toml, supabase/seed.sql and migrations to be sure
 COPY supabase/__init__.py /app/backend/supabase/
@@ -35,7 +38,3 @@ COPY supabase/models /app/backend/supabase/models/
 # Environment variables are managed in two ways:
 # * .env file for local
 # * classic environmental variables (e.g. through fly.io secrets)
-
-# NOTE: For larger apps gunicorn is suggested (we used that at my previous company)
-# TODO: Remove --log-level debug
-CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "debug"]

@@ -1,0 +1,2 @@
+# we put some slow to build requirements here for better Docker caching
+psycopg2==2.9.9  # requires gcc
