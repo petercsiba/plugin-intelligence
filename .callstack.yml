@@ -2,10 +2,10 @@ pr_review:
   # Default: true
   auto_run: true
   modules:
-    # Automatically create a description summarizing the changes in pull request. 
+    # Automatically create a description summarizing the changes in pull request.
     description:
       enabled: true
-      diagram: false
+      diagram: true
 
     # Find potential bugs in pull request changes or related files.
     bug_hunter:
@@ -23,7 +23,7 @@ pr_review:
       # Describe your code conventions in plain text.
       conventions: |
         E.g. Exported variables, functions, classes and methods should be defined before private.
-    
+
 
     # Point out any typos or grammatical errors in variable names, texts, comments.
     grammar:
@@ -31,8 +31,8 @@ pr_review:
 
     # Suggest performance improvements to added code.
     performance:
-      enabled: true
+      enabled: false
 
     # Find potential security issues in added code.
     security:
-      enabled: true
+      enabled: false
