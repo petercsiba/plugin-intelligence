@@ -143,42 +143,57 @@ def generate_revenue_estimate(plugin: Plugin,) -> Tuple[Optional[str], Optional[
 
 
 # Fuzzy matching to extract lower and upper bounds from generate_revenue_estimate output
-def extract_bounds(text: Optional[str]) -> Tuple[int, int]:
-    # Regular expression pattern to capture amounts following "Lower" or "Upper" keywords
-    # Adjusted pattern to capture bullet points, bold markers, and flexible spacing
-    # Examples:
-    # - **Lower** Bound: $1,000
-    # * Upper Bound: $2,000
-    # - **Lower Bound**: Assuming a slight decrease in conversion rates — $10,000
-    pattern = r"(?i)(lower|upper)[^\$]*\$(\d+(?:,\d+)*)"
+def extract_bounds(text: Optional[str], verbose: bool = False) -> Tuple[int, int]:
+    if text is None:
+        return 0, 0
 
-    # Find all matches using the pattern
-    matches = re.findall(pattern, str(text))
+    # Function to extract all numbers after a specific phrase in a line
+    def extract_number_after_phrase(line: str, phrase: str) -> Optional[int]:
+        # Find the position of the phrase
+        pos = line.lower().find(phrase.lower())
+        if pos == -1:
+            return None
 
-    def clean_amount(int_str: str) -> int:
-        """Helper function to remove commas and convert to integer."""
-        return int(int_str.replace(",", ""))
+        # Extract the part of the line after the phrase
+        relevant_part = line[pos + len(phrase):]
 
-    # Initialize variables to hold the bounds
+        # If there's an equals sign, take only the part after the last equals sign
+        if '=' in relevant_part:
+            relevant_part = relevant_part.split('=')[-1]
+
+        # Remove $ and commas, then find all numbers
+        cleaned = re.sub(r'[$,]', '', relevant_part)
+        numbers = [int(num) for num in re.findall(r'\d+', cleaned)]
+
+        return max(numbers) if numbers else None
+
     lower_bound = -1
     upper_bound = -1
 
-    # Process the matches and assign to appropriate variables
-    for role, amount in matches:
-        if role.lower() == "lower":
-            # We do `max` since the revenue analysis can do lower/upper bounds on multiple parameters,
-            # think ARPU or monthly revenue, while we want to capture the annual revenue.
-            lower_bound = max(lower_bound, clean_amount(amount))
-        elif role.lower() == "upper":
-            upper_bound = max(lower_bound, clean_amount(amount))
+    # Split the text into lines and process each line
+    for line in text.split('\n'):
+        line = line.strip()
+        result = None
+        if 'lower bound' in line.lower():
+            result = extract_number_after_phrase(line, 'lower bound')
+            if result is not None:
+                lower_bound = result
+        elif 'upper bound' in line.lower():
+            result = extract_number_after_phrase(line, 'upper bound')
+            if result is not None:
+                upper_bound = result
 
-    if lower_bound < 0:
-        print("ERROR: Could not find lower bound")
+        if result and verbose:
+            print(f"lower: {lower_bound}, upper: {upper_bound} line: {line}")
+
+    # Error handling
+    if lower_bound == -1:
         lower_bound = 0
-    if upper_bound < 0:
-        print("ERROR: Could not find upper bound")
+        print("ERROR: Could not find lower bound")
+    if upper_bound == -1:
         upper_bound = 0
-    if upper_bound < lower_bound or upper_bound == 0:
+        print("ERROR: Could not find upper bound")
+    if upper_bound < lower_bound:
         print("WARNING: Upper bound is less than lower bound.")
         upper_bound = lower_bound
 
@@ -192,6 +207,8 @@ def extract_bounds(text: Optional[str]) -> Tuple[int, int]:
 # might as well use the ChatCompletion interface for this task.
 # AND remove those plugin $TTM datapoints as they don't seem to be used much
 # (we should still disclose them somewhere).
+# TODO(P1, quality): For "Free + B2B sales",
+#   it outputs 0, 0. We should fix this: 8154 (Barracuda Chromebook Security Extension)
 def gpt_generate_revenue_estimate_for_plugin(plugin: Plugin, force_update=False) -> None:
     if plugin.revenue_analysis and not force_update:
         print(f"Skipping plugin {plugin.id} as it already has revenue analysis.")
