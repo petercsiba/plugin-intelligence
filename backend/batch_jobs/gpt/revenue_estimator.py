@@ -183,7 +183,7 @@ def extract_bounds(text: Optional[str], verbose: bool = False) -> Tuple[int, int
             if result is not None:
                 upper_bound = result
 
-        if result and verbose:
+        if result is not None and verbose:
             print(f"lower: {lower_bound}, upper: {upper_bound} line: {line}")
 
     # Error handling
