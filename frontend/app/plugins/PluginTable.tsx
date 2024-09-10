@@ -55,8 +55,8 @@ const PluginTable: React.FC<PluginTableProps> = ({ plugins }) => {
                     <ListBoxOneLine listOfStrings={plugin.main_tags} />
                   </TableCell>
                   <TableCell>
-                    {plugin.revenue_lower_bound && plugin.revenue_upper_bound ? (
-                        `${formatCurrency(plugin.revenue_lower_bound)} - ${formatCurrency(plugin.revenue_upper_bound)}`
+                    {plugin.revenue_estimate_derived ? (
+                        `${formatCurrency(plugin.revenue_estimate_derived)}`
                     ) : 'N/A'}
                   </TableCell>
                   <TableCell>{formatNumberShort(plugin.user_count)}</TableCell>
