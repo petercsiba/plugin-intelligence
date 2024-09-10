@@ -361,7 +361,7 @@ def get_all_google_workspace_from_database(p_date: str) -> List[ScrapeAddOnDetai
 
     # Join the subquery with the original table to get the source_url
     query = (GoogleWorkspace
-             .select(GoogleWorkspace.google_id, GoogleWorkspace.source_url, GoogleWorkspace.link)
+             .select(GoogleWorkspace.google_id, GoogleWorkspace.source_url, GoogleWorkspace.link. GoogleWorkspace.name)
              .join(subquery, on=(
             (GoogleWorkspace.google_id == subquery.c.google_id) &
             (GoogleWorkspace.p_date == subquery.c.max_p_date)
@@ -373,6 +373,7 @@ def get_all_google_workspace_from_database(p_date: str) -> List[ScrapeAddOnDetai
         result.append(ScrapeAddOnDetailsJob(
             url=entry.source_url if entry.source_url else entry.link,
             p_date=p_date,
+            name=entry.name,
             google_id=entry.google_id,
             marketplace_link=entry.link,
         ))

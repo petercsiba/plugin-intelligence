@@ -49,6 +49,7 @@ export function formatNumberShort(value: number | null | undefined): string {
   if (value == null) {
     return 'N/A';
   }
+
   // Define suffixes and their thresholds
   const suffixes = [
     { threshold: 1e9, suffix: "B" }, // Billions
@@ -56,36 +57,26 @@ export function formatNumberShort(value: number | null | undefined): string {
     { threshold: 1e3, suffix: "k" }, // Thousands
   ];
 
-  // Helper function to remove trailing ".0" if present
-  function cleanTrailingZero(numStr: string): string {
-    return numStr.replace(/\.0/, '');
+  // Helper function to remove trailing zeros and unnecessary decimal point
+  function cleanNumber(numStr: string): string {
+    return numStr.replace(/\.0+$/, '');
   }
 
   // Loop through the suffixes to find an appropriate threshold
   for (const { threshold, suffix } of suffixes) {
-    if (value >= threshold) {
-      return `${cleanTrailingZero((value / threshold).toFixed(1))}${suffix}`;
+    if (Math.abs(value) >= threshold) {
+      return `${cleanNumber((value / threshold).toFixed(1))}${suffix}`;
     }
   }
 
   // Format without suffix if below the thousands threshold
-  let formattedValue: string;
-  if (value < 10) {
-    formattedValue = "N/A"
-    try {
-      // Your code that might throw an error
-      formattedValue = `${value.toFixed(2)}`; // 2 decimal places for values less than 10
-    } catch (error) {
-      debugError(error);
-      throw error;
-    }
-  } else if (value < 100) {
-    formattedValue = `${value.toFixed(1)}`; // 1 decimal place for values between 10 and 99
+  if (Math.abs(value) < 10) {
+    return cleanNumber(value.toFixed(2)); // 2 decimal places for values less than 10
+  } else if (Math.abs(value) < 100) {
+    return cleanNumber(value.toFixed(1)); // 1 decimal place for values between 10 and 99
   } else {
-    formattedValue = `${value.toFixed(0)}`; // 0 decimal places for values 100 and above
+    return cleanNumber(value.toFixed(0)); // 0 decimal places for values 100 and above
   }
-
-  return cleanTrailingZero(formattedValue);
 }
 
 export function formatNumber(value: number | null | undefined): string {
