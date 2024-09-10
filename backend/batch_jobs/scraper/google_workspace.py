@@ -18,7 +18,8 @@ from batch_jobs.common import (
     find_tag_and_get_text,
     listing_updated_str_to_date,
     extract_number_best_effort,
-    is_html_in_english, standardize_url,
+    is_html_in_english,
+    standardize_url,
 )
 from batch_jobs.scraper.search_terms import GOOGLE_WORKSPACE_SEARCH_TERMS
 from batch_jobs.scraper.settings import should_save_large_fields
@@ -245,16 +246,29 @@ def process_add_on_page_response(
     add_on.source_url = scrape_job.url
 
     save_large_fields = should_save_large_fields(scrape_job.p_date)
-    _parse_add_on_page_response(add_on, soup, save_large_fields=save_large_fields, debug_url=scrape_job.url)
+    _parse_add_on_page_response(
+        add_on, soup, save_large_fields=save_large_fields, debug_url=scrape_job.url
+    )
 
     # NOTE: yes this blocks the event loop and could benefit from asyncio,
     # but DB calls are usually way faster (3-10ms) than the HTTP GET (100-1000ms) above so it is fine.
     add_on.save()
 
 
+def remove_endswith(text, suffix):
+    if text.endswith(suffix):
+        return text[: -len(suffix)].rstrip()
+    return text
+
+
 # TODO(P1, reliability): Maybe it's possible to parse the data from this Javascript stuff, unsure about Wayback though.
 # <script nonce="">AF_initDataCallback({key: 'ds:1', hash: '6', data:[[428704666266,null,null,["Calamari","Modern leave and attendance management. Remote work, time off management and clock-in with iBeacons.","Calamari helps businesses and organizations boost the productivity of their employees by simplifying attendance and leave management. It's simple to use, allows tracking of vacation accrual and provides easy request and approval system for time off. It offers both attendance and leave tracking. Calamari automates time off approval and gives employees the easiest access to their leave records, useful PTO reports and team calendars overview.\n\nTry it for FREE! No credit card or commitment required.\nLeave Management:\n  • access control for different types of users (regular employees/managers/admins)\n  • PTO tracking, absence and vacation management, remote work tracking\n  • configuration of policies from different countries, custom leave types\n  • multilevel approval process, approval automation\n  • time off reports in Excel, PDF export\n  • team calendars, team capacity, absence calendar\n  • email notifications, slack notifications\n  • multi-country organizations\n  • requests on behalf of other employees (for managers)\n  • mobile app for employees and managers\n  • “who is off” weekly and daily notifications\n  • employee profiles \u0026 directory\n  • public API\n\nAttendance Management (clockin):\n  • attendance clock in methods: web browser, mobile application, QR codes, iBeacon, API\n  • mobile app with iBeacon technology\n  • abnormalities reporting\n  • working time reports, late arrivals and early departures reports\n  • reports export to payroll\n  • mobile application for employees\n  • real time attendance tracking\n  • clock in, clock out reminders\n  • time clock mobile terminals\n  • time tracking with GPS location\n  • clock in from email\n  • full history of changes made\n  • email notifications\n\n\nG Suite integration:\n  • synchronize employees from G Suite directory\n  • import employees for the onboarding\n  • import public holidays from Google calendar\n  • single sign on for G Suite users\n  • synchronize time off and remote work requests into Google Calendar\n  • available for multi-domain G Suite Accounts\n\nOther integrations:\n  • Slack (clock in / clock out / slack notifications)\n  • Atlassian JIRA (time off requests sync)\n  • Office 365/Outlook (time off calendar sync)\n\nQuality:\n  • dedicated subdomain, separate database\n  • support for all browsers and mobile devices\n  • 99.9% uptime and 24/7 monitoring\n  • hosting provider security: ISO 27001 CERT\n  • data backup in different availability zones\n  • English, Spanish, French, German, Polish language supported\n\nSee www.calamari.io for more details.","https://lh5.googleusercontent.com/-oLWY9PD6b5w/U_MVhYVsSCI/AAAAAAAAADQ/a33ioS_UCVY/s0/calamari_128x128_kolor.png","https://lh3.googleusercontent.com/9MReo6ZoloGfmb28DdImDYl_rubN6I1uukjUrjnN1ftlFYGe8H5qFskKi4qpXoReOFl33sXRNg\u003ds220-w220-h140-nd","calamari",[["https://lh3.googleusercontent.com/-pJaZMFzwk9g/ZC57WpfBGiI/AAAAAAAAAB0/nA2wLtxx-vIw24Y8nle1AHZfpowUgl60wCNcBGAsYHQ/s640-w640-h400/Ewidencja.png",1],["https://lh3.googleusercontent.com/-gOWhkaPJyqI/ZC57f1mpofI/AAAAAAAAAB8/DOiuaRHsQfILUfnWATbU4YMgFrvUEYw7gCNcBGAsYHQ/s640-w640-h400/Zegar.png",1],["https://lh3.googleusercontent.com/-HSPLNgQL4UM/ZC57jQ1jO1I/AAAAAAAAACE/xwFXiGPOEc8EB6Rx0YZ42-xU5Ld18J_ogCNcBGAsYHQ/s640-w640-h400/Manager.png",1],["https://lh3.googleusercontent.com/-UA9akNy7Etk/ZC57ltfKkQI/AAAAAAAAACM/y1N0sVa8brsEGDkb3C5ZdUmbNIsDlI17QCNcBGAsYHQ/s640-w640-h400/People%2Bdirectory.png",1],["https://lh3.googleusercontent.com/-aXmxFsrve2U/ZC57n19CsGI/AAAAAAAAACY/7_YEkviasxQQ2A3fskm4g-MwKA9xePhDwCNcBGAsYHQ/s640-w640-h400/Integracje.png",1]]],["calamari.io","",0,""],[10,5,"103K+",103974],null,null,["","https://calamari.io/terms-of-use","https://calamari.io/privacy-policy","https://help.calamari.io/","https://calamari.io/"],null,null,true,null,null,false,[[4,""]],null,false,false,null,2,[1680767910,147079000],2,false,null,false,null,[],false,false,false,""]], sideChannel: {}});</script>  #noqa
-def _parse_add_on_page_response(add_on: GoogleWorkspace, soup: BeautifulSoup, save_large_fields: bool, debug_url=None):
+def _parse_add_on_page_response(
+    add_on: GoogleWorkspace,
+    soup: BeautifulSoup,
+    save_large_fields: bool,
+    debug_url=None,
+):
 
     # They have changed styles and classes a few times, so we need to be careful here.
     # Observations:
@@ -269,13 +283,24 @@ def _parse_add_on_page_response(add_on: GoogleWorkspace, soup: BeautifulSoup, sa
     developer_additional_info_span = soup.find("span", class_="nWIEC")
     if developer_additional_info_span:
         add_on.developer_name = developer_additional_info_span.text.strip()
+        # A bit of a hack for <i class="google-material-icons bmrmhd" aria-hidden="true">open_in_new</i>,
+        #   as in this case it is more nested in div/a/i
+        add_on.developer_name = remove_endswith(add_on.developer_name, "open_in_new")
     else:
         developer_by = soup.find("div", class_="L6OhWc")
         if developer_by:
-            add_on.developer_name = developer_by.text.replace('By:', '').strip()
+            add_on.developer_name = developer_by.text.replace("By:", "").strip()
+            # A bit of a hack for <i class="google-material-icons bmrmhd" aria-hidden="true">open_in_new</i>,
+            #   as in this case it is more nested in div/a/i
+            add_on.developer_name = remove_endswith(
+                add_on.developer_name, "open_in_new"
+            )
 
     for developer_a in soup.find_all("a", class_="DmgOFc Sm1toc"):
-        if "plus.google.com" in developer_a["href"] or "support.google.com" in developer_a["href"]:
+        if (
+            "plus.google.com" in developer_a["href"]
+            or "support.google.com" in developer_a["href"]
+        ):
             continue
 
         # Remove all subtags within the found <a> tag, this for .text to work correctly for subtags like:
@@ -354,29 +379,40 @@ def get_all_from_marketplace(p_date: str) -> List[ScrapeAddOnDetailsJob]:
 
 def get_all_google_workspace_from_database(p_date: str) -> List[ScrapeAddOnDetailsJob]:
     # Define the subquery to get the latest p_date for each google_id
-    subquery = (GoogleWorkspace
-                .select(GoogleWorkspace.google_id, fn.MAX(GoogleWorkspace.p_date).alias('max_p_date'))
-                .group_by(GoogleWorkspace.google_id)
-                .alias('subquery'))
+    subquery = (
+        GoogleWorkspace.select(
+            GoogleWorkspace.google_id,
+            fn.MAX(GoogleWorkspace.p_date).alias("max_p_date"),
+        )
+        .group_by(GoogleWorkspace.google_id)
+        .alias("subquery")
+    )
 
     # Join the subquery with the original table to get the source_url
-    query = (GoogleWorkspace
-             .select(GoogleWorkspace.google_id, GoogleWorkspace.source_url, GoogleWorkspace.link. GoogleWorkspace.name)
-             .join(subquery, on=(
-            (GoogleWorkspace.google_id == subquery.c.google_id) &
-            (GoogleWorkspace.p_date == subquery.c.max_p_date)
-    )))
+    query = GoogleWorkspace.select(
+        GoogleWorkspace.google_id,
+        GoogleWorkspace.source_url,
+        GoogleWorkspace.link.GoogleWorkspace.name,
+    ).join(
+        subquery,
+        on=(
+            (GoogleWorkspace.google_id == subquery.c.google_id)
+            & (GoogleWorkspace.p_date == subquery.c.max_p_date)
+        ),
+    )
 
     # Execute the query and fetch the results
     result = []
     for entry in query:
-        result.append(ScrapeAddOnDetailsJob(
-            url=entry.source_url if entry.source_url else entry.link,
-            p_date=p_date,
-            name=entry.name,
-            google_id=entry.google_id,
-            marketplace_link=entry.link,
-        ))
+        result.append(
+            ScrapeAddOnDetailsJob(
+                url=entry.source_url if entry.source_url else entry.link,
+                p_date=p_date,
+                name=entry.name,
+                google_id=entry.google_id,
+                marketplace_link=entry.link,
+            )
+        )
     return result
 
 
