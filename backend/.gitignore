@@ -1,3 +1,4 @@
 .env.prod
 batch_jobs/backlinks_data/*
+scripts/localdata/*
 **/__pycache__/
