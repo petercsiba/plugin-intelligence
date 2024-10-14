@@ -12,6 +12,9 @@ from supabase.models.data import Plugin, MarketplaceName
 
 plugins_router = APIRouter()
 
+LOWER_BOUND_WEIGHT = 9
+UPPER_BOUND_WEIGHT = 1
+
 
 class PluginsTopResponse(BaseModel):
     id: int
@@ -29,6 +32,7 @@ class PluginsTopResponse(BaseModel):
     # Derived stuff
     revenue_lower_bound: Optional[int] = None
     revenue_upper_bound: Optional[int] = None
+    revenue_estimate_derived: Optional[int] = None
     lowest_paid_tier: Optional[float] = None
     main_tags: Optional[list] = None
 
@@ -45,7 +49,13 @@ def get_plugins_top(limit: int = 20, marketplace_name: Optional[MarketplaceName]
         )
 
     # Query the top plugins by upper_bound
-    query = Plugin.select().order_by(fn.COALESCE(Plugin.revenue_upper_bound, 0).desc()).limit(limit)
+    query = (
+        Plugin.select()
+        .order_by(
+            ((LOWER_BOUND_WEIGHT * fn.COALESCE(Plugin.revenue_lower_bound, 0) + UPPER_BOUND_WEIGHT * fn.COALESCE(Plugin.revenue_upper_bound, 0)) / (LOWER_BOUND_WEIGHT + UPPER_BOUND_WEIGHT)).desc()
+        )
+        .limit(limit)
+    )
     if marketplace_name:
         query = query.where(Plugin.marketplace_name == marketplace_name)
     return _list_plugins(query)
@@ -61,6 +71,9 @@ def get_plugins_for_company(company_slug: str):
 def _list_plugins(query: Query) -> List[PluginsTopResponse]:
     top_plugins = []
     for plugin in query:
+        lower_bound = plugin.revenue_lower_bound or 0
+        upper_bound = plugin.revenue_upper_bound or 0
+        interpolated_revenue = (LOWER_BOUND_WEIGHT * lower_bound + UPPER_BOUND_WEIGHT * upper_bound) / (LOWER_BOUND_WEIGHT + UPPER_BOUND_WEIGHT)
         plugin_response = PluginsTopResponse(
             id=plugin.id,
             name=plugin.name,
@@ -70,8 +83,9 @@ def _list_plugins(query: Query) -> List[PluginsTopResponse]:
             user_count=plugin.user_count,
             avg_rating=rating_in_bounds(plugin.avg_rating, f"plugin_id={plugin.id}"),
             rating_count=plugin.rating_count,
-            revenue_lower_bound=plugin.revenue_lower_bound,
-            revenue_upper_bound=plugin.revenue_upper_bound,
+            revenue_lower_bound=plugin.lower_bound,
+            revenue_upper_bound=plugin.upper_bound,
+            revenue_estimate_derived=int(interpolated_revenue) if lower_bound > 0 and upper_bound > 0 else None,
             lowest_paid_tier=plugin.lowest_paid_tier,
             main_tags=parse_fuzzy_list(plugin.tags, max_elements=3),
         )

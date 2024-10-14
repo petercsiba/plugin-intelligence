@@ -13,6 +13,7 @@ export interface TopPluginResponse {
 
   revenue_lower_bound?: number;
   revenue_upper_bound?: number;
+  revenue_estimate_derived?: number;
   lowest_paid_tier: number | null;
   main_tags?: string[];
 }
