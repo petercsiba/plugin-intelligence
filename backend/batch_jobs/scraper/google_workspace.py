@@ -350,6 +350,7 @@ async def async_scrape_add_on_details(
                     print("WARNING: could not get data")
                     return
                 add_on_html = await response.text()
+                # TODO(P0, scraping): Try instead https://github.com/unclecode/crawl4ai ; BUT likely expensive
                 process_add_on_page_response(scrape_job, add_on_html)
 
 

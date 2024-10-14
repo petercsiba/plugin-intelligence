@@ -5,6 +5,10 @@ Organized into two main parts:
   * Yes, we could've used Supabase row-level security, BUT I like to have an abstraction layer in between.
 * Batch Jobs: Workers ingesting data into our database.
 
+## Related Projects
+* https://www.expand.ai/ - expand.ai instantly turns any website into a type-safe API you can rely on.
+* https://github.com/unclecode/crawl4ai
+
 ## Stack
 * Python
 * Supabase for PostgresSQL
