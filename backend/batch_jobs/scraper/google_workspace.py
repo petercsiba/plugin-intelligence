@@ -27,7 +27,44 @@ from common.company import standardize_company_name
 from common.config import POSTGRES_DATABASE_URL
 from supabase.models.data import GoogleWorkspace
 
+# TODO: crawling /marketplace/search/ is against robots.txt :/
 SEARCH_URL = "https://workspace.google.com/marketplace/search/"
+# but maybe if i show some respect / restraint in say crawling only every week
+# and only listings directly from the marketplace, it might be okay
+# https://chatgpt.com/share/672ac15b-46d8-8005-8534-8de9c2f4c616
+# I wonder how Semrush, SimilarWeb, etc. do it? No idea how they can have agreements with all websites.
+
+# TODO(P00, compliance): We need to bring the crawler up-to-date to Data standards
+# Web Scraping Policies
+# 1. Data
+# Do you provide data in raw form? If not, do you anonymize, aggregate or summarize the data before providing it?
+# (b) Has any PII contained in the data been removed, anonymized, or aggregated such that it cannot be used to identify an individual?
+#  => Even publicly available contact data is considered PII
+# 2. Terms of Service and Methodologies
+# (a) When scraping a site, do you agree to Terms of Service (TOS), including but not limited to, automated “click throughs”? This often occurs when creating an account.
+#   => You implicitly agree to the TOS when you use the website
+#    THEIR TOS 3.3.
+#    3.3 For example, you must not access (or attempt to access) the Market through any automated means
+#    (including use of scripts, crawlers, or similar technologies)
+#    and you must ensure that you comply with the instructions set out in any robots.txt file
+#    present on the Market website.
+# (b) Do you resolve captchas?
+#    => No
+#
+# 3. Do you create an account to gain access to information?
+#    => No
+
+# 4. If you engage in any behavior to mask your identity / IP addresses,
+#    => No, BUT TODO(P00, compliance): Include a User-Agent header in the request
+#
+# (a) Is it traceable back to your company?
+#
+# (b) Is there a way for your company to be contacted?
+#
+# (c) Is your company name included in the metadata of each request?
+#
+#
+# 5. Do you take steps not to interfere with a site’s functionality? If yes, what are they?
 
 LISTS = [SEARCH_URL + quote(term) for term in GOOGLE_WORKSPACE_SEARCH_TERMS] + [
     # MAIN categories
